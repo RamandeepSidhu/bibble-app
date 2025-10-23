@@ -14,7 +14,6 @@ import { Eye, EyeOff } from "lucide-react";
 const url = `${process.env.NEXT_PUBLIC_LIVE_URL}`;
 
 const Login = () => {
-  const router = useRouter();
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -44,18 +43,11 @@ const Login = () => {
       });
 
       if (response?.ok) {
-        // Simple redirect based on role
-        // In a real app, you'd check the session after login
-        if (values.email === "admin@example.com") {
-          router.push("/admin/dashboard");
-        } else {
-          router.push("/dashboard");
-        }
         showToast.success("Success", "User logged in successfully.");
-      } else {
-        showToast.error("Error", response.error || "Invalid credentials");
+        window.location.reload();
       }
     } catch (error: any) {
+      console.log(error);
       showToast.error("Error", "Login failed");
       setIsLoading(false);
     } finally {
