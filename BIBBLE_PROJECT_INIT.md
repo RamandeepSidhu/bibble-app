@@ -25,7 +25,6 @@ A comprehensive admin panel for product management with multilingual support and
   "productId": null,
   "type": "book",
   "categoryId": "67101b8b4aa4b876a2b2c110",
-  "tags": ["bible", "genesis"],
   "contentType": "free",
   "freePages": 10,
   "title": {

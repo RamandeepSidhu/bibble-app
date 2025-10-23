@@ -30,7 +30,7 @@ const Login = () => {
     },
   });
 
-  const handleLogin = async (values: { email: string; password: string }) => {
+    const handleLogin = async (values: { email: string; password: string }) => {
     if (isLoading) {
       return;
     }
@@ -63,22 +63,21 @@ const Login = () => {
     }
   };
   return (
-    <Card className="grid min-h-svh lg:grid-cols-2">
+    <Card className="grid min-h-svh lg:grid-cols-1">
       <div className="flex flex-col gap-4 md:p-10">
         <div className="flex justify-center gap-2 md:justify-start">
           <Link
-            href={url}
-            target="_blank"
+            href="/"
             className="flex items-center gap-2 font-medium"
           >
-            <div className="text-primary-foreground flex size-6 items-center justify-center rounded-md">
-              <img src="/images/logo.svg" />
+            <div className="flex size-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
+              <span className="text-sm font-bold">B</span>
             </div>
             Bibble App
           </Link>
         </div>
         <div className="flex flex-1 items-center justify-center">
-          <div className="w-full max-w-sm border  p-[25px] rounded-lg">
+          <div className="w-full max-w-sm border p-[25px] rounded-lg">
             <form
               className="flex flex-col gap-6"
               onSubmit={formik.handleSubmit}
@@ -114,7 +113,7 @@ const Login = () => {
                     </Link>
                   </div>
                   <div className="relative">
-                      <Input
+                    <Input
                       id="password"
                       type={showPassword ? "text" : "password"}
                       placeholder="**********"
@@ -131,7 +130,7 @@ const Login = () => {
                     >
                       {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
-                    </div>
+                  </div>
                 </div>
                 {errorMessage && (
                   <p className="text-destructive text-sm font-sm text-center">
@@ -157,13 +156,6 @@ const Login = () => {
             </form>
           </div>
         </div>
-      </div>
-      <div className="bg-muted relative hidden lg:block">
-        <img
-          src="/images/login-banner.svg"
-          alt="Image"
-          className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
-        />
       </div>
     </Card>
   );

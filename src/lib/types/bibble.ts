@@ -12,12 +12,10 @@ export type ProductType = 'book' | 'story' | 'chapter' | 'verse';
 export interface Product {
   productId: string | null;
   type: ProductType;
-  categoryId: string;
   tags: string[];
   title: MultilingualText;
   description: MultilingualText;
-  profile_image: string;
-  images: string[];
+  producer: string;
   createdAt?: string;
   updatedAt?: string;
   status?: 'active' | 'inactive' | 'draft';
@@ -95,12 +93,8 @@ export interface AdminUser {
 // Form interfaces for creating/editing content
 export interface ProductFormData {
   type: ProductType;
-  categoryId: string;
-  tags: string[];
   title: MultilingualText;
   description: MultilingualText;
-  profile_image: string;
-  images: string[];
 }
 
 export interface StoryFormData {
