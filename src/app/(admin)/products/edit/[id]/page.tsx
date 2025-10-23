@@ -10,6 +10,7 @@ import { ProductType, MultilingualText, ProductFormData } from '@/lib/types/bibb
 import { ArrowLeft, Save, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const stepperSteps = [
   { id: 'book', title: 'Book Details' },
@@ -181,17 +182,15 @@ export default function EditProductPage() {
                       <label className="text-sm font-medium text-gray-700">
                         Product Type <span className="text-red-500">*</span>
                       </label>
-                      <select
-                        value={productForm.type}
-                        onChange={(e) => setProductForm({ ...productForm, type: e.target.value as ProductType })}
-                        className="w-full h-[40px] px-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-transparent transition-colors"
-                      >
-                        <option value="book">📖 Book</option>
-                        <option value="story">📚 Story</option>
-                        <option value="chapter">📄 Chapter</option>
-                        <option value="verse">📝 Verse</option>
-                        <option value="hymns">🎵 Hymns</option>
-                      </select>
+                      <Select value={productForm.type} onValueChange={(e: any) => setProductForm({ ...productForm, type: e.target.value as ProductType })}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Filter by type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="book">📖  Book</SelectItem>
+                          <SelectItem value="song">🎵 Hymns</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     <div className="space-y-2">
@@ -200,7 +199,7 @@ export default function EditProductPage() {
                       </label>
                       <CKEditorComponent
                         value={productForm.title}
-                        onChange={(val: MultilingualText) => setProductForm({...productForm, title: val})}
+                        onChange={(val: MultilingualText) => setProductForm({ ...productForm, title: val })}
                         placeholder="Enter product title"
                       />
                     </div>
@@ -211,7 +210,7 @@ export default function EditProductPage() {
                       </label>
                       <CKEditorComponent
                         value={productForm.description}
-                        onChange={(val: MultilingualText) => setProductForm({...productForm, description: val})}
+                        onChange={(val: MultilingualText) => setProductForm({ ...productForm, description: val })}
                         placeholder="Enter product description"
                       />
                     </div>
@@ -234,7 +233,7 @@ export default function EditProductPage() {
                       </label>
                       <CKEditorComponent
                         value={productForm.title}
-                        onChange={(val) => setProductForm({...productForm, title: val})}
+                        onChange={(val) => setProductForm({ ...productForm, title: val })}
                         placeholder="Enter content title"
                       />
                     </div>
@@ -245,7 +244,7 @@ export default function EditProductPage() {
                       </label>
                       <CKEditorComponent
                         value={productForm.description}
-                        onChange={(val) => setProductForm({...productForm, description: val})}
+                        onChange={(val) => setProductForm({ ...productForm, description: val })}
                         placeholder="Enter content description"
                       />
                     </div>
@@ -267,7 +266,7 @@ export default function EditProductPage() {
                       </label>
                       <CKEditorComponent
                         value={productForm.title}
-                        onChange={(val: MultilingualText) => setProductForm({...productForm, title: val})}
+                        onChange={(val: MultilingualText) => setProductForm({ ...productForm, title: val })}
                         placeholder="Enter chapter title"
                       />
                     </div>
@@ -278,7 +277,7 @@ export default function EditProductPage() {
                       </label>
                       <CKEditorComponent
                         value={productForm.description}
-                        onChange={(val: MultilingualText) => setProductForm({...productForm, description: val})}
+                        onChange={(val: MultilingualText) => setProductForm({ ...productForm, description: val })}
                         placeholder="Enter chapter content"
                       />
                     </div>
@@ -300,7 +299,7 @@ export default function EditProductPage() {
                       </label>
                       <CKEditorComponent
                         value={productForm.title}
-                        onChange={(val: MultilingualText) => setProductForm({...productForm, title: val})}
+                        onChange={(val: MultilingualText) => setProductForm({ ...productForm, title: val })}
                         placeholder="Enter verse title"
                       />
                     </div>
@@ -311,7 +310,7 @@ export default function EditProductPage() {
                       </label>
                       <CKEditorComponent
                         value={productForm.description}
-                        onChange={(val: MultilingualText) => setProductForm({...productForm, description: val})}
+                        onChange={(val: MultilingualText) => setProductForm({ ...productForm, description: val })}
                         placeholder="Enter verse text"
                       />
                     </div>

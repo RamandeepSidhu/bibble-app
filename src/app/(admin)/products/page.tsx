@@ -119,11 +119,6 @@ export default function ProductsPage() {
     switch (type) {
       case 'book':
         return '📖';
-      case 'story':
-        return '📚';
-      case 'chapter':
-        return '📄';
-      case 'verse':
         return '📝';
       case 'hymns':
         return '🎵';
@@ -174,10 +169,7 @@ export default function ProductsPage() {
             <SelectContent>
               <SelectItem value="all">All Types</SelectItem>
               <SelectItem value="book">Book</SelectItem>
-              <SelectItem value="story">Story</SelectItem>
-              <SelectItem value="chapter">Chapter</SelectItem>
-              <SelectItem value="verse">Verse</SelectItem>
-              <SelectItem value="hymns">Hymns</SelectItem>
+              <SelectItem value="song">Hymns</SelectItem>
             </SelectContent>
           </Select>
         </div>

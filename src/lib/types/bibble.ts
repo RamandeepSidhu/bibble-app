@@ -150,7 +150,7 @@ export type LanguageCode = typeof LANGUAGES[number]['code'];
 // Product 2 type options
 export const PRODUCT_TYPES = [
   { value: 'book', label: 'Book', icon: '📖' },
-  { value: 'hymns', label: 'Hymns', icon: '🎵' }
+  { value: 'song', label: 'Hymns', icon: '🎵' }
 ] as const;
 
 // Content type options removed - admin can add all features
