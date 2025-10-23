@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { ProductFormData, PRODUCT_TYPES } from "@/lib/types/bibble";
+import { ProductFormData, PRODUCT_TYPES, MultilingualText } from "@/lib/types/bibble";
 import { Button } from "@/components/ui/button";
 import { Stepper } from "@/components/ui/stepper";
 import { MultilingualRichEditor } from "@/components/ui/multilingual-rich-editor";
@@ -28,6 +28,11 @@ const isRichTextEmpty = (htmlContent: string): boolean => {
 
   return cleaned.length === 0;
 };
+
+const isMultilingualFieldComplete = (field: MultilingualText): boolean => {
+  return Object.values(field).some(val => !isRichTextEmpty(val));
+};
+
 export default function AddBookPage() {
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [validationError, setValidationError] = useState<string>("");
@@ -37,17 +42,14 @@ export default function AddBookPage() {
     title: { en: "", sw: "", fr: "", rn: "" },
     description: { en: "", sw: "", fr: "", rn: "" },
   });
-const isMultilingualFieldComplete = (field: Record<any, any>): boolean => {
-  return Object.values(field).every(val => val.trim() !== "");
-  };
 
   const handleNextStep = () => {
     setValidationError("");
 
     if (
       !bookData.type ||
-      isRichTextEmpty(bookData.title.en) ||
-      isRichTextEmpty(bookData.description.en)
+      !isMultilingualFieldComplete(bookData.title) ||
+      !isMultilingualFieldComplete(bookData.description)
     ) {
       setValidationError(
         "Please fill in all required fields: Book Type, and Title & Description in all languages (en, sw, fr, rn)."
@@ -84,7 +86,7 @@ const isMultilingualFieldComplete = (field: Record<any, any>): boolean => {
 
     console.log("💾 SAVE PAYLOAD", payload);
 
-    setSuccessMessage("Book saved successfully!");
+    setSuccessMessage("Product saved successfully!");
     setTimeout(() => setSuccessMessage(""), 3000);
   };
 
@@ -99,12 +101,12 @@ const isMultilingualFieldComplete = (field: Record<any, any>): boolean => {
       {/* Header */}
       <div className="border-b border-gray-100 bg-white">
         <div className="max-w-6xl mx-auto px-5 py-6 flex items-center gap-4">
-          <Link href="/books" className="text-gray-600 hover:text-gray-900">
+          <Link href="/products" className="text-gray-600 hover:text-gray-900">
             <ArrowLeft className="h-6 w-6" />
           </Link>
           <div className="flex-1">
-            <h1 className="text-3xl font-bold text-gray-900">Add Bible Book</h1>
-            <p className="text-gray-500">Create a new book with multilingual content</p>
+            <h1 className="text-3xl font-bold text-gray-900">Add Product</h1>
+            <p className="text-gray-500">Create a new product with multilingual content</p>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
@@ -122,13 +124,13 @@ const isMultilingualFieldComplete = (field: Record<any, any>): boolean => {
             {/* BOOK DETAILS STEP */}
             {currentStep === 0 && (
               <>
-                <h2 className="text-2xl font-semibold text-gray-900 mb-2">Book Details</h2>
-                <p className="text-gray-600 mb-8">Add basic information for your bible book.</p>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-2">Product Details</h2>
+                <p className="text-gray-600 mb-8">Add basic information for your product.</p>
 
                 {/* Book Type Selection */}
                 <div className="space-y-3">
                   <label className="text-sm font-medium text-gray-700">
-                    Book Type <span className="text-red-500">*</span>
+                    Product Type <span className="text-red-500">*</span>
                   </label>
                   <Select
                     value={bookData.type}
@@ -138,7 +140,7 @@ const isMultilingualFieldComplete = (field: Record<any, any>): boolean => {
                     }}
                   >
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select book type" />
+                      <SelectValue placeholder="Select product type" />
                     </SelectTrigger>
                     <SelectContent>
                       {PRODUCT_TYPES.map((type) => (
@@ -175,7 +177,7 @@ const isMultilingualFieldComplete = (field: Record<any, any>): boolean => {
                         setBookData({ ...bookData, title: val });
                         setValidationError(""); // Clear validation error
                       }}
-                      placeholder="Enter book title"
+                      placeholder="Enter product title"
                     />
                   </div>
 
@@ -200,7 +202,7 @@ const isMultilingualFieldComplete = (field: Record<any, any>): boolean => {
                         setBookData({ ...bookData, description: val });
                         setValidationError(""); // Clear validation error
                       }}
-                      placeholder="Enter book description"
+                      placeholder="Enter product description"
                     />
                   </div>
                 </div>
@@ -246,8 +248,8 @@ const isMultilingualFieldComplete = (field: Record<any, any>): boolean => {
             {(() => {
               // Check if first step (form) is complete
               const isFirstStepComplete = bookData.type &&
-                bookData.title.en.trim() &&
-                bookData.description.en.trim();
+                isMultilingualFieldComplete(bookData.title) &&
+                isMultilingualFieldComplete(bookData.description);
 
               if (isFirstStepComplete) {
                 return (
@@ -256,7 +258,7 @@ const isMultilingualFieldComplete = (field: Record<any, any>): boolean => {
                     className="px-8 py-3 bg-theme-primary hover:bg-theme-primary text-white font-semibold rounded-lg shadow-md transition-colors"
                   >
                     <Save className="h-5 w-5 mr-2" />
-                    Save Book
+                    Save Product
                   </Button>
                 );
               } else {
