@@ -46,7 +46,7 @@ export default function AddBookPage() {
   {/* Header */}
   <div className="border-b border-gray-100 bg-white">
     <div className="max-w-6xl mx-auto px-5 py-6 flex items-center gap-4">
-      <Link href="/admin/books" className="text-gray-600 hover:text-gray-900">
+      <Link href="/books" className="text-gray-600 hover:text-gray-900">
         <ArrowLeft className="h-6 w-6" />
       </Link>
       <div className="flex-1">

@@ -1,12 +1,15 @@
 'use client';
 
+import { NextPage } from 'next';
 import { SessionProvider } from 'next-auth/react';
 import React from 'react';
 
-interface AuthProviderProps {
+interface Props {
   children: React.ReactNode;
+  session: any
 }
+const AuthProvider: NextPage<Props> = ({ children,session }) => {
+  return <SessionProvider session={session}>{children}</SessionProvider>;
+};
 
-export function AuthProvider({ children }: AuthProviderProps) {
-  return <SessionProvider>{children}</SessionProvider>;
-}
+export default AuthProvider;

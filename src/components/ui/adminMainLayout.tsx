@@ -1,37 +1,36 @@
-'use client';
+"use client";
 
-import { useSession, signOut } from 'next-auth/react';
-import { Button } from '@/components/ui/button';
-import { AdminSidebar } from '@/components/ui/adminSideBar';
-import { Menu, LogOut } from 'lucide-react';
-import { useState } from 'react';
+import { useSession, signOut } from "next-auth/react";
+import { Button } from "@/components/ui/button";
+import { AdminSidebar } from "@/components/ui/adminSideBar";
+import { Menu, LogOut } from "lucide-react";
+import React, { memo, useState } from "react";
 
-export default function AdminLayout({
+const AdminMainLayoutComponent = ({
   children,
 }: {
   children: React.ReactNode;
-}) {
+}) => {
   const { data: session } = useSession();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLogout = async () => {
-    await signOut({ callbackUrl: '/login' });
+    await signOut({ callbackUrl: "/auth/login" });
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Mobile sidebar */}
-      <AdminSidebar 
-        sidebarOpen={sidebarOpen} 
-        setSidebarOpen={setSidebarOpen} 
-        isMobile={true} 
+    <React.Fragment>
+      <AdminSidebar
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+        isMobile={true}
       />
 
       {/* Desktop sidebar */}
-      <AdminSidebar 
-        sidebarOpen={sidebarOpen} 
-        setSidebarOpen={setSidebarOpen} 
-        isMobile={false} 
+      <AdminSidebar
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+        isMobile={false}
       />
 
       {/* Main content */}
@@ -64,11 +63,11 @@ export default function AdminLayout({
 
         {/* Page content */}
         <main className="py-6">
-          <div className="mx-auto max-w-7xl px-3 lg:px-2">
-            {children}
-          </div>
+          <div className="mx-auto max-w-7xl px-3 lg:px-2">{children}</div>
         </main>
       </div>
-    </div>
+    </React.Fragment>
   );
-}
+};
+
+export const AdminMainLayout = memo(AdminMainLayoutComponent);

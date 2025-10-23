@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { AuthProvider } from "@/components/auth/AuthContext";
 import { ReactQueryProviders } from "./ReactQueryProviders";
 import { Toaster } from "@/components/ui/sonner";
-
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "./api/auth/[...nextauth]/route";
+import AuthProvider from "./AuthProvider";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -20,17 +21,18 @@ export const metadata: Metadata = {
   description: "Bibble App Admin Dashboard",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session: any = await getServerSession(authOptions);
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AuthProvider>
+        <AuthProvider session={session}>
           <ReactQueryProviders>
             {children}
             <Toaster richColors position="top-right" />

@@ -124,7 +124,7 @@ export default function EditProductPage() {
       <div className="bg-white border-b border-gray-100">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center gap-4">
-            <Link href="/admin/products" className="flex items-center text-gray-600 hover:text-gray-900 transition-colors">
+            <Link href="/products" className="flex items-center text-gray-600 hover:text-gray-900 transition-colors">
               <ArrowLeft className="h-6 w-6" />
             </Link>
             <div className="flex-1">

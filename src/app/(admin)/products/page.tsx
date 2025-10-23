@@ -140,7 +140,7 @@ export default function ProductsPage() {
             Manage your products and content
           </p>
         </div>
-        <Link href="/admin/products/add">
+        <Link href="/products/add">
           <Button className="bg-theme-primary text-theme-secondary hover:bg-theme-primary-dark">
             <Plus className="h-4 w-4 mr-2" />
             Add Product
@@ -256,7 +256,7 @@ export default function ProductsPage() {
                   </TableCell>
                   <TableCell className="text-right py-4 px-6">
                     <div className="flex justify-end gap-2">
-                      <Link href={`/admin/products/edit/${product.productId}`}>
+                      <Link href={`/products/edit/${product.productId}`}>
                         <Button variant="outline" size="sm" className="!min-w-[80px]">
                           <Edit className="h-4 w-4 mr-1" />
                           Edit

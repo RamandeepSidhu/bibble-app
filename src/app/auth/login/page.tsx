@@ -1,7 +1,7 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,12 +11,12 @@ import { loginValidationSchema } from "@/lib/validations";
 import { Card } from "@/components/ui/card";
 import { showToast } from "@/lib/toast";
 import { Eye, EyeOff } from "lucide-react";
-const url = `${process.env.NEXT_PUBLIC_LIVE_URL}`;
 
 const Login = () => {
-  const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const router = useRouter();
+  const { status } = useSession();
 
   const formik = useFormik({
     initialValues: {
@@ -28,6 +28,15 @@ const Login = () => {
       handleLogin(values);
     },
   });
+
+  // Show loading while checking session
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
     const handleLogin = async (values: { email: string; password: string }) => {
     if (isLoading) {
@@ -45,9 +54,23 @@ const Login = () => {
       if (response?.ok) {
         showToast.success("Success", "User logged in successfully.");
         window.location.reload();
+      } else {
+        // Handle NextAuth errors
+        if (response?.error) {
+          let errorMsg = "Login failed";
+          
+          if (response.error === "CredentialsSignin") {
+            errorMsg = "Invalid email or password.";
+          } else {
+            errorMsg = response.error;
+          }
+          
+          showToast.error("Error", errorMsg);
+        } else {
+          showToast.error("Error", "Login failed");
+        }
       }
     } catch (error: any) {
-      console.log(error);
       showToast.error("Error", "Login failed");
       setIsLoading(false);
     } finally {
@@ -98,7 +121,7 @@ const Login = () => {
                   <div className="flex items-center">
                     <Label htmlFor="password">Password</Label>
                     <Link
-                      href="/forgot-password"
+                      href="/auth/forgot-password"
                       className="ml-auto text-sm underline-offset-4 hover:underline"
                     >
                       Forgot your password?
@@ -124,11 +147,6 @@ const Login = () => {
                     </button>
                   </div>
                 </div>
-                {errorMessage && (
-                  <p className="text-destructive text-sm font-sm text-center">
-                    {errorMessage}
-                  </p>
-                )}
 
                 <Button
                   type="submit"

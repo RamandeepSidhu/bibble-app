@@ -20,14 +20,10 @@ interface AdminSidebarProps {
 export function AdminSidebar({ sidebarOpen, setSidebarOpen, isMobile = false }: AdminSidebarProps) {
   const { data: session } = useSession();
 
-  const handleLogout = async () => {
-    await signOut({ callbackUrl: '/login' });
-  };
-
   const navigation = [
-    { name: 'Dashboard', href: '/admin/dashboard', icon: Home },
-    { name: 'Users', href: '/admin/users', icon: Users },
-    { name: 'Products', href: '/admin/products', icon: Package },
+    { name: 'Dashboard', href: '/', icon: Home },
+    { name: 'Users', href: '/users', icon: Users },
+    { name: 'Products', href: '/products', icon: Package },
   ];
 
   const sidebarContent = (

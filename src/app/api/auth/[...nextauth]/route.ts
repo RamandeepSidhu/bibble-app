@@ -3,7 +3,6 @@ import CredentialProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { cookies } from "next/headers";
 import { AUTH_TOKEN_KEY } from "@/api/token";
-import ClientInstance from "@/lib/client";
 
 export const authOptions: NextAuthOptions = {
   session: {
@@ -14,57 +13,62 @@ export const authOptions: NextAuthOptions = {
     maxAge: 365 * 24 * 60 * 60,
   },
   secret: process.env.NEXT_AUTH_SECRET,
-  pages: {
-    signIn: "/login", // your portal login page
-    error: "/login",  // redirect here on any auth error
-  },
   providers: [
     CredentialProvider({
       name: "Credentials",
       credentials: { email: { label: "Email", type: "text" }, password: { label: "Password", type: "password" } },
-      authorize: async (credentials) => {
-        const { email, password } = credentials as any;
-        let messageText = 'Login failed';
+       authorize: async (credentials) => {
+         const { email, password } = credentials as any;
 
-        try {
-          const res: any = await ClientInstance.Auth.Login({ email, password });
-          if (res.success && res.token) {
-            const user = res.data;
-            if(user?.isEmailVarify === false){
-              messageText = 'EmailNotVerified';
-              throw new Error("EmailNotVerified");
-            }
-            const cookieStore = await cookies();
-            cookieStore.set(AUTH_TOKEN_KEY, res.token);
-            cookieStore.set("email", user.email);
+         try {
 
-            return {
-              id: user._id,
-              name: user.name || "",
-              email: user.email,
-              role_id: user.role,
-              username: user.username,
-              isActive: !!user.isActive,
-              status: user.status,
-              createdAt: user.createdAt,
-              image_link: user.profile_image || "/images/user.png",
-              token: res.token,
-              subscription: user?.subscription || {},
-              country_code: user?.country_code || "",
-              phone_number: user?.phone_number || "",
-              isEmailVarify: user?.isEmailVarify,
-            };
-          }
+           const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
+             method: "POST",
+             headers: {
+               "Content-Type": "application/json",
+             },
+             body: JSON.stringify({
+               email: email,
+               password: password,
+             }),
+           });
 
-          throw new Error(res.message || "Invalid credentials.");
-        } catch (error: any) {
-          if(error?.response?.data?.message==='Please varify your email!'){
-            messageText = 'EmailNotVerified';
-            throw new Error(messageText);
-          }
-          throw new Error(error?.response?.data?.message || messageText);
-        }
-      },
+
+           if (!response.ok) {
+             const errorText = await response.text();
+             throw new Error(`Network error: ${response.status} - ${errorText}`);
+           }
+
+           const result = await response.json();
+
+           if (!result.success) {
+             throw new Error(result.message || "Login failed");
+           }
+
+           const user = result.data;
+
+           // Set cookies for token storage
+           const cookieStore = await cookies();
+           cookieStore.set(AUTH_TOKEN_KEY, result.token);
+           cookieStore.set("email", user.email);
+
+           return {
+             id: user._id || user.id,
+             name: user.name || "",
+             email: user.email,
+             role: user.role,
+             username: user.username || "",
+             isActive: !!user.isActive,
+             status: user.status,
+             createdAt: user.createdAt,
+             token: result.token,
+             country_code: user?.country_code || "",
+           };
+         } catch (error: any) {
+           console.error("Authentication error:", error);
+           throw new Error(error.message || "Login failed");
+         }
+       },
     }),
 
     GoogleProvider({
@@ -93,7 +97,7 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id as string;
         session.user.name = token.name as string;
         session.user.email = token.email as string;
-        session.user.role_id = token.role_id as string;
+        session.user.role = token.role as string;
         session.user.username = token.username as string;
         session.user.isActive = token.isActive as boolean;
         session.user.status = token.status as string;
@@ -102,11 +106,6 @@ export const authOptions: NextAuthOptions = {
         session.user.phone_number = token.phone_number as string;
         session.user.country_code = token.country_code as string;
         session.user.token = token.token as string;
-        session.user.subscription = token.subscription || {} as any;
-        session.user.isEmailVarify = token.isEmailVarify as boolean;
-        if (token.googleLoginError) {
-          session.user.googleLoginError = token.googleLoginError;
-        }
       }
       return session;
     },

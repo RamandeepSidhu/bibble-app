@@ -141,7 +141,7 @@ export default function AdminDashboard() {
           </div>
           <div className="p-6">
             <div className="grid grid-cols-1 gap-4">
-              <Link href="/admin/users">
+              <Link href="/users">
                 <Button variant="outline" className="w-full h-16 flex items-center justify-start">
                   <Users className="h-5 w-5 mr-3" />
                   <div className="text-left">
@@ -150,7 +150,7 @@ export default function AdminDashboard() {
                   </div>
                 </Button>
               </Link>
-              <Link href="/admin/products">
+              <Link href="/products">
                 <Button variant="outline" className="w-full h-16 flex items-center justify-start">
                   <Package className="h-5 w-5 mr-3" />
                   <div className="text-left">
