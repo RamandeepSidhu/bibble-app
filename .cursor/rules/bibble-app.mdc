@@ -1,0 +1,87 @@
+---
+alwaysApply: true
+---
+{
+  "rules": {
+    "context_initialization": {
+      "description": "Starting point for each interaction",
+      "steps": [
+        "ALWAYS read 'PROJECT_OVERVIEW.md'",
+        "ALWAYS read '.cursor/tasks.mdc' to check task status",
+        "ALWAYS read relevant .mdc documentation files"
+      ]
+    },
+    "task_management": {
+      "description": "Rules for task tracking in tasks.mdc",
+      "guidelines": [
+        "When a code change completes a task, automatically update tasks.mdc without needing explicit instruction",
+        "Keep tasks organized under the correct headings: Pending, In Progress, Completed",
+        "Never delete tasks — always move them to Completed instead"
+      ]
+    },
+    "operational_protocol": {
+      "description": "How to approach tasks",
+      "before_action": [
+        "Create a MECE (Mutually Exclusive, Collectively Exhaustive) task breakdown"
+      ],
+      "code_changes": [
+        "Read relevant code sections before editing",
+        "Preserve existing functionality",
+        "Maintain type safety",
+        "Follow Angular style guide for naming and structure",
+        "Enforce kebab-case for all file and folder names under src/app/",
+        "All modules: .module.ts, components: .component.ts, services: .service.ts",
+        "Prohibit use of 'any' type except in legacy code (with TODO comment)",
+        "Prefer interfaces for data models in src/app/shared/interfaces/",
+        "Always use ChangeDetectionStrategy.OnPush for components",
+        "Prefer Reactive Forms over Template-driven Forms",
+        "Use SCSS for styling (no inline styles, no CSS)",
+        "Use pipeable RxJS operators and avoid nested subscriptions"
+      ]
+    },
+    "safety_requirements": [
+      "NEVER break type safety",
+      "ALWAYS maintain proper error handling",
+      "ALWAYS document new code (with JSDoc/TSDoc)",
+      "All components, services, and pipes must have associated unit tests in the same directory",
+      "Unit test files must end with .spec.ts",
+      "Do not remove existing functionality unless explicitly required",
+      "Do not add new dependencies, third-party packages, or unnecessary code unless strictly required",
+      "All API calls must go through HttpClient with interceptors",
+      "Never log sensitive data (passwords, tokens, keys)"
+    ],
+    "performance_practices": [
+      "Use OnPush change detection everywhere unless required otherwise",
+      "Always lazy load feature modules",
+      "Use trackBy in ngFor loops"
+    ],
+    "documentation_standards": [
+      "Each service, component, and interface must include JSDoc/TSDoc comments"
+    ],
+    "refactoring_policy": [
+      "Only refactor when it improves readability, performance, or maintainability"
+    ],
+    "priorities": [
+      {
+        "source": "PROJECT_OVERVIEW.md",
+        "weight": 1.0
+      },
+      {
+        "source": "src/app/shared/",
+        "weight": 0.9
+      }
+    ],
+    "modes": {
+      "base": {
+        "description": "For routine tasks"
+      },
+      "enhanced": {
+        "description": "For complex problems"
+      }
+    },
+    "project_directives": {
+      "name": "bibble admin",
+      "ai_first": true
+    }
+  }
+}
