@@ -7,15 +7,18 @@ export interface MultilingualText {
   rn: string;
 }
 
-export type ProductType = 'book' | 'story' | 'chapter' | 'verse';
+export type ProductType = 'book' | 'story' | 'chapter' | 'verse' | 'hymns';
 
 export interface Product {
   productId: string | null;
   type: ProductType;
+  categoryId?: string;
   tags: string[];
   title: MultilingualText;
   description: MultilingualText;
   producer: string;
+  profile_image?: string;
+  images?: string[];
   createdAt?: string;
   updatedAt?: string;
   status?: 'active' | 'inactive' | 'draft';
@@ -144,12 +147,10 @@ export const LANGUAGES = [
 
 export type LanguageCode = typeof LANGUAGES[number]['code'];
 
-// Product type options
+// Product 2 type options
 export const PRODUCT_TYPES = [
   { value: 'book', label: 'Book', icon: '📖' },
-  { value: 'story', label: 'Story', icon: '📚' },
-  { value: 'chapter', label: 'Chapter', icon: '📄' },
-  { value: 'verse', label: 'Verse', icon: '📝' }
+  { value: 'hymns', label: 'Hymns', icon: '🎵' }
 ] as const;
 
 // Content type options removed - admin can add all features

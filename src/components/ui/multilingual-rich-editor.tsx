@@ -27,6 +27,20 @@ export function MultilingualRichEditor({
   const [activeLanguage, setActiveLanguage] = useState<'en' | 'sw' | 'fr' | 'rn'>('en');
   const [isPreviewMode, setIsPreviewMode] = useState(false);
 
+  // Helper function to check if rich text content is actually empty
+  const isRichTextEmpty = (htmlContent: string): boolean => {
+    if (!htmlContent) return true;
+
+    // Remove HTML tags and decode HTML entities
+    const textContent = htmlContent
+      .replace(/<[^>]*>/g, '') // Remove HTML tags
+      .replace(/&nbsp;/g, ' ') // Replace non-breaking spaces
+      .replace(/&[a-zA-Z0-9#]+;/g, ' ') // Replace HTML entities
+      .trim();
+
+    return textContent.length === 0;
+  };
+
   const handleLanguageChange = (lang: 'en' | 'sw' | 'fr' | 'rn', newValue: string) => {
     onChange({
       ...value,
@@ -37,8 +51,7 @@ export function MultilingualRichEditor({
   const renderRichEditor = (lang: 'en' | 'sw' | 'fr' | 'rn', langLabel: string) => {
     const langValue = value[lang] || '';
     const isActive = activeLanguage === lang;
-    const hasContent = !!langValue;
-
+    const hasContent = !isRichTextEmpty(langValue);
     return (
       <div key={lang} className={`space-y-2 ${!isActive ? 'hidden' : ''}`}>
         <div className="flex items-center justify-between">
@@ -119,7 +132,7 @@ export function MultilingualRichEditor({
           >
             <span className="mr-1">{lang.flag}</span>
             {lang.name}
-            {value[lang.code] && <span className="ml-1 text-green-500">✓</span>}
+            {!isRichTextEmpty(value[lang.code] || '') && <span className="ml-1 text-green-500">✓</span>}
           </button>
         ))}
       </div>

@@ -47,6 +47,7 @@ export default function ProductsPage() {
         fr: 'Le premier livre de la Bible, décrivant la création.', 
         rn: 'Igitabu ca mbere c\'uburimwo bw\'isi.' 
       },
+      producer: 'Bibble Admin',
       profile_image: 'https://cdn.mysite.com/images/genesis_cover.png',
       images: [
         'https://cdn.mysite.com/images/genesis1.png',
@@ -72,6 +73,7 @@ export default function ProductsPage() {
         fr: 'L\'histoire de comment Dieu a créé le monde en sept jours.', 
         rn: 'Inkuru ivuga ukuntu Imana yaremye isi mu minsi irindwi.' 
       },
+      producer: 'Bibble Admin',
       profile_image: 'https://cdn.mysite.com/images/creation_cover.png',
       images: [],
       createdAt: '2024-01-16T14:20:00Z',
@@ -123,6 +125,8 @@ export default function ProductsPage() {
         return '📄';
       case 'verse':
         return '📝';
+      case 'hymns':
+        return '🎵';
       default:
         return '📄';
     }
@@ -173,6 +177,7 @@ export default function ProductsPage() {
               <SelectItem value="story">Story</SelectItem>
               <SelectItem value="chapter">Chapter</SelectItem>
               <SelectItem value="verse">Verse</SelectItem>
+              <SelectItem value="hymns">Hymns</SelectItem>
             </SelectContent>
           </Select>
         </div>
