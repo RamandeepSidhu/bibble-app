@@ -36,69 +36,61 @@ export default function AddBookPage() {
     title: { en: "", sw: "", fr: "", rn: "" },
     description: { en: "", sw: "", fr: "", rn: "" },
   });
+const isMultilingualFieldComplete = (field: Record<any, any>): boolean => {
+  return Object.values(field).every(val => val.trim() !== "");
+};
+const handleNextStep = () => {
+  setValidationError("");
 
-  const handleNextStep = () => {
-    // Clear previous validation error
-    setValidationError("");
+  if (
+    !bookData.type ||
+    !isMultilingualFieldComplete(bookData.title) ||
+    !isMultilingualFieldComplete(bookData.description)
+  ) {
+    setValidationError(
+      "Please fill in all required fields: Book Type, and Title & Description in all languages (en, sw, fr, rn)."
+    );
+    return;
+  }
 
-    const isFormComplete = bookData.type &&
-      bookData.title.en.trim() &&
-      bookData.description.en.trim();
+  if (currentStep < steps.length - 1) {
+    setCurrentStep((s) => s + 1);
+  } else {
+    handleSave();
+  }
+}
 
-    if (!isFormComplete) {
-      setValidationError("Please fill in all required fields (Book Type, Title, and Description) before proceeding to the next step.");
-      return;
-    }
+const handleSave = () => {
+  setValidationError("");
 
-    const payload = {
-      step: currentStep + 1,
-      stepId: steps[currentStep].id,
-      stepTitle: steps[currentStep].title,
-      data: bookData,
-      timestamp: new Date().toISOString()
-    };
+  if (
+    !bookData.type ||
+    !isMultilingualFieldComplete(bookData.title) ||
+    !isMultilingualFieldComplete(bookData.description)
+  ) {
+    setValidationError(
+      "Please fill in all required fields: Book Type, and Title & Description in all languages (en, sw, fr, rn)."
+    );
+    return;
+  }
 
-    if (currentStep < steps.length - 1) {
-      setCurrentStep((s) => s + 1);
-    } else {
-      handleSave();
-    }
+  const payload = {
+    type: bookData.type,
+    title: bookData.title,
+    description: bookData.description,
   };
+
+  console.log("💾 SAVE PAYLOAD", payload);
+
+  setSuccessMessage("Book saved successfully!");
+  setTimeout(() => setSuccessMessage(""), 3000);
+};
+
 
   const handlePrevStep = () => {
     if (currentStep > 0) setCurrentStep((s) => s - 1);
   };
 
-  const handleSave = () => {
-    setValidationError("");
-
-    const isFormComplete = bookData.type &&
-      bookData.title.en.trim() &&
-      bookData.description.en.trim();
-
-    if (!isFormComplete) {
-      setValidationError("Please fill in all required fields (Book Type, Title, and Description) before saving.");
-      return;
-    }
-
-    const payload = {
-      type: bookData.type,
-      title: bookData.title, // HTML from CKEditor
-      description: bookData.description, // HTML from CKEditor
-    };
-
-    console.log("💾 === SAVE SUBMISSION PAYLOAD ===");
-    console.log("🔄 Current Step:", currentStep + 1, "of", steps.length);
-    console.log("📋 Step ID:", steps[currentStep].id);
-    console.log("📝 Step Title:", steps[currentStep].title);
-    console.log("📦 Complete Data:", JSON.stringify(bookData, null, 2));
-    console.log("⏰ Timestamp:", new Date().toISOString());
-    console.log("📤 Full Payload:", JSON.stringify(payload, null, 2));
-    console.log("=====================================");
-
-    setSuccessMessage("Book saved successfully!");
-    setTimeout(() => setSuccessMessage(""), 3000); // Clear success message after 3 seconds
-  };
 
   return (
     <div className="bg-white min-h-screen">
