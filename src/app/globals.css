@@ -86,3 +86,16 @@ input {
       display: none;
   }
 }
+.ck-editor__editable{
+  min-height: 200px !important;
+  padding-left: 24px !important;
+}
+.ck.ck-button.ck-on, a.ck.ck-button.ck-on {
+    color: var(--primary)  !important;
+}
+.ck.ck-button.ck-on, a.ck.ck-button.ck-on {
+    background: var(--primary-foreground) !important;
+}
+.ck.ck-editor__editable.ck-focused:not(.ck-editor__nested-editable) {
+  border-color:var(--primary) !important;
+}

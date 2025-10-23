@@ -7,6 +7,7 @@ import { MultilingualRichEditor } from "@/components/ui/multilingual-rich-editor
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Save } from 'lucide-react';
 import Link from "next/link";
+import CKEditorComponent from "@/components/CKEditorComponent";
 
 const steps = [
   { id: "book", title: "Book" },
@@ -14,19 +15,7 @@ const steps = [
   { id: 'media', title: 'Story' },
   { id: 'review', title: 'Verse' }
 ];
-const isRichTextEmpty = (htmlContent: string): boolean => {
-  if (!htmlContent) return true;
 
-  const cleaned = htmlContent
-    .replace(/<(p|div|br|span)[^>]*>/gi, "") // remove empty tags
-    .replace(/<\/(p|div|span)>/gi, "")
-    .replace(/&nbsp;/gi, " ")
-    .replace(/&[a-zA-Z0-9#]+;/g, " ")
-    .replace(/\s+/g, "")
-    .trim();
-
-  return cleaned.length === 0;
-};
 export default function AddBookPage() {
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [validationError, setValidationError] = useState<string>("");
@@ -36,55 +25,67 @@ export default function AddBookPage() {
     title: { en: "", sw: "", fr: "", rn: "" },
     description: { en: "", sw: "", fr: "", rn: "" },
   });
-const isMultilingualFieldComplete = (field: Record<any, any>): boolean => {
-  return Object.values(field).every(val => val.trim() !== "");
-};
-const handleNextStep = () => {
-  setValidationError("");
 
-  if (
-    !bookData.type ||
-    !isMultilingualFieldComplete(bookData.title) ||
-    !isMultilingualFieldComplete(bookData.description)
-  ) {
-    setValidationError(
-      "Please fill in all required fields: Book Type, and Title & Description in all languages (en, sw, fr, rn)."
-    );
-    return;
-  }
+  // Helper function to check if rich text content is actually empty
+  const isRichTextEmpty = (htmlContent: string): boolean => {
+    if (!htmlContent) return true;
 
-  if (currentStep < steps.length - 1) {
-    setCurrentStep((s) => s + 1);
-  } else {
-    handleSave();
-  }
-}
+    // Remove HTML tags and decode HTML entities
+    const textContent = htmlContent
+      .replace(/<[^>]*>/g, '') // Remove HTML tags
+      .replace(/&nbsp;/g, ' ') // Replace non-breaking spaces
+      .replace(/&[a-zA-Z0-9#]+;/g, ' ') // Replace HTML entities
+      .trim();
 
-const handleSave = () => {
-  setValidationError("");
-
-  if (
-    !bookData.type ||
-    !isMultilingualFieldComplete(bookData.title) ||
-    !isMultilingualFieldComplete(bookData.description)
-  ) {
-    setValidationError(
-      "Please fill in all required fields: Book Type, and Title & Description in all languages (en, sw, fr, rn)."
-    );
-    return;
-  }
-
-  const payload = {
-    type: bookData.type,
-    title: bookData.title,
-    description: bookData.description,
+    return textContent.length === 0;
   };
 
-  console.log("💾 SAVE PAYLOAD", payload);
+  const handleNextStep = () => {
+    setValidationError("");
 
-  setSuccessMessage("Book saved successfully!");
-  setTimeout(() => setSuccessMessage(""), 3000);
-};
+    if (
+      !bookData.type ||
+      isRichTextEmpty(bookData.title.en) ||
+      isRichTextEmpty(bookData.description.en)
+    ) {
+      setValidationError(
+        "Please fill in all required fields: Book Type, and Title & Description in all languages (en, sw, fr, rn)."
+      );
+      return;
+    }
+
+    if (currentStep < steps.length - 1) {
+      setCurrentStep((s) => s + 1);
+    } else {
+      handleSave();
+    }
+  };
+
+  const handleSave = () => {
+    setValidationError("");
+
+    if (
+      !bookData.type ||
+      isRichTextEmpty(bookData.title.en) ||
+      isRichTextEmpty(bookData.description.en)
+    ) {
+      setValidationError(
+        "Please fill in all required fields: Book Type, and Title & Description in all languages (en, sw, fr, rn)."
+      );
+      return;
+    }
+
+    const payload = {
+      type: bookData.type,
+      title: bookData.title,
+      description: bookData.description,
+    };
+
+    console.log("💾 SAVE PAYLOAD", payload);
+
+    setSuccessMessage("Book saved successfully!");
+    setTimeout(() => setSuccessMessage(""), 3000);
+  };
 
 
   const handlePrevStep = () => {
@@ -153,7 +154,7 @@ const handleSave = () => {
 
                 {/* Title and Description */}
                 <div className="space-y-8">
-                  <MultilingualRichEditor
+                  {/* <MultilingualRichEditor
                     label="Book Title"
                     value={bookData.title}
                     onChange={(val) => {
@@ -162,9 +163,23 @@ const handleSave = () => {
                     }}
                     placeholder="Enter book title"
                     required
-                  />
+                  /> */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Book Title <span className="text-red-500">*</span>
+                    </label>
+                    <CKEditorComponent
+                      value={bookData.title}
+                      onChange={(val) => {
+                        setBookData({ ...bookData, title: val });
+                        setValidationError(""); // Clear validation error
+                      }}
+                      placeholder="Enter book title"
+                    />
+                  </div>
 
-                  <MultilingualRichEditor
+
+                  {/* <MultilingualRichEditor
                     label="Book Description"
                     value={bookData.description}
                     onChange={(val) => {
@@ -173,7 +188,20 @@ const handleSave = () => {
                     }}
                     placeholder="Enter book description"
                     required
-                  />
+                  /> */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Book Description<span className="text-red-500">*</span>
+                    </label>
+                    <CKEditorComponent
+                      value={bookData.description}
+                      onChange={(val) => {
+                        setBookData({ ...bookData, description: val });
+                        setValidationError(""); // Clear validation error
+                      }}
+                      placeholder="Enter book description"
+                    />
+                  </div>
                 </div>
               </>
             )}
@@ -217,8 +245,8 @@ const handleSave = () => {
             {(() => {
               // Check if first step (form) is complete
               const isFirstStepComplete = bookData.type &&
-                bookData.title.en.trim() &&
-                bookData.description.en.trim();
+                !isRichTextEmpty(bookData.title.en) &&
+                !isRichTextEmpty(bookData.description.en);
 
               if (isFirstStepComplete) {
                 return (
@@ -236,8 +264,8 @@ const handleSave = () => {
                     onClick={handleNextStep}
                     disabled={!isFirstStepComplete}
                     className={`px-8 py-3 font-semibold rounded-lg shadow-md transition-colors ${isFirstStepComplete
-                        ? "bg-theme-primary hover:bg-theme-primary text-white"
-                        : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      ? "bg-theme-primary hover:bg-theme-primary text-white"
+                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
                       }`}
                   >
                     Next
