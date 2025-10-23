@@ -1,8 +1,7 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { signIn, useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,9 +14,7 @@ import { Eye, EyeOff } from "lucide-react";
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const router = useRouter();
   const { status } = useSession();
-
   const formik = useFormik({
     initialValues: {
       email: "",
@@ -38,7 +35,7 @@ const Login = () => {
     );
   }
 
-    const handleLogin = async (values: { email: string; password: string }) => {
+  const handleLogin = async (values: { email: string; password: string }) => {
     if (isLoading) {
       return;
     }
@@ -58,13 +55,13 @@ const Login = () => {
         // Handle NextAuth errors
         if (response?.error) {
           let errorMsg = "Login failed";
-          
+
           if (response.error === "CredentialsSignin") {
             errorMsg = "Invalid email or password.";
           } else {
             errorMsg = response.error;
           }
-          
+
           showToast.error("Error", errorMsg);
         } else {
           showToast.error("Error", "Login failed");
@@ -81,10 +78,7 @@ const Login = () => {
     <Card className="grid min-h-svh lg:grid-cols-1">
       <div className="flex flex-col gap-4 md:p-10">
         <div className="flex justify-center gap-2 md:justify-start">
-          <Link
-            href="/"
-            className="flex items-center gap-2 font-medium"
-          >
+          <Link href="/" className="flex items-center gap-2 font-medium">
             <div className="flex size-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
               <span className="text-sm font-bold">B</span>
             </div>
@@ -143,7 +137,11 @@ const Login = () => {
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                       onClick={() => setShowPassword(!showPassword)}
                     >
-                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      {showPassword ? (
+                        <EyeOff className="w-5 h-5" />
+                      ) : (
+                        <Eye className="w-5 h-5" />
+                      )}
                     </button>
                   </div>
                 </div>
