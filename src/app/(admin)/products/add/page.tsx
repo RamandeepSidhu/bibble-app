@@ -15,7 +15,19 @@ const steps = [
   { id: 'media', title: 'Story' },
   { id: 'review', title: 'Verse' }
 ];
+const isRichTextEmpty = (htmlContent: string): boolean => {
+  if (!htmlContent) return true;
 
+  const cleaned = htmlContent
+    .replace(/<(p|div|br|span)[^>]*>/gi, "") // remove empty tags
+    .replace(/<\/(p|div|span)>/gi, "")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&[a-zA-Z0-9#]+;/g, " ")
+    .replace(/\s+/g, "")
+    .trim();
+
+  return cleaned.length === 0;
+};
 export default function AddBookPage() {
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [validationError, setValidationError] = useState<string>("");
@@ -25,19 +37,8 @@ export default function AddBookPage() {
     title: { en: "", sw: "", fr: "", rn: "" },
     description: { en: "", sw: "", fr: "", rn: "" },
   });
-
-  // Helper function to check if rich text content is actually empty
-  const isRichTextEmpty = (htmlContent: string): boolean => {
-    if (!htmlContent) return true;
-
-    // Remove HTML tags and decode HTML entities
-    const textContent = htmlContent
-      .replace(/<[^>]*>/g, '') // Remove HTML tags
-      .replace(/&nbsp;/g, ' ') // Replace non-breaking spaces
-      .replace(/&[a-zA-Z0-9#]+;/g, ' ') // Replace HTML entities
-      .trim();
-
-    return textContent.length === 0;
+const isMultilingualFieldComplete = (field: Record<any, any>): boolean => {
+  return Object.values(field).every(val => val.trim() !== "");
   };
 
   const handleNextStep = () => {
@@ -66,8 +67,8 @@ export default function AddBookPage() {
 
     if (
       !bookData.type ||
-      isRichTextEmpty(bookData.title.en) ||
-      isRichTextEmpty(bookData.description.en)
+      !isMultilingualFieldComplete(bookData.title) ||
+      !isMultilingualFieldComplete(bookData.description)
     ) {
       setValidationError(
         "Please fill in all required fields: Book Type, and Title & Description in all languages (en, sw, fr, rn)."
@@ -245,8 +246,8 @@ export default function AddBookPage() {
             {(() => {
               // Check if first step (form) is complete
               const isFirstStepComplete = bookData.type &&
-                !isRichTextEmpty(bookData.title.en) &&
-                !isRichTextEmpty(bookData.description.en);
+                bookData.title.en.trim() &&
+                bookData.description.en.trim();
 
               if (isFirstStepComplete) {
                 return (
