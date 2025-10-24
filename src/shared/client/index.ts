@@ -82,21 +82,33 @@ class Client {
     createStory: (payload: any) => HttpClient.post(ADD_STORY, payload),
     updateStory: (id: string, payload: any) => HttpClient.put(UPDATE_STORY.replace('{id}', id), payload),
     deleteStory: (id: string) => HttpClient.delete(DELETE_STORY.replace('{id}', id)),
-    getStoryById: (id: string) => HttpClient.get(GET_STORY_BY_ID.replace('{id}', id)),
+    getStoryById: (id: string) => {
+      const url = GET_STORY_BY_ID.replace('{id}', id);
+      console.log('Fetching story with URL:', url);
+      return HttpClient.get(url);
+    },
     getStoriesByProduct: (productId: string) => HttpClient.get(GET_STORIES_BY_PRODUCT.replace('{productId}', productId)),
     
     // Chapter methods
     createChapter: (payload: any) => HttpClient.post(ADD_CHAPTER, payload),
     updateChapter: (id: string, payload: any) => HttpClient.put(UPDATE_CHAPTER.replace('{id}', id), payload),
     deleteChapter: (id: string) => HttpClient.delete(DELETE_CHAPTER.replace('{id}', id)),
-    getChapterById: (id: string) => HttpClient.get(GET_CHAPTER_BY_ID.replace('{id}', id)),
+    getChapterById: (id: string) => {
+      const url = GET_CHAPTER_BY_ID.replace('{id}', id);
+      console.log('Fetching chapter with URL:', url);
+      return HttpClient.get(url);
+    },
     getChaptersByStory: (storyId: string) => HttpClient.get(GET_CHAPTERS_BY_STORY.replace('{storyId}', storyId)),
     
     // Verse methods
     createVerse: (payload: any) => HttpClient.post(ADD_VERSE, payload),
     updateVerse: (id: string, payload: any) => HttpClient.put(UPDATE_VERSE.replace('{id}', id), payload),
     deleteVerse: (id: string) => HttpClient.delete(DELETE_VERSE.replace('{id}', id)),
-    getVerseById: (id: string) => HttpClient.get(GET_VERSE_BY_ID.replace('{id}', id)),
+    getVerseById: (id: string) => {
+      const url = GET_VERSE_BY_ID.replace('{id}', id);
+      console.log('Fetching verse with URL:', url);
+      return HttpClient.get(url);
+    },
     getVersesByChapter: (chapterId: string) => HttpClient.get(GET_VERSES_BY_CHAPTER.replace('{chapterId}', chapterId)),
     getUserList: (params?: string) => {
       const queryString = params ? `?${params}` : '';

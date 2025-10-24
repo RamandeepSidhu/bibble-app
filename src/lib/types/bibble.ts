@@ -32,9 +32,9 @@ export interface Product {
 }
 
 export interface Story {
-  _id?: string;
-  storyId?: string;
-  productId: string;
+  _id?: any;
+  storyId?: any;
+  productId: any;
   title: MultilingualText;
   description: MultilingualText;
   order: number;
@@ -44,9 +44,9 @@ export interface Story {
 }
 
 export interface Chapter {
-  _id?: string;
+  _id?: any;
   chapterId?: string;
-  storyId: string;
+  storyId: any;
   title: MultilingualText;
   order: number;
   createdAt?: string;
@@ -55,9 +55,9 @@ export interface Chapter {
 }
 
 export interface Verse {
-  _id?: string;
-  verseId?: string;
-  chapterId: string;
+  _id?: any;
+  verseId?: any;
+  chapterId: any;
   number: number;
   text: MultilingualText;
   createdAt?: string;
