@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { AdminSidebar } from "@/components/ui/adminSideBar";
 import { Menu, LogOut } from "lucide-react";
 import React, { memo, useState } from "react";
+import { Toaster } from "@/components/ui/sonner";
 
 const AdminMainLayoutComponent = ({
   children,
@@ -66,6 +67,9 @@ const AdminMainLayoutComponent = ({
           <div className="mx-auto max-w-7xl px-3 lg:px-2">{children}</div>
         </main>
       </div>
+      
+      {/* Toast notifications */}
+      <Toaster position="top-right" />
     </React.Fragment>
   );
 };

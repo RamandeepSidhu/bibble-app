@@ -7,5 +7,8 @@ export const API_ENDPOINTS = {
   ADD_HYMN:"admin/hymn",
   LANGUAGES:"admin/languages",
   CREATE_LANGUAGES:"admin/languages",
-  GET_LANGUAGE_CODE:"admin/languages/codes"
+  GET_LANGUAGE_CODE:"admin/languages/codes",
+  UPDATE_LANGUAGE:"admin/languages/{id}",
+  DELETE_LANGUAGE:"admin/languages/{id}",
+  GET_LANGUAGE_BY_ID:"admin/languages/{id}"
 };

@@ -7,7 +7,8 @@ import {
   LogOut, 
   X,
   Home,
-  Package
+  Package,
+  Globe
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -24,6 +25,7 @@ export function AdminSidebar({ sidebarOpen, setSidebarOpen, isMobile = false }: 
     { name: 'Dashboard', href: '/', icon: Home },
     { name: 'Users', href: '/users', icon: Users },
     { name: 'Products', href: '/products', icon: Package },
+    { name: 'Languages', href: '/languages', icon: Globe },
     { name: 'Verse', href: '/verse', icon: Package },
   ];
 

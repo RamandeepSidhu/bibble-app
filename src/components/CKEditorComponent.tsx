@@ -232,8 +232,7 @@ const CKEditorComponent: FC<CKEditorComponentProps> = ({ value, onChange, placeh
                                 : 'border-transparent text-theme-primary/60 hover:text-theme-primary hover:border-theme-primary/30'
                         }`}
                     >
-                        <span className="mr-1">{lang.flag}</span>
-                        {lang.name}
+                        {lang.name} ({lang.code})
                         {!isRichTextEmpty(value[lang.code] || '') && <span className="ml-1 text-green-500">✓</span>}
                     </button>
                 ))}

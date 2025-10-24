@@ -55,10 +55,32 @@ A comprehensive multilingual admin panel for the Bibble application with hierarc
 - **API Endpoints**: Configured `/admin/languages` and `/admin/languages/codes` endpoints
 - **Dual API Integration**: Components now fetch both language names and language codes simultaneously
 - **Language Code Merging**: Language codes are merged with language data for enhanced functionality
+- **Language Code Display**: Language codes are now displayed alongside language names in the UI
+- **Removed Language Icons**: Language flags/icons have been removed for cleaner interface
 - **Parallel API Calls**: Both language and language code APIs are called in parallel for better performance
 - **API-Only Approach**: Components rely entirely on API data with no static fallbacks
 - **Loading States**: Added proper loading indicators while fetching languages
 - **Error Handling**: Comprehensive error handling for API failures
+
+#### ✅ **Language Management CRUD System**
+- **Admin Sidebar**: Added new "Languages" tab with Globe icon
+- **Language Management Page**: Complete CRUD interface for language administration
+- **Create Language**: Modal form with name, code, symbol, status, and default fields
+- **Read Languages**: Table display with search, filter, and pagination capabilities
+- **Update Language**: Edit modal with pre-populated form data
+- **Delete Language**: shadcn/ui Dialog confirmation for safe language deletion
+- **API Integration**: Full integration with language management endpoints
+- **Type Safety**: Complete TypeScript interfaces for language management
+- **Status Management**: Active/Inactive status with visual indicators
+- **Default Language**: Default language designation with special badges
+- **Search & Filter**: Real-time search by name, code, symbol with status filtering
+- **Responsive Design**: Mobile-friendly interface with proper table scrolling
+- **Professional UI**: Clean table design with action buttons and status badges
+- **Dialog Confirmation**: Professional delete confirmation using shadcn/ui Dialog component
+- **Simplified Forms**: Removed sortOrder field for cleaner, simpler language management
+- **Toast Notifications**: Success and error messages displayed in top-right corner
+- **User Feedback**: Real-time feedback for all CRUD operations (create, update, delete)
+- **Error Handling**: Comprehensive error handling with user-friendly messages
 
 ---
 

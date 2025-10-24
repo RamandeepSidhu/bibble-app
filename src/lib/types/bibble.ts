@@ -156,6 +156,43 @@ export const LANGUAGES: Language[] = [
 
 export type LanguageCode = Language['code'];
 
+// Language Management Types
+export interface LanguageManagement {
+  _id: string;
+  name: string;
+  code: string;
+  symbol: string;
+  isActive: boolean;
+  isDefault: boolean;
+  sortOrder: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CreateLanguagePayload {
+  name: string;
+  code: string;
+  symbol: string;
+  isActive: boolean;
+  isDefault: boolean;
+  sortOrder: number;
+}
+
+export interface UpdateLanguagePayload {
+  name: string;
+  code: string;
+  symbol: string;
+  isActive: boolean;
+  isDefault: boolean;
+  sortOrder: number;
+}
+
+export interface LanguageApiResponse {
+  success: boolean;
+  data: LanguageManagement | LanguageManagement[] | {};
+  message: string;
+}
+
 // Product 2 type options
 export const PRODUCT_TYPES = [
   { value: 'book', label: 'Book', icon: '📖' },
