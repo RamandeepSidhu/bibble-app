@@ -32,6 +32,7 @@ import {
 import { LanguageManagement, CreateLanguagePayload, UpdateLanguagePayload } from '@/lib/types/bibble';
 import ClientInstance from '@/shared/client';
 import { showToast } from '@/lib/toast';
+import LanguagesTableShimmer from '@/components/ui/languages-table-shimmer';
 
 export default function LanguagesPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -250,9 +251,7 @@ export default function LanguagesPage() {
 
       {/* Languages Table */}
       {isLoading ? (
-        <div className="text-center py-12">
-          <div className="text-gray-500 text-lg">Loading languages...</div>
-        </div>
+        <LanguagesTableShimmer />
       ) : filteredLanguages.length === 0 ? (
         <div className="text-center py-12">
           <div className="text-gray-500 text-lg">No languages found</div>
