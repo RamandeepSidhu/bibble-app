@@ -1,12 +1,13 @@
 "use client";
 import { useState, useEffect } from "react";
-import { ProductFormData, PRODUCT_TYPES, MultilingualText, Language } from "@/lib/types/bibble";
+import { CreateHymnPayload, MultilingualText, Language, ProductManagement } from "@/lib/types/bibble";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Save, Loader2, ArrowLeft } from 'lucide-react';
 import Link from "next/link";
 import ClientInstance from "@/shared/client";
 import CKEditorComponent from "@/components/CKEditorComponent";
+import { showToast } from "@/lib/toast";
 
 const isRichTextEmpty = (htmlContent: string): boolean => {
     if (!htmlContent) return true;
@@ -26,38 +27,40 @@ const isMultilingualFieldComplete = (field: MultilingualText): boolean => {
     return Object.values(field).some(val => !isRichTextEmpty(val));
 };
 
-export default function AddBookPage() {
+export default function AddHymnPage() {
     const [validationError, setValidationError] = useState<string>("");
     const [successMessage, setSuccessMessage] = useState<string>("");
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [isLoadingData, setIsLoadingData] = useState<boolean>(true);
     const [languages, setLanguages] = useState<Language[]>([]);
+    const [products, setProducts] = useState<ProductManagement[]>([]);
 
-    const [bookData, setBookData] = useState<ProductFormData>({
-        type: "",
-        contentType: "free",
-        freePages: 0,
-        title: {},
-        description: {},
+    const [hymnData, setHymnData] = useState<CreateHymnPayload>({
+        productId: "",
+        number: 1,
+        text: {},
     });
 
-    // Fetch languages and language codes from API on component mount
+    // Fetch languages and products from API
     useEffect(() => {
-        const fetchLanguages = async () => {
+        const fetchData = async () => {
             try {
+                setIsLoadingData(true);
+                
                 // Fetch both language names and language codes
-                const [languageResponse, languageCodeResponse] = await Promise.all([
+                const [languageResponse, languageCodeResponse, productsResponse] = await Promise.all([
                     ClientInstance.APP.getLanguage(),
-                    ClientInstance.APP.getLanguageCode()
+                    ClientInstance.APP.getLanguageCode(),
+                    ClientInstance.APP.getProducts()
                 ]);
 
+                // Handle languages
                 if ((languageResponse as any)?.success && (languageResponse as any)?.data) {
                     let languagesData = (languageResponse as any).data;
                     
-                    // If we also have language codes, merge them with language data
                     if ((languageCodeResponse as any)?.success && (languageCodeResponse as any)?.data) {
                         const languageCodes = (languageCodeResponse as any).data;
                         
-                        // Merge language codes with language data
                         languagesData = languagesData.map((lang: any) => {
                             const matchingCode = languageCodes.find((code: any) => 
                                 code.code === lang.code || code.name === lang.name
@@ -77,34 +80,40 @@ export default function AddBookPage() {
                     languagesData.forEach((lang: Language) => {
                         initialMultilingualData[lang.code] = "";
                     });
-                    setBookData(prev => ({
+                    setHymnData(prev => ({
                         ...prev,
-                        title: initialMultilingualData,
-                        description: initialMultilingualData
+                        text: initialMultilingualData
                     }));
                 }
+
+                // Handle products
+                if ((productsResponse as any)?.success && (productsResponse as any)?.data) {
+                    const allProducts = (productsResponse as any).data;
+                    // Filter only song products
+                    const songProducts = allProducts.filter((product: ProductManagement) => product.type === 'song');
+                    setProducts(songProducts);
+                }
             } catch (error) {
-                console.error("Error fetching languages:", error);
-                // No fallback - rely only on API data
-                setLanguages([]);
+                console.error("Error fetching data:", error);
+                showToast.error("Error", "Network error. Please check your connection and try again.");
+            } finally {
+                setIsLoadingData(false);
             }
         };
 
-        fetchLanguages();
+        fetchData();
     }, []);
 
     const handleSave = async () => {
         setValidationError("");
 
         if (
-            !bookData.type ||
-            !isMultilingualFieldComplete(bookData.title) ||
-            !isMultilingualFieldComplete(bookData.description) ||
-            !bookData.contentType ||
-            (bookData.contentType === 'free' && bookData.freePages <= 0)
+            !hymnData.productId ||
+            !hymnData.number ||
+            !isMultilingualFieldComplete(hymnData.text)
         ) {
             setValidationError(
-                "Please fill in all required fields: Product Type, Content Type, Title & Description in all languages, and Free Pages if content type is free."
+                "Please fill in all required fields: Product, Hymn Number, and Text in all languages."
             );
             return;
         }
@@ -112,83 +121,96 @@ export default function AddBookPage() {
         setIsLoading(true);
 
         try {
-            const payload = {
-                type: bookData.type,
-                title: bookData.title,
-                description: bookData.description,
-                contentType: bookData.contentType,
-                freePages: bookData.freePages,
+            const payload: CreateHymnPayload = {
+                productId: hymnData.productId,
+                number: hymnData.number,
+                text: hymnData.text,
             };
 
-            const response: any = await ClientInstance.APP.createProduct(payload);
+            const response: any = await ClientInstance.APP.createHymn(payload);
             if (response.success) {
-                setSuccessMessage("Product created successfully!");
-                // Reset form with current languages
+                setSuccessMessage("Hymn created successfully!");
+                showToast.success("Hymn Created", "Hymn has been created successfully!");
+                
+                // Reset form
                 const resetMultilingualData: MultilingualText = {};
                 languages.forEach((lang: Language) => {
                     resetMultilingualData[lang.code] = "";
                 });
-                setBookData({
-                    type: "",
-                    contentType: "free",
-                    freePages: 0,
-                    title: resetMultilingualData,
-                    description: resetMultilingualData,
+                setHymnData({
+                    productId: "",
+                    number: 1,
+                    text: resetMultilingualData,
                 });
 
                 setTimeout(() => {
-                    window.location.href = "/products";
+                    window.location.href = "/hymns";
                 }, 2000);
             } else {
-                setValidationError(response.message || "Failed to create product. Please try again.");
+                setValidationError(response.message || "Failed to create hymn. Please try again.");
+                showToast.error("Error", response.message || "Failed to create hymn");
             }
         } catch (error) {
             setValidationError("Network error. Please check your connection and try again.");
+            showToast.error("Error", "Network error. Please check your connection and try again.");
         } finally {
             setIsLoading(false);
         }
     };
 
+    if (isLoadingData) {
+        return (
+            <div className="bg-white min-h-screen rounded-lg shadow-sky-100 space-y-6 container mx-auto px-4 py-8">
+                <div className="flex items-center justify-center h-64">
+                    <div className="text-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-theme-primary mx-auto"></div>
+                        <p className="mt-2 text-gray-600">Loading data...</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="bg-white min-h-screen rounded-lg shadow-sky-100 space-y-6 container mx-auto px-4 py-8">
             {/* Header */}
             <div className="border-b border-gray-100 bg-white">
-                <div className="mx-auto px-5 py-6 flex items-center gap-4">
-                <Link href="/products" className="text-gray-600 hover:text-gray-900">
+                <div className="max-w-6xl mx-auto px-5 py-6 flex items-center gap-4">
+                    <Link href="/hymns" className="text-gray-600 hover:text-gray-900">
                         <ArrowLeft className="h-6 w-6" />
                     </Link>
                     <div className="flex-1">
-                        <h1 className="text-3xl font-bold text-gray-900">Add Product</h1>
-                        <p className="text-gray-500">Create a new multilingual product</p>
+                        <h1 className="text-3xl font-bold text-gray-900">Add Hymn</h1>
+                        <p className="text-gray-500">Create a new hymn for a song product</p>
                     </div>
                 </div>
             </div>
 
-            <div className="mx-auto px-2">
+            <div className="max-w-6xl mx-auto px-2">
                 <div className="p-10 space-y-8">
-                    {/* Product Type and Content Type */}
+                    {/* Product Selection and Hymn Number */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Product Type */}
+                        {/* Product Selection */}
                         <div className="space-y-3">
                             <label className="text-sm font-medium text-gray-700">
-                                Product Type <span className="text-red-500">*</span>
+                                Select Product <span className="text-red-500">*</span>
                             </label>
                             <Select
-                                value={bookData.type}
+                                value={hymnData.productId}
                                 onValueChange={(value) => {
-                                    setBookData({ ...bookData, type: value });
+                                    setHymnData({ ...hymnData, productId: value });
                                     setValidationError("");
                                 }}
                             >
                                 <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Select product type" />
+                                    <SelectValue placeholder="Select product" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {PRODUCT_TYPES.map((type) => (
-                                        <SelectItem key={type.value} value={type.value}>
+                                    {products.map((product) => (
+                                        <SelectItem key={product._id} value={product._id}>
                                             <span className="flex items-center gap-2">
-                                                <span>{type.icon}</span>
-                                                {type.label}
+                                                <span>🎵</span>
+                                                {product.title.en || 'Untitled'}
                                             </span>
                                         </SelectItem>
                                     ))}
@@ -196,78 +218,38 @@ export default function AddBookPage() {
                             </Select>
                         </div>
 
-                        {/* Content Type */}
+                        {/* Hymn Number */}
                         <div className="space-y-3">
                             <label className="text-sm font-medium text-gray-700">
-                                Content Type <span className="text-red-500">*</span>
-                            </label>
-                            <Select
-                                value={bookData.contentType}
-                                onValueChange={(value) => {
-                                    setBookData({ ...bookData, contentType: value as "free" | "paid" });
-                                    setValidationError("");
-                                }}
-                            >
-                                <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Select content type" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="free">🆓 Free</SelectItem>
-                                    <SelectItem value="paid">💰 Paid</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-
-                    {/* Free Pages (if Free) */}
-                    {bookData.contentType === "free" && (
-                        <div className="space-y-3">
-                            <label className="text-sm font-medium text-gray-700">
-                                Free Pages <span className="text-red-500">*</span>
+                                Hymn Number <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="number"
-                                value={bookData.freePages}
+                                value={hymnData.number}
                                 onChange={(e) => {
-                                    setBookData({ ...bookData, freePages: parseInt(e.target.value) || 0 });
+                                    setHymnData({ ...hymnData, number: parseInt(e.target.value) || 1 });
                                     setValidationError("");
                                 }}
-                                placeholder="Enter number of free pages"
+                                placeholder="Enter hymn number"
                                 className="w-full h-[40px] px-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none"
-                                min="0"
+                                min="1"
                             />
                         </div>
-                    )}
+                    </div>
 
-                    {/* Title & Description */}
-                    <div className="space-y-8">
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-700">
-                                Title <span className="text-red-500">*</span>
-                            </label>
-                            <CKEditorComponent
-                                value={bookData.title}
-                                onChange={(val: MultilingualText) => {
-                                    setBookData({ ...bookData, title: val });
-                                    setValidationError("");
-                                }}
-                                placeholder="Enter multilingual title"
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-700">
-                                Description <span className="text-red-500">*</span>
-                            </label>
-                            <CKEditorComponent
-                                value={bookData.description}
-                                onChange={(val: MultilingualText) => {
-                                    setBookData({ ...bookData, description: val });
-                                    setValidationError("");
-                                }}
-                                placeholder="Enter multilingual description"
-                            />
-                        </div>
+                    {/* Hymn Text */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700">
+                            Hymn Text <span className="text-red-500">*</span>
+                        </label>
+                        <CKEditorComponent
+                            value={hymnData.text}
+                            onChange={(val: MultilingualText) => {
+                                setHymnData({ ...hymnData, text: val });
+                                setValidationError("");
+                            }}
+                            placeholder="Enter multilingual hymn text"
+                        />
                     </div>
                 </div>
 
@@ -294,12 +276,12 @@ export default function AddBookPage() {
                         {isLoading ? (
                             <>
                                 <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                                Creating Product...
+                                Creating Hymn...
                             </>
                         ) : (
                             <>
                                 <Save className="h-5 w-5 mr-2" />
-                                Save Product
+                                Save Hymn
                             </>
                         )}
                     </Button>

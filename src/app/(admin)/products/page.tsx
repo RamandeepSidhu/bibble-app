@@ -19,11 +19,12 @@ import {
   Eye,
   Globe,
   FileText,
-  Check,
   X
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ToggleSwitch } from '@/components/ui/toggle-switch';
+import Pagination from '@/components/Pagination';
 import Link from 'next/link';
 import { ProductManagement, ChangeProductStatusPayload } from '@/lib/types/bibble';
 import ClientInstance from '@/shared/client';
@@ -37,15 +38,69 @@ export default function ProductsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deletingProduct, setDeletingProduct] = useState<ProductManagement | null>(null);
+  const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
+  const [statusChangeProduct, setStatusChangeProduct] = useState<ProductManagement | null>(null);
+  const [newStatus, setNewStatus] = useState<'active' | 'inactive' | null>(null);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  
+  // Filter state
+  const [contentType, setContentType] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<string>('createdAt');
+  const [sortOrder, setSortOrder] = useState<string>('desc');
 
   // Fetch products from API
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         setIsLoading(true);
-        const response: any = await ClientInstance.APP.getProducts();
+        
+        // Build query parameters
+        const params: any = {
+          page: currentPage,
+          limit: pageSize,
+          sortBy: sortBy,
+          sortOrder: sortOrder
+        };
+
+        // Add search parameter if not empty
+        if (searchTerm.trim()) {
+          params.search = searchTerm.trim();
+        }
+
+        // Add type filter if not 'all'
+        if (selectedType !== 'all') {
+          params.type = selectedType;
+        }
+
+        // Add content type filter if not 'all'
+        if (contentType !== 'all') {
+          params.contentType = contentType;
+        }
+
+        // Add status filter if not 'all'
+        if (selectedStatus !== 'all') {
+          params.status = selectedStatus;
+        }
+
+        const response: any = await ClientInstance.APP.getProducts(params);
         if (response?.success && response?.data) {
           setProducts(response.data);
+          
+          // Handle pagination data if available
+          if (response.pagination) {
+            setTotalItems(response.pagination.total || response.data.length);
+            setTotalPages(response.pagination.totalPages || 1);
+            setCurrentPage(response.pagination.page || 1);
+          } else {
+            setTotalItems(response.data.length);
+            setTotalPages(1);
+            setCurrentPage(1);
+          }
         } else {
           showToast.error("Error", response?.message || "Failed to fetch products");
         }
@@ -57,22 +112,10 @@ export default function ProductsPage() {
       }
     };
     fetchProducts();
-  }, []);
+  }, [currentPage, pageSize, searchTerm, selectedType, selectedStatus, contentType, sortBy, sortOrder]);
 
-  // Filter products based on search, type, and status
-  const filteredProducts = products.filter(product => {
-    const matchesSearch = 
-      (product.title.en || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (product.title.sw || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (product.title.fr || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (product.title.rn || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (product.description.en || '').toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesType = selectedType === 'all' || product.type === selectedType;
-    const matchesStatus = selectedStatus === 'all' || product.status === selectedStatus;
-    
-    return matchesSearch && matchesType && matchesStatus;
-  });
+  // Products are now filtered server-side, so we use them directly
+  const filteredProducts = products;
 
   const handleDeleteClick = (product: ProductManagement) => {
     setDeletingProduct(product);
@@ -96,21 +139,77 @@ export default function ProductsPage() {
     }
   };
 
-  const handleStatusChange = async (product: ProductManagement, newStatus: 'active' | 'inactive' | 'draft') => {
+  const handleStatusToggle = (product: ProductManagement) => {
+    const newStatus = product.status === 'active' ? 'inactive' : 'active';
+    setStatusChangeProduct(product);
+    setNewStatus(newStatus);
+    setIsStatusDialogOpen(true);
+  };
+
+  const handleStatusChange = async () => {
+    if (!statusChangeProduct || !newStatus) return;
+    
     try {
       const payload: ChangeProductStatusPayload = { status: newStatus };
-      const response: any = await ClientInstance.APP.changeProductStatus(product._id, payload);
+      const response: any = await ClientInstance.APP.changeProductStatus(statusChangeProduct._id, payload);
       if (response?.success) {
         setProducts(products.map(p => 
-          p._id === product._id ? { ...p, status: newStatus } : p
+          p._id === statusChangeProduct._id ? { ...p, status: newStatus } : p
         ));
         showToast.success("Status Updated", `Product status changed to ${newStatus}`);
+        setIsStatusDialogOpen(false);
+        setStatusChangeProduct(null);
+        setNewStatus(null);
       } else {
         showToast.error("Error", response?.message || "Failed to update product status");
       }
     } catch (error) {
       showToast.error("Error", "Network error. Please check your connection and try again.");
     }
+  };
+
+  // Pagination handlers
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setCurrentPage(1); // Reset to first page when changing page size
+  };
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setSelectedType('all');
+    setSelectedStatus('all');
+    setContentType('all');
+    setSortBy('createdAt');
+    setSortOrder('desc');
+    setCurrentPage(1);
+  };
+
+  // Check if any filters are applied
+  const hasActiveFilters = () => {
+    return (
+      searchTerm.trim() !== '' ||
+      selectedType !== 'all' ||
+      selectedStatus !== 'all' ||
+      contentType !== 'all' ||
+      sortBy !== 'createdAt' ||
+      sortOrder !== 'desc'
+    );
+  };
+
+  // Count active filters
+  const getActiveFiltersCount = () => {
+    let count = 0;
+    if (searchTerm.trim() !== '') count++;
+    if (selectedType !== 'all') count++;
+    if (selectedStatus !== 'all') count++;
+    if (contentType !== 'all') count++;
+    if (sortBy !== 'createdAt') count++;
+    if (sortOrder !== 'desc') count++;
+    return count;
   };
 
   const getStatusBadge = (status: string) => {
@@ -172,7 +271,8 @@ export default function ProductsPage() {
       </div>
 
       {/* Search and Filter */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-3 md:gap-4 mt-5">
+      <div className="space-y-4 mb-6 mt-5">
+        {/* Search Bar */}
         <div className="relative w-full md:w-96">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <Search className="h-5 w-5 text-gray-400" />
@@ -181,33 +281,123 @@ export default function ProductsPage() {
             placeholder="Search products..."
             type="search"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="block w-full sm:w-80 h-[40px] pl-10 pr-4 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1); // Reset to first page when searching
+            }}
+            className="block w-full h-[40px] pl-10 pr-4 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
           />
         </div>
-        <div className="flex gap-3 w-full sm:w-auto">
-          <Select value={selectedType} onValueChange={setSelectedType}>
-            <SelectTrigger className="w-full sm:w-[150px]">
+
+        {/* Filter Controls */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5  gap-4">
+          {/* Type Filter */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">Type</label>
+          <Select value={selectedType} onValueChange={(value) => {
+            setSelectedType(value);
+            setCurrentPage(1);
+          }}>
+              <SelectTrigger className="w-full">
               <SelectValue placeholder="Filter by type" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Types</SelectItem>
               <SelectItem value="book">Book</SelectItem>
-              <SelectItem value="song">Hymns</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-            <SelectTrigger className="w-full sm:w-[150px]">
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="inactive">Inactive</SelectItem>
-              <SelectItem value="draft">Draft</SelectItem>
+                <SelectItem value="song">Song</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Content Type Filter */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">Content Type</label>
+            <Select value={contentType} onValueChange={(value) => {
+            setContentType(value);
+            setCurrentPage(1);
+          }}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Filter by content type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Content Types</SelectItem>
+                <SelectItem value="free">Free</SelectItem>
+                <SelectItem value="paid">Paid</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Status Filter */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">Status</label>
+            <Select value={selectedStatus} onValueChange={(value) => {
+            setSelectedStatus(value);
+            setCurrentPage(1);
+          }}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="block">Block</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Sort By */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">Sort By</label>
+            <Select value={sortBy} onValueChange={(value) => {
+            setSortBy(value);
+            setCurrentPage(1);
+          }}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="createdAt">Created Date</SelectItem>
+                <SelectItem value="updatedAt">Updated Date</SelectItem>
+                <SelectItem value="title">Title</SelectItem>
+                <SelectItem value="type">Type</SelectItem>
+                <SelectItem value="status">Status</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+           {/* Sort Order */}
+          <div className="space-y-2 w-full">
+            <label className="text-sm font-medium text-gray-700">Sort Order</label>
+            <Select value={sortOrder} onValueChange={(value) => {
+              setSortOrder(value);
+              setCurrentPage(1);
+            }}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sort order" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="asc">Ascending</SelectItem>
+                <SelectItem value="desc">Descending</SelectItem>
             </SelectContent>
           </Select>
         </div>
+         </div>
+
+         {/* Clear Filters Button - Only show when filters are active */}
+         {hasActiveFilters() && (
+           <div className="flex justify-end">
+             <Button
+               variant="outline"
+               onClick={clearFilters}
+               className="flex items-center gap-2"
+             >
+               <X className="h-4 w-4" />
+               Clear Filters ({getActiveFiltersCount()})
+             </Button>
+           </div>
+         )}
+        
       </div>
 
       {/* Products Table */}
@@ -228,8 +418,7 @@ export default function ProductsPage() {
               <TableRow className="border-b border-[#EAECF0]">
                 <TableHead className="font-semibold text-[#475467] text-xs py-4 px-6">Product</TableHead>
                 <TableHead className="font-semibold text-[#475467] text-xs py-4 px-6">Type</TableHead>
-                <TableHead className="font-semibold text-[#475467] text-xs py-4 px-6">Title (EN)</TableHead>
-                <TableHead className="font-semibold text-[#475467] text-xs py-4 px-6">Title (SW)</TableHead>
+                <TableHead className="font-semibold text-[#475467] text-xs py-4 px-6">Title</TableHead>
                 <TableHead className="font-semibold text-[#475467] text-xs py-4 px-6">Status</TableHead>
                 <TableHead className="font-semibold text-[#475467] text-xs py-4 px-6">Created</TableHead>
                 <TableHead className="font-semibold text-[#475467] text-xs py-4 px-6 text-right">Actions</TableHead>
@@ -245,59 +434,37 @@ export default function ProductsPage() {
                 >
                   <TableCell className="py-4 px-6">
                     <div className="flex items-center space-x-3">
-                      <div className="h-10 w-10 rounded-full bg-theme-secondary text-theme-primary flex items-center justify-center font-semibold">
-                        {getTypeIcon(product.type)}
-                      </div>
-                      <div>
-                        <div className="font-medium text-gray-900">
-                          {product.title.en || 'Untitled'}
+                      <div className="h-10 w-10 rounded-full bg-theme-secondary text-theme-primary flex items-center justify-center font-semibold text-lg">
+                          {getTypeIcon(product.type)}
                         </div>
+                      <div>
+                        <div className="font-medium text-gray-900 max-w-xs truncate" dangerouslySetInnerHTML={{ __html: product.title.en || 'Untitled' }} />
                         <div className="text-sm text-gray-500">
-                          {product.contentType} • {product.type}
+                          {product.contentType}
                         </div>
                       </div>
                     </div>
                   </TableCell>
                   <TableCell className="py-4 px-6">
-                    <span className="inline-flex items-center px-2 py-1 text-xs rounded-full bg-theme-secondary text-theme-primary border border-theme-primary">
-                      {getTypeIcon(product.type)} {product.type}
-                    </span>
+                    <div className="h-8 w-8 rounded-full bg-theme-secondary text-theme-primary flex items-center justify-center font-semibold text-lg">
+                      {getTypeIcon(product.type)}
+                    </div>
                   </TableCell>
                   <TableCell className="py-4 px-6">
-                    <div className="max-w-xs truncate" dangerouslySetInnerHTML={{ __html: product.title.en || '-' }} />
+                    <div className="max-w-xs">
+                      <div className="truncate" dangerouslySetInnerHTML={{ __html: product.title.en || '-' }} />
+                      {product.title.sw && product.title.sw !== product.title.en && (
+                        <div className="truncate text-sm text-gray-500 mt-1" dangerouslySetInnerHTML={{ __html: product.title.sw }} />
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="py-4 px-6">
-                    <div className="max-w-xs truncate" dangerouslySetInnerHTML={{ __html: product.title.sw || '-' }} />
-                  </TableCell>
-                  <TableCell className="py-4 px-6">
-                    <div className="flex items-center gap-2">
-                      <span className={getStatusBadge(product.status || 'inactive')}>
-                        {product.status || 'inactive'}
-                      </span>
-                      <div className="flex gap-1">
-                        <button
-                          onClick={() => handleStatusChange(product, 'active')}
-                          className={`p-1 rounded ${
-                            product.status === 'active' 
-                              ? 'bg-green-100 text-green-700' 
-                              : 'text-gray-400 hover:text-green-600'
-                          }`}
-                          title="Set Active"
-                        >
-                          <Check className="h-3 w-3" />
-                        </button>
-                        <button
-                          onClick={() => handleStatusChange(product, 'inactive')}
-                          className={`p-1 rounded ${
-                            product.status === 'inactive' 
-                              ? 'bg-red-100 text-red-700' 
-                              : 'text-gray-400 hover:text-red-600'
-                          }`}
-                          title="Set Inactive"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </div>
+                    <div className="flex items-center gap-3">
+                      <ToggleSwitch
+                        checked={product.status === 'active'}
+                        onChange={() => handleStatusToggle(product)}
+                        size="md"
+                      />
                     </div>
                   </TableCell>
                   <TableCell className="py-4 px-6 text-gray-700 text-sm">
@@ -329,6 +496,16 @@ export default function ProductsPage() {
         </div>
       )}
 
+      {/* Pagination */}
+      <Pagination
+        currentPage={currentPage}
+        totalItems={totalItems}
+        pageSize={pageSize}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
+        isLoading={isLoading}
+      />
+
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
@@ -344,6 +521,26 @@ export default function ProductsPage() {
             </Button>
             <Button variant="destructive" onClick={handleDeleteProduct}>
               Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Status Change Confirmation Dialog */}
+      <Dialog open={isStatusDialogOpen} onOpenChange={setIsStatusDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Change Product Status</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to change the status of "{statusChangeProduct?.title.en || 'Untitled'}" to <strong>{newStatus}</strong>?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsStatusDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleStatusChange} className="bg-theme-primary hover:bg-theme-primary-dark">
+              Confirm
             </Button>
           </DialogFooter>
         </DialogContent>

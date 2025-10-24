@@ -240,4 +240,31 @@ export interface ProductApiResponse {
   message: string;
 }
 
+// Hymn Management Types
+export interface HymnManagement {
+  _id: string;
+  productId: string;
+  number: number;
+  text: MultilingualText;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CreateHymnPayload {
+  productId: string;
+  number: number;
+  text: MultilingualText;
+}
+
+export interface UpdateHymnPayload {
+  number: number;
+  text: MultilingualText;
+}
+
+export interface HymnApiResponse {
+  success: boolean;
+  data: HymnManagement | HymnManagement[] | {};
+  message: string;
+}
+
 // Content type options removed - admin can add all features

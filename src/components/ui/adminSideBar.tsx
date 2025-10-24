@@ -8,7 +8,8 @@ import {
   X,
   Home,
   Package,
-  Globe
+  Globe,
+  Music
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -26,6 +27,7 @@ export function AdminSidebar({ sidebarOpen, setSidebarOpen, isMobile = false }: 
     { name: 'Users', href: '/users', icon: Users },
     { name: 'Products', href: '/products', icon: Package },
     { name: 'Languages', href: '/languages', icon: Globe },
+    { name: 'Hymns', href: '/hymns', icon: Music },
     { name: 'Verse', href: '/verse', icon: Package },
   ];
 

@@ -161,7 +161,7 @@ export default function EditProductPage() {
 
     if (isLoadingProduct) {
   return (
-            <div className="bg-white min-h-screen rounded-lg shadow-sky-100">
+            <div className="bg-white min-h-screen rounded-lg shadow-sky-100 space-y-6 container mx-auto px-4 py-8">
                 <div className="flex items-center justify-center h-64">
                     <div className="text-center">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-theme-primary mx-auto"></div>
@@ -174,7 +174,7 @@ export default function EditProductPage() {
 
     if (!product) {
         return (
-            <div className="bg-white min-h-screen rounded-lg shadow-sky-100">
+            <div className="bg-white min-h-screen rounded-lg shadow-sky-100 space-y-6 container mx-auto px-4 py-8">
                 <div className="flex items-center justify-center h-64">
                     <div className="text-center">
                         <p className="text-gray-600">Product not found</p>
@@ -188,10 +188,10 @@ export default function EditProductPage() {
     }
 
     return (
-        <div className="bg-white min-h-screen rounded-lg shadow-sky-100">
+        <div className="bg-white min-h-screen rounded-lg shadow-sky-100 space-y-6 container mx-auto px-4 py-8">
             {/* Header */}
             <div className="border-b border-gray-100 bg-white">
-                <div className="max-w-6xl mx-auto px-5 py-6 flex items-center gap-4">
+                <div className="mx-auto px-5 py-6 flex items-center gap-4">
                     <Link href="/products" className="text-gray-600 hover:text-gray-900">
                         <ArrowLeft className="h-6 w-6" />
                     </Link>
@@ -202,7 +202,7 @@ export default function EditProductPage() {
         </div>
       </div>
 
-            <div className="max-w-6xl mx-auto px-2">
+            <div className="mx-auto px-2">
                 <div className="p-10 space-y-8">
                     {/* Product Type and Content Type */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

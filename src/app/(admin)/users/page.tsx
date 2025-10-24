@@ -228,7 +228,7 @@ export default function UsersPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 container mx-auto px-4 py-8">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>

@@ -64,7 +64,7 @@ const AdminMainLayoutComponent = ({
 
         {/* Page content */}
         <main className="py-6">
-          <div className="mx-auto max-w-7xl px-3 lg:px-2">{children}</div>
+          <div className="mx-auto max-w-8xl px-3 lg:px-2">{children}</div>
         </main>
       </div>
       
