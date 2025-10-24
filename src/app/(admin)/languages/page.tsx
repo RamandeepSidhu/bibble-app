@@ -242,7 +242,7 @@ export default function LanguagesPage() {
             <SelectContent>
               <SelectItem value="all">All Status</SelectItem>
               <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="inactive">Inactive</SelectItem>
+              <SelectItem value="inactive">Default</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -367,7 +367,7 @@ export default function LanguagesPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Symbol</label>
-                <Input
+                <Input maxLength={5} minLength={2}
                   value={formData.symbol}
                   onChange={(e) => setFormData({...formData, symbol: e.target.value})}
                   placeholder="Enter language symbol"
@@ -437,7 +437,7 @@ export default function LanguagesPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Symbol</label>
                 <Input
-                  value={formData.symbol}
+                  value={formData.symbol}  maxLength={5} minLength={2}
                   onChange={(e) => setFormData({...formData, symbol: e.target.value})}
                   placeholder="Enter language symbol"
                 />
