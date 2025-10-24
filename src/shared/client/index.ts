@@ -19,7 +19,25 @@ const {
   UPDATE_LANGUAGE,
   CREATE_LANGUAGES,
   GET_LANGUAGE_BY_ID,
-  DELETE_LANGUAGE,  
+  DELETE_LANGUAGE,
+  // Story endpoints
+  ADD_STORY,
+  UPDATE_STORY,
+  DELETE_STORY,
+  GET_STORY_BY_ID,
+  GET_STORIES_BY_PRODUCT,
+  // Chapter endpoints
+  ADD_CHAPTER,
+  UPDATE_CHAPTER,
+  DELETE_CHAPTER,
+  GET_CHAPTER_BY_ID,
+  GET_CHAPTERS_BY_STORY,
+  // Verse endpoints
+  ADD_VERSE,
+  UPDATE_VERSE,
+  DELETE_VERSE,
+  GET_VERSE_BY_ID,
+  GET_VERSES_BY_CHAPTER,
 } = API_ENDPOINTS;
 class Client {
   Auth = {
@@ -58,6 +76,27 @@ class Client {
     GetLanguageById: (id: string) => HttpClient.get(GET_LANGUAGE_BY_ID.replace('{id}', id)),
     getBioProfileById: (id: string) => HttpClient.get(`/${id}`),
     getAdminDashboard: () => HttpClient.get(ADMIN_DASHBOARD),
+    
+    // Story methods
+    createStory: (payload: any) => HttpClient.post(ADD_STORY, payload),
+    updateStory: (id: string, payload: any) => HttpClient.put(UPDATE_STORY.replace('{id}', id), payload),
+    deleteStory: (id: string) => HttpClient.delete(DELETE_STORY.replace('{id}', id)),
+    getStoryById: (id: string) => HttpClient.get(GET_STORY_BY_ID.replace('{id}', id)),
+    getStoriesByProduct: (productId: string) => HttpClient.get(GET_STORIES_BY_PRODUCT.replace('{productId}', productId)),
+    
+    // Chapter methods
+    createChapter: (payload: any) => HttpClient.post(ADD_CHAPTER, payload),
+    updateChapter: (id: string, payload: any) => HttpClient.put(UPDATE_CHAPTER.replace('{id}', id), payload),
+    deleteChapter: (id: string) => HttpClient.delete(DELETE_CHAPTER.replace('{id}', id)),
+    getChapterById: (id: string) => HttpClient.get(GET_CHAPTER_BY_ID.replace('{id}', id)),
+    getChaptersByStory: (storyId: string) => HttpClient.get(GET_CHAPTERS_BY_STORY.replace('{storyId}', storyId)),
+    
+    // Verse methods
+    createVerse: (payload: any) => HttpClient.post(ADD_VERSE, payload),
+    updateVerse: (id: string, payload: any) => HttpClient.put(UPDATE_VERSE.replace('{id}', id), payload),
+    deleteVerse: (id: string) => HttpClient.delete(DELETE_VERSE.replace('{id}', id)),
+    getVerseById: (id: string) => HttpClient.get(GET_VERSE_BY_ID.replace('{id}', id)),
+    getVersesByChapter: (chapterId: string) => HttpClient.get(GET_VERSES_BY_CHAPTER.replace('{chapterId}', chapterId)),
   }
 }
 
