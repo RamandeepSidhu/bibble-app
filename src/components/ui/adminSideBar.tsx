@@ -1,6 +1,7 @@
 'use client';
 
 import { useSession, signOut } from 'next-auth/react';
+import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { 
   Users, 
@@ -22,6 +23,7 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ sidebarOpen, setSidebarOpen, isMobile = false }: AdminSidebarProps) {
   const { data: session } = useSession();
+  const pathname = usePathname();
 
   const navigation = [
     { name: 'Dashboard', href: '/', icon: Home },
@@ -51,14 +53,23 @@ export function AdminSidebar({ sidebarOpen, setSidebarOpen, isMobile = false }: 
       <nav className="flex-1 space-y-1 px-2 py-4">
         {navigation.map((item) => {
           const Icon = item.icon;
+          const isActive = pathname === item.href || 
+            (item.href !== '/' && pathname.startsWith(item.href));
+          
           return (
             <Link
               key={item.name}
               href={item.href}
-              className="group flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+              className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
+                isActive
+                  ? 'bg-theme-secondary text-[#A23021]'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+              }`}
               onClick={() => isMobile && setSidebarOpen(false)}
             >
-              <Icon className="mr-3 h-5 w-5" />
+              <Icon className={`mr-3 h-5 w-5 ${
+                isActive ? 'text-[#A23021]' : 'text-gray-400 group-hover:text-gray-500'
+              }`} />
               {item.name}
             </Link>
           );
