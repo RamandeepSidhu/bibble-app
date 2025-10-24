@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { CKEditorComponent } from '@/components/ui/ckeditor';
-import { MultilingualText, LANGUAGES } from '@/lib/types/bibble';
+import { MultilingualText, LANGUAGES, Language } from '@/lib/types/bibble';
 import { Eye, Edit3 } from 'lucide-react';
 
 interface MultilingualRichEditorProps {
@@ -14,6 +14,7 @@ interface MultilingualRichEditorProps {
   type?: 'input' | 'textarea';
   rows?: number;
   required?: boolean;
+  languages?: Language[]; // Optional dynamic languages
 }
 
 export function MultilingualRichEditor({
@@ -22,9 +23,10 @@ export function MultilingualRichEditor({
   onChange,
   placeholder = '',
   rows = 4,
-  required = false
+  required = false,
+  languages = LANGUAGES
 }: MultilingualRichEditorProps) {
-  const [activeLanguage, setActiveLanguage] = useState<'en' | 'sw' | 'fr' | 'rn'>('en');
+  const [activeLanguage, setActiveLanguage] = useState<string>(languages[0]?.code || 'en');
   const [isPreviewMode, setIsPreviewMode] = useState(false);
 
   // Helper function to check if rich text content is actually empty
@@ -41,23 +43,23 @@ export function MultilingualRichEditor({
     return textContent.length === 0;
   };
 
-  const handleLanguageChange = (lang: 'en' | 'sw' | 'fr' | 'rn', newValue: string) => {
+  const handleLanguageChange = (lang: string, newValue: string) => {
     onChange({
       ...value,
       [lang]: newValue
     });
   };
 
-  const renderRichEditor = (lang: 'en' | 'sw' | 'fr' | 'rn', langLabel: string) => {
-    const langValue = value[lang] || '';
-    const isActive = activeLanguage === lang;
+  const renderRichEditor = (lang: Language) => {
+    const langValue = value[lang.code] || '';
+    const isActive = activeLanguage === lang.code;
     const hasContent = !isRichTextEmpty(langValue);
     return (
-      <div key={lang} className={`space-y-2 ${!isActive ? 'hidden' : ''}`}>
+      <div key={lang.code} className={`space-y-2 ${!isActive ? 'hidden' : ''}`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-lg">{LANGUAGES.find(l => l.code === lang)?.flag}</span>
-            <span className="text-sm font-medium text-gray-700">{langLabel}</span>
+            <span className="text-lg">{lang.flag}</span>
+            <span className="text-sm font-medium text-gray-700">{lang.name}</span>
             {required && <span className="text-red-500">*</span>}
           </div>
           <div className="flex items-center gap-2">
@@ -67,8 +69,8 @@ export function MultilingualRichEditor({
                 size="sm"
                 onClick={() => setIsPreviewMode(!isPreviewMode)}
                 className={`text-xs ${
-                  isPreviewMode 
-                    ? 'bg-theme-primary text-theme-secondary' 
+                  isPreviewMode
+                    ? 'bg-theme-primary text-theme-secondary'
                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                 }`}
               >
@@ -80,7 +82,7 @@ export function MultilingualRichEditor({
         </div>
 
         {isPreviewMode ? (
-          <div 
+          <div
             className="min-h-[100px] p-3 border border-gray-300 rounded-md bg-gray-50 prose prose-sm max-w-none"
             dangerouslySetInnerHTML={{ __html: langValue }}
             style={{
@@ -91,8 +93,8 @@ export function MultilingualRichEditor({
         ) : (
           <CKEditorComponent
             value={langValue}
-            onChange={(newValue) => handleLanguageChange(lang, newValue)}
-            placeholder={`${placeholder} (${langLabel})`}
+            onChange={(newValue) => handleLanguageChange(lang.code, newValue)}
+            placeholder={`${placeholder} (${lang.name})`}
             className="min-h-[100px]"
           />
         )}
@@ -119,7 +121,7 @@ export function MultilingualRichEditor({
 
       {/* Language Tabs */}
       <div className="flex border-b border-gray-200">
-        {LANGUAGES.map((lang) => (
+        {languages.map((lang) => (
           <button
             key={lang.code}
             type="button"
@@ -139,10 +141,7 @@ export function MultilingualRichEditor({
 
       {/* Rich Text Editors */}
       <div className="space-y-4">
-        {renderRichEditor('en', 'English')}
-        {renderRichEditor('sw', 'Swahili')}
-        {renderRichEditor('fr', 'French')}
-        {renderRichEditor('rn', 'Kinyarwanda')}
+        {languages.map((lang) => renderRichEditor(lang))}
       </div>
 
       <style jsx>{`

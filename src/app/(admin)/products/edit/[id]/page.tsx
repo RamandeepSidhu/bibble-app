@@ -5,30 +5,44 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import CKEditorComponent from '@/components/CKEditorComponent';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Stepper } from '@/components/ui/stepper';
+import { updateProduct, UpdateProductRequest, getProductById } from '@/api/productApi';
 import { ProductType, MultilingualText, ProductFormData } from '@/lib/types/bibble';
-import { ArrowLeft, Save, Plus } from 'lucide-react';
+import { ArrowLeft, Save, Plus, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const stepperSteps = [
-  { id: 'book', title: 'Book Details' },
-  { id: 'story', title: 'Story' },
-  { id: 'chapter', title: 'Chapter' },
-  { id: 'verse', title: 'Verse' }
+  { id: 'details', title: 'Basic Info' },
+  { id: 'content1', title: 'Content Level 1' },
+  { id: 'content2', title: 'Content Level 2' },
+  { id: 'content3', title: 'Content Level 3' }
 ];
 
 export default function EditProductPage() {
   const params = useParams();
   const productId = params.id as string;
-
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [productForm, setProductForm] = useState<ProductFormData>({
     type: 'book',
     title: { en: '', sw: '', fr: '', rn: '' },
     description: { en: '', sw: '', fr: '', rn: '' },
+    contentType: 'free',
+    freePages: 0,
   });
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  // Helper function to check if rich text content is actually empty
+  const isRichTextEmpty = (htmlContent: string): boolean => {
+    if (!htmlContent) return true;
+    const textContent = htmlContent
+      .replace(/<[^>]*>/g, '') // Remove HTML tags
+      .replace(/&nbsp;/g, ' ') // Replace non-breaking spaces
+      .replace(/&[a-zA-Z0-9#]+;/g, ' ') // Replace HTML entities
+      .trim();
+    return textContent.length === 0;
+  };
 
   // Load product data (mock data for now)
   useEffect(() => {
@@ -47,6 +61,8 @@ export default function EditProductPage() {
         fr: 'Le premier livre de la Bible, décrivant la création.',
         rn: 'Igitabu ca mbere c\'uburimwo bw\'isi.'
       },
+      contentType: 'free' as 'free' | 'paid',
+      freePages: 10,
       profile_image: 'https://cdn.mysite.com/images/genesis_cover.png',
       images: [
         'https://cdn.mysite.com/images/genesis1.png',
@@ -90,7 +106,7 @@ export default function EditProductPage() {
     }
   };
 
-  const handleUpdateProduct = () => {
+  const handleUpdateProduct = async () => {
     // Helper function to check if rich text content is actually empty
     const isRichTextEmpty = (htmlContent: string): boolean => {
       if (!htmlContent) return true;
@@ -111,6 +127,16 @@ export default function EditProductPage() {
       return;
     }
 
+    if (!productForm.contentType) {
+      alert('Please select a content type');
+      return;
+    }
+
+    if (productForm.contentType === 'free' && productForm.freePages <= 0) {
+      alert('Please enter a valid number of free pages');
+      return;
+    }
+
     if (!hasTitleContent) {
       alert('Please enter a title in at least one language');
       return;
@@ -121,21 +147,35 @@ export default function EditProductPage() {
       return;
     }
 
-    const updatedProduct = {
-      productId: productId,
-      type: productForm.type,
-      title: productForm.title,
-      description: productForm.description,
-    };
+    setIsLoading(true);
 
-    console.log('=== UPDATE PRODUCT PAYLOAD ===');
-    console.log('Product ID:', productId);
-    console.log('Updated Product:', JSON.stringify(updatedProduct, null, 2));
-    console.log('Product Form Data:', JSON.stringify(productForm, null, 2));
-    console.log('==============================');
+    try {
+      const payload: any = {
+        productId: productId,
+        type: productForm.type,
+        title: productForm.title,
+        description: productForm.description,
+        contentType: productForm.contentType,
+        freePages: productForm.freePages,
+      };
 
-    // Here you would typically make an API call
-    alert('Product updated successfully!');
+      console.log('🚀 UPDATING PRODUCT', payload);
+
+      const response = await updateProduct(payload);
+
+      if (response.success) {
+        alert('Product updated successfully!');
+        // Optionally redirect or refresh data
+        window.location.href = "/products";
+      } else {
+        alert(response.message || "Failed to update product. Please try again.");
+      }
+    } catch (error) {
+      console.error("❌ Error updating product:", error);
+      alert("Network error. Please check your connection and try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -177,21 +217,60 @@ export default function EditProductPage() {
 
                   {/* Direct Editing Section */}
                   <div className="space-y-6">
-                    {/* Product Type Selection */}
-                    <div className="space-y-3">
-                      <label className="text-sm font-medium text-gray-700">
-                        Product Type <span className="text-red-500">*</span>
-                      </label>
-                      <Select value={productForm.type} onValueChange={(e: any) => setProductForm({ ...productForm, type: e.target.value as ProductType })}>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Filter by type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="book">📖  Book</SelectItem>
-                          <SelectItem value="song">🎵 Hymns</SelectItem>
-                        </SelectContent>
-                      </Select>
+                    {/* Product Type and Content Type Row */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Product Type Selection */}
+                      <div className="space-y-3">
+                        <label className="text-sm font-medium text-gray-700">
+                          Product Type <span className="text-red-500">*</span>
+                        </label>
+                        <Select value={productForm.type} onValueChange={(value) => setProductForm({ ...productForm, type: value as ProductType })}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select product type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="book">📖 Book</SelectItem>
+                            <SelectItem value="song">🎵 Hymns</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Content Type Selection */}
+                      <div className="space-y-3">
+                        <label className="text-sm font-medium text-gray-700">
+                          Content Type <span className="text-red-500">*</span>
+                        </label>
+                        <Select
+                          value={productForm.contentType}
+                          onValueChange={(value) => setProductForm({ ...productForm, contentType: value as 'free' | 'paid' })}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select content type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="free">🆓 Free</SelectItem>
+                            <SelectItem value="paid">💰 Paid</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
+
+                    {/* Conditional Free Pages Row */}
+                    {productForm.contentType === 'free' && (
+                      <div className="space-y-3">
+                        <label className="text-sm font-medium text-gray-700">
+                          Free Pages <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="number"
+                          value={productForm.freePages}
+                          onChange={(e) => setProductForm({ ...productForm, freePages: parseInt(e.target.value) || 0 })}
+                          placeholder="Enter number of free pages"
+                          className="w-full h-[40px] px-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-transparent transition-colors"
+                          min="0"
+                        />
+                      </div>
+                    )}
 
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-gray-700">
@@ -334,10 +413,20 @@ export default function EditProductPage() {
                 {currentStep === stepperSteps.length - 1 ? (
                   <Button
                     onClick={handleUpdateProduct}
-                    className="px-8 py-3 bg-theme-primary hover:bg-theme-primary text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
+                    disabled={isLoading}
+                    className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <Save className="h-5 w-5 mr-2" />
-                    Update Product
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                        Updating Product...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-5 w-5 mr-2" />
+                        Update Product
+                      </>
+                    )}
                   </Button>
                 ) : (
                   <Button

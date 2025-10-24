@@ -33,7 +33,7 @@ const isMultilingualFieldComplete = (field: MultilingualText): boolean => {
   return Object.values(field).some(val => !isRichTextEmpty(val));
 };
 
-export default function AddBookPage() {
+export default function AddBookPageDummyOld() {
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [validationError, setValidationError] = useState<string>("");
   const [successMessage, setSuccessMessage] = useState<string>("");
@@ -319,23 +319,6 @@ export default function AddBookPage() {
                     onClick={handleNextStep}
                     disabled={!isFirstStepComplete}
                     className={`px-8 py-3 font-semibold rounded-lg shadow-md transition-colors ${isFirstStepComplete
-                      ? "bg-theme-primary hover:bg-theme-primary text-white"
-                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      }`}
-                  >
-                    Next
-                  </Button>
-                );
-              }
-            })()}
-          </div>
-        </div>
-      </div>
-    </div>
-
-  );
-}
-nsition-colors ${isFirstStepComplete
                       ? "bg-theme-primary hover:bg-theme-primary text-white"
                       : "bg-gray-300 text-gray-500 cursor-not-allowed"
                       }`}

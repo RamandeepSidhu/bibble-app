@@ -1,17 +1,24 @@
 // Bibble Admin - TypeScript Interfaces for Multilingual Content Management
 
-export interface MultilingualText {
-  en: string;
-  sw: string;
-  fr: string;
-  rn: string;
+export interface Language {
+  code: string;
+  name: string;
+  flag?: string;
 }
 
-export type ProductType = 'book' | 'story' | 'chapter' | 'verse' | 'hymns';
+export interface MultilingualText {
+  [languageCode: string]: string;
+}
+
+// Dynamic multilingual text type factory
+export type DynamicMultilingualText<T extends Language[]> = {
+  [K in T[number]['code']]: string;
+};
+
 
 export interface Product {
   productId: string | null;
-  type: ProductType;
+  type: any;
   categoryId?: string;
   tags: string[];
   title: MultilingualText;
@@ -95,9 +102,11 @@ export interface AdminUser {
 
 // Form interfaces for creating/editing content
 export interface ProductFormData {
-  type: ProductType;
+  type: any;
   title: MultilingualText;
   description: MultilingualText;
+  contentType:any,  // 'free' | 'paid';
+  freePages: number;
 }
 
 export interface StoryFormData {
@@ -137,15 +146,15 @@ export interface PaginatedResponse<T> {
   };
 }
 
-// Language options for forms
-export const LANGUAGES = [
+// Language options for forms (fallback until API loads)
+export const LANGUAGES: Language[] = [
   { code: 'en', name: 'English', flag: '🇺🇸' },
   { code: 'sw', name: 'Swahili', flag: '🇹🇿' },
   { code: 'fr', name: 'French', flag: '🇫🇷' },
   { code: 'rn', name: 'Kinyarwanda', flag: '🇷🇼' }
-] as const;
+];
 
-export type LanguageCode = typeof LANGUAGES[number]['code'];
+export type LanguageCode = Language['code'];
 
 // Product 2 type options
 export const PRODUCT_TYPES = [

@@ -24,6 +24,7 @@ export function AdminSidebar({ sidebarOpen, setSidebarOpen, isMobile = false }: 
     { name: 'Dashboard', href: '/', icon: Home },
     { name: 'Users', href: '/users', icon: Users },
     { name: 'Products', href: '/products', icon: Package },
+    { name: 'Verse', href: '/verse', icon: Package },
   ];
 
   const sidebarContent = (
