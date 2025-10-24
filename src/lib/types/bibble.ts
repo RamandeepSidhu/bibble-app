@@ -208,9 +208,16 @@ export interface ProductManagement {
   description: MultilingualText;
   contentType: string;
   freePages?: number;
+  views?: number;
+  shares?: number;
   status: 'active' | 'inactive' | 'draft';
   createdAt?: string;
   updatedAt?: string;
+  userId?: {
+    _id: string;
+    name: string;
+    email: string;
+  };
 }
 
 export interface CreateProductPayload {

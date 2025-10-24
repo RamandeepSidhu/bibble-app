@@ -207,9 +207,9 @@ const CKEditorComponent: FC<CKEditorComponentProps> = ({ value, onChange, placeh
                 )}
 
                 {/* Language Status Indicator */}
-                <div className="flex items-center gap-2 text-xs">
-                    <div className={`w-2 h-2 rounded-full ${hasContent ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                    <span className={hasContent ? 'text-green-600' : 'text-gray-500'}>
+                <div className="flex items-center gap-2 text-xs mb-3">
+                    <div className={`w-2 h-2 rounded-full ${hasContent ? 'bg-green-500 mb-3' : 'bg-gray-300 mb-3'}`}></div>
+                    <span className={hasContent ? 'text-green-600 mb-3' : 'text-gray-500  mb-3'}>
                         {hasContent ? 'Content added' : 'No content'}
                     </span>
                 </div>

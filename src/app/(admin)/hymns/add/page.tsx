@@ -34,6 +34,12 @@ export default function AddHymnPage() {
     const [isLoadingData, setIsLoadingData] = useState<boolean>(true);
     const [languages, setLanguages] = useState<Language[]>([]);
     const [products, setProducts] = useState<ProductManagement[]>([]);
+    const [allProducts, setAllProducts] = useState<ProductManagement[]>([]);
+    const [displayedProducts, setDisplayedProducts] = useState<ProductManagement[]>([]);
+    const [currentPage, setCurrentPage] = useState<number>(1);
+    const [pageSize] = useState<number>(10);
+    const [hasMoreProducts, setHasMoreProducts] = useState<boolean>(true);
+    const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
 
     const [hymnData, setHymnData] = useState<CreateHymnPayload>({
         productId: "",
@@ -51,7 +57,7 @@ export default function AddHymnPage() {
                 const [languageResponse, languageCodeResponse, productsResponse] = await Promise.all([
                     ClientInstance.APP.getLanguage(),
                     ClientInstance.APP.getLanguageCode(),
-                    ClientInstance.APP.getProducts()
+                    ClientInstance.APP.getProducts({ type: 'song' })
                 ]);
 
                 // Handle languages
@@ -88,10 +94,20 @@ export default function AddHymnPage() {
 
                 // Handle products
                 if ((productsResponse as any)?.success && (productsResponse as any)?.data) {
-                    const allProducts = (productsResponse as any).data;
-                    // Filter only song products
-                    const songProducts = allProducts.filter((product: ProductManagement) => product.type === 'song');
-                    setProducts(songProducts);
+                    const allProductsData = (productsResponse as any).data;
+                    
+                    // Products are already filtered by API to only return song products
+                    const productsToUse = allProductsData;
+                    
+                    setAllProducts(productsToUse);
+                    
+                    // Initialize displayed products (first 10)
+                    const initialProducts = productsToUse.slice(0, pageSize);
+                    setDisplayedProducts(initialProducts);
+                    setProducts(initialProducts);
+                    
+                    // Check if there are more products
+                    setHasMoreProducts(productsToUse.length > pageSize);
                 }
             } catch (error) {
                 console.error("Error fetching data:", error);
@@ -103,6 +119,37 @@ export default function AddHymnPage() {
 
         fetchData();
     }, []);
+
+    // Load more products function
+    const loadMoreProducts = () => {
+        setIsLoadingMore(true);
+        
+        const nextPage = currentPage + 1;
+        const startIndex = currentPage * pageSize;
+        const endIndex = startIndex + pageSize;
+        
+        const nextProducts = allProducts.slice(startIndex, endIndex);
+        
+        if (nextProducts.length > 0) {
+            setDisplayedProducts(prev => [...prev, ...nextProducts]);
+            setProducts(prev => [...prev, ...nextProducts]);
+            setCurrentPage(nextPage);
+            
+            // Check if there are more products to load
+            const remainingProducts = allProducts.length - (endIndex);
+            setHasMoreProducts(remainingProducts > 0);
+        } else {
+            // No more products to load
+            setHasMoreProducts(false);
+        }
+        
+        setIsLoadingMore(false);
+    };
+
+    // Get icon based on product type (only songs are fetched)
+    const getTypeIcon = (type: string) => {
+        return '🎵'; // All products are songs since API filters by type=song
+    };
 
     const handleSave = async () => {
         setValidationError("");
@@ -160,7 +207,7 @@ export default function AddHymnPage() {
 
     if (isLoadingData) {
         return (
-            <div className="bg-white min-h-screen rounded-lg shadow-sky-100 space-y-6 container mx-auto px-4 py-8">
+            <div className="bg-white min-h-screen rounded-lg shadow-sky-100 space-y-6 container mx-auto px-4 py-4">
                 <div className="flex items-center justify-center h-64">
                     <div className="text-center">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-theme-primary mx-auto"></div>
@@ -172,10 +219,10 @@ export default function AddHymnPage() {
     }
 
     return (
-        <div className="bg-white min-h-screen rounded-lg shadow-sky-100 space-y-6 container mx-auto px-4 py-8">
+        <div className="bg-white min-h-screen rounded-lg shadow-sky-100 space-y-6 container mx-auto px-4 py-4">
             {/* Header */}
-            <div className="border-b border-gray-100 bg-white">
-                <div className="max-w-6xl mx-auto px-5 py-6 flex items-center gap-4">
+            <div className=" mx-auto px-12 py-6  border-b border-gray-100 bg-white">
+                <div className="flex items-center gap-4">
                     <Link href="/hymns" className="text-gray-600 hover:text-gray-900">
                         <ArrowLeft className="h-6 w-6" />
                     </Link>
@@ -186,8 +233,8 @@ export default function AddHymnPage() {
                 </div>
             </div>
 
-            <div className="max-w-6xl mx-auto px-2">
-                <div className="p-10 space-y-8">
+            <div className="mx-auto px-12 ">
+                <div className="space-y-8">
                     {/* Product Selection and Hymn Number */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Product Selection */}
@@ -195,27 +242,55 @@ export default function AddHymnPage() {
                             <label className="text-sm font-medium text-gray-700">
                                 Select Product <span className="text-red-500">*</span>
                             </label>
-                            <Select
-                                value={hymnData.productId}
-                                onValueChange={(value) => {
-                                    setHymnData({ ...hymnData, productId: value });
-                                    setValidationError("");
-                                }}
-                            >
-                                <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Select product" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {products.map((product) => (
-                                        <SelectItem key={product._id} value={product._id}>
-                                            <span className="flex items-center gap-2">
-                                                <span>🎵</span>
-                                                {product.title.en || 'Untitled'}
-                                            </span>
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <div className="space-y-2">
+                                <Select
+                                    value={hymnData.productId}
+                                    onValueChange={(value) => {
+                                        setHymnData({ ...hymnData, productId: value });
+                                        setValidationError("");
+                                    }}
+                                >
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="Select product" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {displayedProducts.map((product) => (
+                                            <SelectItem key={product._id} value={product._id}>
+                                                <span className="flex items-center gap-2">
+                                                    <span>{getTypeIcon(product.type)}</span>
+                                                    <span className="flex-1">{product.title.en || 'Untitled'}</span>
+                                                </span>
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                
+                                {/* Load More Button */}
+                                {hasMoreProducts && (allProducts.length - displayedProducts.length) > 0 && (
+                                    <div className="flex justify-center pt-2">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={loadMoreProducts}
+                                            disabled={isLoadingMore}
+                                            className="flex items-center gap-2"
+                                        >
+                                            {isLoadingMore ? (
+                                                <>
+                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                    Loading...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    Load More Products ({allProducts.length - displayedProducts.length} remaining)
+                                                </>
+                                            )}
+                                        </Button>
+                                    </div>
+                                )}
+                                
+                            </div>
                         </div>
 
                         {/* Hymn Number */}
@@ -267,7 +342,7 @@ export default function AddHymnPage() {
                 )}
 
                 {/* Save Button */}
-                <div className="flex justify-end items-center px-10 py-6 border-t border-gray-200">
+                <div className="flex justify-end items-center py-6 border-t border-gray-200">
                     <Button
                         onClick={handleSave}
                         disabled={isLoading}

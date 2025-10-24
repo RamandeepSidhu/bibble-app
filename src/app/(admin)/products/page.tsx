@@ -4,14 +4,6 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { 
   Plus, 
   Edit, 
   Trash2, 
@@ -19,7 +11,8 @@ import {
   Eye,
   Globe,
   FileText,
-  X
+  X,
+  Package
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -240,11 +233,86 @@ export default function ProductsPage() {
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-theme-primary mx-auto"></div>
-            <p className="mt-2 text-gray-600">Loading products...</p>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(6)].map((_, index) => (
+            <div key={index} className="bg-white border border-gray-200 rounded-lg shadow-sm flex flex-col min-h-[400px]">
+              {/* Card Header Shimmer */}
+              <div className="p-6 border-b border-gray-100">
+                <div className="flex items-center space-x-3">
+                  <div className="h-12 w-12 rounded-full bg-gray-200 animate-pulse"></div>
+                  <div className="flex-1">
+                    <div className="h-6 bg-gray-200 rounded animate-pulse mb-2"></div>
+                    <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4"></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Content Shimmer */}
+              <div className="p-6 flex-grow">
+                {/* Product Information Shimmer */}
+                <div className="mb-4">
+                  <div className="h-6 bg-gray-200 rounded animate-pulse mb-3 w-48"></div>
+                  <div className="space-y-2">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="p-3">
+                        <div className="h-4 bg-gray-200 rounded animate-pulse w-16 mb-2"></div>
+                        <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4"></div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Description Shimmer */}
+                <div className="mb-4">
+                  <div className="h-6 bg-gray-200 rounded animate-pulse mb-3 w-32"></div>
+                  <div className="space-y-2">
+                    {[...Array(4)].map((_, i) => (
+                      <div key={i} className="p-3">
+                        <div className="h-4 bg-gray-200 rounded animate-pulse w-12 mb-2"></div>
+                        <div className="space-y-1">
+                          <div className="h-4 bg-gray-200 rounded animate-pulse w-full"></div>
+                          <div className="h-4 bg-gray-200 rounded animate-pulse w-5/6"></div>
+                          <div className="h-4 bg-gray-200 rounded animate-pulse w-4/6"></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Product Stats Shimmer */}
+                <div className="mb-4">
+                  <div className="h-6 bg-gray-200 rounded animate-pulse mb-3 w-32"></div>
+                  <div className="grid grid-cols-2 gap-4">
+                    {[...Array(4)].map((_, i) => (
+                      <div key={i} className="p-3 bg-gray-50 rounded border border-gray-200">
+                        <div className="flex items-center justify-between">
+                          <div className="h-4 bg-gray-200 rounded animate-pulse w-20"></div>
+                          <div className="h-4 bg-gray-200 rounded animate-pulse w-8"></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Status and Date Shimmer */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="h-6 w-12 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="h-4 bg-gray-200 rounded animate-pulse w-16"></div>
+                  </div>
+                  <div className="h-3 bg-gray-200 rounded animate-pulse w-32"></div>
+                </div>
+              </div>
+
+              {/* Card Footer Shimmer */}
+              <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 rounded-b-lg flex-shrink-0">
+                <div className="flex justify-end gap-2">
+                  <div className="h-8 bg-gray-200 rounded animate-pulse w-16"></div>
+                  <div className="h-8 bg-gray-200 rounded animate-pulse w-20"></div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -382,7 +450,7 @@ export default function ProductsPage() {
             </SelectContent>
           </Select>
         </div>
-         </div>
+      </div>
 
          {/* Clear Filters Button - Only show when filters are active */}
          {hasActiveFilters() && (
@@ -400,7 +468,7 @@ export default function ProductsPage() {
         
       </div>
 
-      {/* Products Table */}
+      {/* Products Cards */}
       {filteredProducts.length === 0 ? (
         <div className="text-center py-12">
           <div className="text-gray-500 text-lg">No products found</div>
@@ -412,67 +480,165 @@ export default function ProductsPage() {
           </p>
         </div>
       ) : (
-        <div className="bg-white border border-[#EAECF0] rounded-lg overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow className="border-b border-[#EAECF0]">
-                <TableHead className="font-semibold text-[#475467] text-xs py-4 px-6">Product</TableHead>
-                <TableHead className="font-semibold text-[#475467] text-xs py-4 px-6">Type</TableHead>
-                <TableHead className="font-semibold text-[#475467] text-xs py-4 px-6">Title</TableHead>
-                <TableHead className="font-semibold text-[#475467] text-xs py-4 px-6">Status</TableHead>
-                <TableHead className="font-semibold text-[#475467] text-xs py-4 px-6">Created</TableHead>
-                <TableHead className="font-semibold text-[#475467] text-xs py-4 px-6 text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredProducts.map((product, index) => (
-                <TableRow 
-                  key={product._id} 
-                  className={`border-b border-[#EAECF0] hover:bg-gray-50 transition-colors ${
-                    index % 2 === 0 ? 'bg-[#F9FAFB]' : 'bg-white'
-                  }`}
-                >
-                  <TableCell className="py-4 px-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredProducts.map((product) => (
+            <div key={product._id} className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow flex flex-col min-h-[400px]">
+              {/* Card Header */}
+              <div className="p-6 border-b border-gray-100">
                     <div className="flex items-center space-x-3">
-                      <div className="h-10 w-10 rounded-full bg-theme-secondary text-theme-primary flex items-center justify-center font-semibold text-lg">
-                          {getTypeIcon(product.type)}
-                        </div>
-                      <div>
-                        <div className="font-medium text-gray-900 max-w-xs truncate" dangerouslySetInnerHTML={{ __html: product.title.en || 'Untitled' }} />
-                        <div className="text-sm text-gray-500">
-                          {product.contentType}
-                        </div>
-                      </div>
+                  <div className="h-12 w-12 rounded-full bg-theme-secondary text-theme-primary flex items-center justify-center font-semibold">
+                    <Package className="h-6 w-6" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-semibold text-lg text-gray-900">
+                      {getTypeIcon(product.type)} {product.type?.charAt(0).toUpperCase() + product.type?.slice(1) || 'Product'}
                     </div>
-                  </TableCell>
-                  <TableCell className="py-4 px-6">
-                    <div className="h-8 w-8 rounded-full bg-theme-secondary text-theme-primary flex items-center justify-center font-semibold text-lg">
-                      {getTypeIcon(product.type)}
+                    <div className="text-sm text-gray-500">
+                      {product.contentType}
                     </div>
-                  </TableCell>
-                  <TableCell className="py-4 px-6">
-                    <div className="max-w-xs">
-                      <div className="truncate" dangerouslySetInnerHTML={{ __html: product.title.en || '-' }} />
-                      {product.title.sw && product.title.sw !== product.title.en && (
-                        <div className="truncate text-sm text-gray-500 mt-1" dangerouslySetInnerHTML={{ __html: product.title.sw }} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Product Information with All Languages */}
+              <div className="p-6 flex-grow">
+                <div className="mb-4">
+                  <h4 className="text-lg font-bold text-gray-900 mb-3 border-b-2 border-theme-primary pb-2">Product Title</h4>
+                  
+                  <div className="space-y-1">
+                    {/* Product Title - All Languages */}
+                    <div className="space-y-1">
+                      {product.title.en && (
+                        <div className="text-sm p-3">
+                          <span className="text-sm font-bold text-gray-900 mr-3">EN:</span>
+                          <span className="text-gray-900 font-medium" dangerouslySetInnerHTML={{ __html: product.title.en }} />
+                        </div>
+                      )}
+                      {product.title.sw && (
+                        <div className="text-sm p-3">
+                          <span className="text-sm font-bold text-gray-900 mr-3">SW:</span>
+                          <span className="text-gray-900 font-medium" dangerouslySetInnerHTML={{ __html: product.title.sw }} />
+                        </div>
+                      )}
+                      {product.title.fr && (
+                        <div className="text-sm p-3">
+                          <span className="text-sm font-bold text-gray-900 mr-3">FR:</span>
+                          <span className="text-gray-900 font-medium" dangerouslySetInnerHTML={{ __html: product.title.fr }} />
+                        </div>
+                      )}
+                      {product.title.rn && (
+                        <div className="text-sm p-3">
+                          <span className="text-sm font-bold text-gray-900 mr-3">RN:</span>
+                          <span className="text-gray-900 font-medium" dangerouslySetInnerHTML={{ __html: product.title.rn }} />
+                        </div>
+                      )}
+                      {product.title.hi && (
+                        <div className="text-sm p-3">
+                          <span className="text-sm font-bold text-gray-900 mr-3">HI:</span>
+                          <span className="text-gray-900 font-medium" dangerouslySetInnerHTML={{ __html: product.title.hi }} />
+                        </div>
                       )}
                     </div>
-                  </TableCell>
-                  <TableCell className="py-4 px-6">
-                    <div className="flex items-center gap-3">
-                      <ToggleSwitch
-                        checked={product.status === 'active'}
-                        onChange={() => handleStatusToggle(product)}
-                        size="md"
-                      />
+                  </div>
+                </div>
+
+                {/* Product Description - All Languages */}
+                <div className="mb-4">
+                  <h4 className="text-lg font-bold text-gray-900 mb-3 border-b-2 border-theme-primary pb-2">Description</h4>
+                  <div className="space-y-2">
+                    {/* English */}
+                    {product.description.en && (
+                      <div className="text-sm p-3">
+                        <span className="text-sm font-bold text-gray-900 mr-3">EN:</span>
+                        <div className="text-gray-900 font-medium line-clamp-4" dangerouslySetInnerHTML={{ __html: product.description.en }} />
+                      </div>
+                    )}
+                    {/* Swahili */}
+                    {product.description.sw && (
+                      <div className="text-sm p-3">
+                        <span className="text-sm font-bold text-gray-900 mr-3">SW:</span>
+                        <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: product.description.sw }} />
+                      </div>
+                    )}
+                    {/* French */}
+                    {product.description.fr && (
+                      <div className="text-sm p-3">
+                        <span className="text-sm font-bold text-gray-900 mr-3">FR:</span>
+                        <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: product.description.fr }} />
+                      </div>
+                    )}
+                    {/* Kinyarwanda */}
+                    {product.description.rn && (
+                      <div className="text-sm p-3">
+                        <span className="text-sm font-bold text-gray-900 mr-3">RN:</span>
+                        <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: product.description.rn }} />
+                      </div>
+                    )}
+                    {/* Hindi */}
+                    {product.description.hi && (
+                      <div className="text-sm p-3">
+                        <span className="text-sm font-bold text-gray-900 mr-3">HI:</span>
+                        <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: product.description.hi }} />
+                      </div>
+                    )}
+                  </div>
                     </div>
-                  </TableCell>
-                  <TableCell className="py-4 px-6 text-gray-700 text-sm">
-                    {product.createdAt ? new Date(product.createdAt).toLocaleDateString() : '-'}
-                  </TableCell>
-                  <TableCell className="text-right py-4 px-6">
+
+                {/* Product Stats */}
+                <div className="mb-4">
+                  <h4 className="text-lg font-bold text-gray-900 mb-3 border-b-2 border-theme-primary pb-2">Product Stats</h4>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="p-3 bg-gray-50 rounded border border-gray-200">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-gray-700">Free Pages:</span>
+                        <span className="text-gray-900 font-medium">{product.freePages || 0}</span>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded border border-gray-200">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-gray-700">Views:</span>
+                        <span className="text-gray-900 font-medium">{product.views || 0}</span>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded border border-gray-200">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-gray-700">Shares:</span>
+                        <span className="text-gray-900 font-medium">{product.shares || 0}</span>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded border border-gray-200">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-gray-700">Content Type:</span>
+                        <span className="text-gray-900 font-medium capitalize">{product.contentType || 'N/A'}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Status and Created Date */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <ToggleSwitch
+                      checked={product.status === 'active'}
+                      onChange={() => handleStatusToggle(product)}
+                      size="md"
+                    />
+                    <span className={`text-sm font-medium ${
+                      product.status === 'active' ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {product.status || 'inactive'}
+                    </span>
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    Created: {product.createdAt ? new Date(product.createdAt).toLocaleDateString() : '-'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Card Footer - Actions */}
+              <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 rounded-b-lg flex-shrink-0">
                     <div className="flex justify-end gap-2">
-                      <Link href={`/products/edit/${product._id}`}>
+                  <Link href={`/products/edit/${product._id}`}>
                         <Button variant="outline" size="sm" className="!min-w-[80px]">
                           <Edit className="h-4 w-4 mr-1" />
                           Edit
@@ -481,18 +647,16 @@ export default function ProductsPage() {
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        className="!min-w-[80px] bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
-                        onClick={() => handleDeleteClick(product)}
+                    className="!min-w-[80px] text-red-600 hover:text-red-700 hover:bg-red-50"
+                    onClick={() => handleDeleteClick(product)}
                       >
                         <Trash2 className="h-4 w-4 mr-1" />
                         Delete
                       </Button>
                     </div>
-                  </TableCell>
-                </TableRow>
+              </div>
+            </div>
               ))}
-            </TableBody>
-          </Table>
         </div>
       )}
 

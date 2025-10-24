@@ -159,7 +159,7 @@ export default function EditHymnPage() {
 
     if (isLoadingData) {
         return (
-            <div className="bg-white min-h-screen rounded-lg shadow-sky-100 space-y-6 container mx-auto px-4 py-8">
+            <div className="bg-white min-h-screen rounded-lg shadow-sky-100 space-y-6 container mx-auto px-4 py-4">
                 <div className="flex items-center justify-center h-64">
                     <div className="text-center">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-theme-primary mx-auto"></div>
@@ -172,7 +172,7 @@ export default function EditHymnPage() {
 
     if (!hymn) {
         return (
-            <div className="bg-white min-h-screen rounded-lg shadow-sky-100 space-y-6 container mx-auto px-4 py-8">
+            <div className="bg-white min-h-screen rounded-lg shadow-sky-100 space-y-6 container mx-auto px-4 py-4">
                 <div className="flex items-center justify-center h-64">
                     <div className="text-center">
                         <p className="text-gray-600">Hymn not found</p>
@@ -186,24 +186,24 @@ export default function EditHymnPage() {
     }
 
     return (
-        <div className="bg-white min-h-screen rounded-lg shadow-sky-100 space-y-6 container mx-auto px-4 py-8">
+        <div className="bg-white min-h-screen rounded-lg shadow-sky-100 space-y-6 container mx-auto px-4 py-4">
             {/* Header */}
-            <div className="border-b border-gray-100 bg-white">
-                <div className="max-w-6xl mx-auto px-5 py-6 flex items-center gap-4">
+            <div className=" mx-auto px-12 py-6  border-b border-gray-100 bg-white">
+                <div className="flex items-center gap-4">
                     <Link href="/hymns" className="text-gray-600 hover:text-gray-900">
                         <ArrowLeft className="h-6 w-6" />
                     </Link>
                     <div className="flex-1">
                         <h1 className="text-3xl font-bold text-gray-900">Edit Hymn</h1>
                         <p className="text-gray-500">
-                            {product?.title.en || 'Unknown Product'} - Hymn #{hymn.number}
+                           Hymn #{hymn.number}
                         </p>
                     </div>
                 </div>
             </div>
 
-            <div className="max-w-6xl mx-auto px-2">
-                <div className="p-10 space-y-8">
+            <div className="mx-auto px-12 ">
+                <div className="space-y-8">
                     {/* Hymn Number */}
                     <div className="space-y-3">
                         <label className="text-sm font-medium text-gray-700">
@@ -252,7 +252,7 @@ export default function EditHymnPage() {
                 )}
 
                 {/* Save Button */}
-                <div className="flex justify-end items-center px-10 py-6 border-t border-gray-200">
+                <div className="flex justify-end items-center py-6 border-t border-gray-200">
                     <Button
                         onClick={handleSave}
                         disabled={isLoading}

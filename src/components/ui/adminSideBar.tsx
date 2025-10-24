@@ -24,9 +24,9 @@ export function AdminSidebar({ sidebarOpen, setSidebarOpen, isMobile = false }: 
 
   const navigation = [
     { name: 'Dashboard', href: '/', icon: Home },
+    { name: 'Languages', href: '/languages', icon: Globe },
     { name: 'Users', href: '/users', icon: Users },
     { name: 'Products', href: '/products', icon: Package },
-    { name: 'Languages', href: '/languages', icon: Globe },
     { name: 'Hymns', href: '/hymns', icon: Music },
     { name: 'Verse', href: '/verse', icon: Package },
   ];
