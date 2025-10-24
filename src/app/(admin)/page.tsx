@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -10,19 +11,78 @@ import {
   Activity,
   Calendar,
   DollarSign,
-  Package
+  Package,
+  Music,
+  RefreshCw
 } from 'lucide-react';
 import Link from 'next/link';
+import ClientInstance from '@/shared/client';
+import { showToast } from '@/lib/toast';
+import DashboardShimmer from '@/components/ui/dashboard-shimmer';
+
+interface DashboardData {
+  user: {
+    _id: string;
+    name: string;
+    email: string;
+    role: string;
+  };
+  statistics: {
+    totalUsers: number;
+    paidUsers: number;
+    totalProducts: number;
+    totalHymns: number;
+    recentUsers: Array<{
+      _id: string;
+      name: string;
+      email: string;
+      createdAt: string;
+      profileImage?: string;
+    }>;
+  };
+}
+
+interface DashboardResponse {
+  success: boolean;
+  message: string;
+  data: DashboardData;
+}
 
 export default function AdminDashboard() {
   const { data: session } = useSession();
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const firstName = (session?.user as any)?.first_name || 'Admin';
 
-  const stats = [
+  // Fetch dashboard data
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      const response: any = await ClientInstance.APP.getAdminDashboard();
+      
+      if (response.success) {
+        setDashboardData(response.data);
+      } else {
+        showToast.error("Error", response.message || "Failed to fetch dashboard data");
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      showToast.error("Error", "Failed to fetch dashboard data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  // Dynamic stats based on API data
+  const stats = dashboardData?.statistics ? [
     {
       title: 'Total Users',
-      value: '1,234',
+      value: (dashboardData.statistics.totalUsers || 0).toLocaleString(),
       description: 'All registered users',
       icon: Users,
       change: '+12%',
@@ -31,55 +91,81 @@ export default function AdminDashboard() {
       iconColor: 'text-theme-primary',
     },
     {
-      title: 'Active Users',
-      value: '890',
-      description: 'Users active this month',
+      title: 'Paid Users',
+      value: (dashboardData.statistics.paidUsers || 0).toLocaleString(),
+      description: 'Users with active subscriptions',
       icon: UserCheck,
       change: '+8%',
       changeType: 'positive' as const,
       color: 'bg-theme-secondary text-theme-primary',
       iconColor: 'text-theme-primary',
     },
+    // {
+    //   title: 'Total Products',
+    //   value: (dashboardData.statistics.totalProducts || 0).toLocaleString(),
+    //   description: 'Products in catalog',
+    //   icon: Package,
+    //   change: '+5%',
+    //   changeType: 'positive' as const,
+    //   color: 'bg-theme-secondary text-theme-primary',
+    //   iconColor: 'text-theme-primary',
+    // },
     {
-      title: 'Total Products',
-      value: '45',
-      description: 'Products in catalog',
-      icon: Package,
-      change: '+5%',
+      title: 'Total Hymns',
+      value: (dashboardData.statistics.totalHymns || 0).toLocaleString(),
+      description: 'Hymns in catalog',
+      icon: Music,
+      change: '+3%',
       changeType: 'positive' as const,
       color: 'bg-theme-secondary text-theme-primary',
       iconColor: 'text-theme-primary',
     },
     {
-      title: 'Active Subscriptions',
-      value: '456',
-      description: 'Total active subscriptions',
-      icon: DollarSign,
+      title: 'Free Users',
+      value: ((dashboardData.statistics.totalUsers || 0) - (dashboardData.statistics.paidUsers || 0)).toLocaleString(),
+      description: 'Users on free plan',
+      icon: UserX,
       change: '+15%',
       changeType: 'positive' as const,
       color: 'bg-theme-secondary text-theme-primary',
       iconColor: 'text-theme-primary',
     },
-  ];
+  ] : [];
 
-  const recentActivity = [
-    { id: 1, action: 'New user registered', user: 'John Doe', time: '2 minutes ago', type: 'user' },
-    { id: 2, action: 'Product added', user: 'Holy Bible', time: '5 minutes ago', type: 'product' },
-    { id: 3, action: 'User verified', user: 'Mike Johnson', time: '10 minutes ago', type: 'user' },
-    { id: 4, action: 'Story added', user: 'Creation Story', time: '15 minutes ago', type: 'content' },
-    { id: 5, action: 'Verse added', user: 'John 3:16', time: '20 minutes ago', type: 'content' },
-  ];
+  // Recent activity from API data
+  const recentActivity = dashboardData?.statistics?.recentUsers?.map((user, index) => ({
+    id: user._id,
+    action: 'New user registered',
+    user: user.name,
+    time: new Date(user.createdAt).toLocaleDateString(),
+    type: 'user' as const,
+  })) || [];
+
+  if (loading) {
+    return <DashboardShimmer />;
+  }
 
   return (
     <div className="space-y-6 container mx-auto px-4 py-8">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 mt-2">Welcome back, {firstName}! Here's what's happening with your platform.</p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-gray-600 mt-2">Welcome back, {firstName}! Here's what's happening with your platform.</p>
+        </div>
+        <Button 
+          variant="outline" 
+          onClick={fetchDashboardData}
+          disabled={loading}
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
@@ -108,28 +194,36 @@ export default function AdminDashboard() {
             <p className="text-sm text-gray-600 mt-1">Latest user actions and system events</p>
           </div>
           <div className="p-6">
-            <div className="space-y-4">
-              {recentActivity.map((activity) => (
-                <div key={activity.id} className="flex items-center space-x-4">
-                  <div className={`w-2 h-2 rounded-full ${
-                    activity.type === 'user' ? 'bg-blue-500' :
-                    activity.type === 'product' ? 'bg-purple-500' :
-                    'bg-green-500'
-                  }`}></div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {activity.action}
-                    </p>
-                    <p className="text-sm text-gray-500 truncate">
-                      {activity.user}
-                    </p>
+            {recentActivity.length > 0 ? (
+              <div className="space-y-4">
+                {recentActivity.map((activity) => (
+                  <div key={activity.id} className="flex items-center space-x-4">
+                    <div className={`w-2 h-2 rounded-full ${
+                      activity.type === 'user' ? 'bg-blue-500' :
+                      activity.type === 'product' ? 'bg-purple-500' :
+                      'bg-green-500'
+                    }`}></div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {activity.action}
+                      </p>
+                      <p className="text-sm text-gray-500 truncate">
+                        {activity.user}
+                      </p>
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {activity.time}
+                    </div>
                   </div>
-                  <div className="text-xs text-gray-500">
-                    {activity.time}
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <div className="text-gray-500 text-lg mb-2">No recent activity</div>
+                <p className="text-gray-400">Recent user registrations will appear here</p>
+              </div>
+            )}
           </div>
         </div>
 

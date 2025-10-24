@@ -1,11 +1,19 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Stepper } from '@/components/ui/stepper';
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { 
   Plus, 
   Edit, 
@@ -56,6 +64,7 @@ interface BibleFormData {
 
 export default function BiblePage() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);
   const [validationError, setValidationError] = useState<string>("");
@@ -66,6 +75,10 @@ export default function BiblePage() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingContentType, setEditingContentType] = useState<string>("");
   const [editingContentId, setEditingContentId] = useState<string>("");
+  
+  // Delete confirmation states
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<ProductManagement | null>(null);
   
   // Data states
   const [products, setProducts] = useState<ProductManagement[]>([]);
@@ -448,12 +461,11 @@ export default function BiblePage() {
           response = await ClientInstance.APP.createStory(storyPayload);
           if (response?.success) {
             showToast.success("Story Created", "Story has been created successfully!");
-            setCurrentStep(1);
-            // Update form data with the created story ID
-            setFormData(prev => ({
-              ...prev,
-              chapter: { ...prev.chapter, storyId: response.data._id }
-            }));
+            setSuccessMessage("Story created successfully! Redirecting back to Bible page...");
+            // Redirect back to Bible page after successful creation
+            setTimeout(() => {
+              router.push('/bible');
+            }, 2000);
           }
         }
         
@@ -481,12 +493,11 @@ export default function BiblePage() {
           response = await ClientInstance.APP.createChapter(chapterPayload);
           if (response?.success) {
             showToast.success("Chapter Created", "Chapter has been created successfully!");
-            setCurrentStep(2);
-            // Update form data with the created chapter ID
-            setFormData(prev => ({
-              ...prev,
-              verse: { ...prev.verse, chapterId: response.data._id }
-            }));
+            setSuccessMessage("Chapter created successfully! Redirecting back to Bible page...");
+            // Redirect back to Bible page after successful creation
+            setTimeout(() => {
+              router.push('/bible');
+            }, 2000);
           }
         }
         
@@ -514,42 +525,11 @@ export default function BiblePage() {
           response = await ClientInstance.APP.createVerse(versePayload);
           if (response?.success) {
             showToast.success("Verse Created", "Verse has been created successfully!");
-            setSuccessMessage("All content created successfully! You can now create more content or view the preview.");
-            // Reset form for next creation
+            setSuccessMessage("All content created successfully! Redirecting back to Bible page...");
+            // Redirect back to Bible page after successful creation
             setTimeout(() => {
-              setCurrentStep(0);
-              const resetMultilingualData = () => {
-                const multilingualData: MultilingualText = {};
-                languages.forEach((lang: Language) => {
-                  multilingualData[lang.code] = "";
-                });
-                return multilingualData;
-              };
-              
-              setFormData({
-                story: {
-                  productId: '',
-                  title: resetMultilingualData(),
-                  description: resetMultilingualData(),
-                  order: 1
-                },
-                chapter: {
-                  storyId: '',
-                  title: resetMultilingualData(),
-                  order: 1
-                },
-                verse: {
-                  chapterId: '',
-                  number: 1,
-                  text: resetMultilingualData()
-                }
-              });
-              setSelectedProduct(null);
-              setSelectedStory(null);
-              setSelectedChapter(null);
-              setStories([]);
-              setChapters([]);
-            }, 3000);
+              router.push('/bible');
+            }, 2000);
           } else {
             showToast.error("Error", response?.message || "Failed to create verse");
             return;
@@ -872,11 +852,11 @@ export default function BiblePage() {
                     Chapter Title <span className="text-red-500">*</span>
                     </label>
                     <CKEditorComponent
-                    value={formData.story.title}
+                    value={formData.chapter.title}
                       onChange={(val) => {
                       setFormData(prev => ({
                         ...prev,
-                        story: { ...prev.story, title: val }
+                        chapter: { ...prev.chapter, title: val }
                       }));
                       setValidationError("");
                     }}
@@ -891,15 +871,15 @@ export default function BiblePage() {
                   </label>
                   <Input
                     type="number"
-                    value={formData.story.order}
+                    value={formData.chapter.order}
                     onChange={(e) => {
                       setFormData(prev => ({
                         ...prev,
-                        story: { ...prev.story, order: parseInt(e.target.value) || 1 }
+                        chapter: { ...prev.chapter, order: parseInt(e.target.value) || 1 }
                       }));
                       setValidationError("");
                     }}
-                    placeholder="Enter story order"
+                    placeholder="Enter chapter order"
                     min="1"
                   />
                 </div>
@@ -1179,25 +1159,29 @@ export default function BiblePage() {
                       </div>
                     </div>
                     <div className="flex gap-2">
+                      <Link href={`/products/edit/${product._id}`}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                          }}
+                        >
+                          <Edit className="h-4 w-4 mr-1" />
+                          Edit
+                        </Button>
+                      </Link>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleEditContent('product', product._id);
+                          setProductToDelete(product);
+                          setIsDeleteDialogOpen(true);
                         }}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
                       >
-                        <Edit className="h-4 w-4 mr-1" />
-                        Edit
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setProducts(prev => prev.filter(p => p._id !== product._id));
-                        }}
-                      >
+                        <Trash2 className="h-4 w-4 mr-1" />
                         Remove
                       </Button>
                     </div>
@@ -1413,6 +1397,42 @@ export default function BiblePage() {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Remove Product</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to remove this product from the list? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsDeleteDialogOpen(false);
+                setProductToDelete(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (productToDelete) {
+                  setProducts(prev => prev.filter(p => p._id !== productToDelete._id));
+                  showToast.success("Product Removed", "Product has been removed from the list");
+                }
+                setIsDeleteDialogOpen(false);
+                setProductToDelete(null);
+              }}
+            >
+              Remove
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

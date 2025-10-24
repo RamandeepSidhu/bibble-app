@@ -98,7 +98,10 @@ class Client {
     deleteVerse: (id: string) => HttpClient.delete(DELETE_VERSE.replace('{id}', id)),
     getVerseById: (id: string) => HttpClient.get(GET_VERSE_BY_ID.replace('{id}', id)),
     getVersesByChapter: (chapterId: string) => HttpClient.get(GET_VERSES_BY_CHAPTER.replace('{chapterId}', chapterId)),
-    getUserList: () => HttpClient.get(USER_LIST),
+    getUserList: (params?: string) => {
+      const queryString = params ? `?${params}` : '';
+      return HttpClient.get(USER_LIST + queryString);
+    },
   }
 }
 

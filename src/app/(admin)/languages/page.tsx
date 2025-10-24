@@ -223,18 +223,18 @@ export default function LanguagesPage() {
 
       {/* Search and Filter */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-3 md:gap-4 mt-5">
-        <div className="relative w-full md:w-96">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-gray-400" />
+        <div className="flex-1">
+            <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+                placeholder="Search languages..."
+              value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 w-[50%] bg-white h-[40px]"
+              />
+              
+            </div>
           </div>
-          <input
-            placeholder="Search languages..."
-            type="search"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="block w-full sm:w-80 h-[40px] pl-10 pr-4 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-          />
-        </div>
         <div className="w-full sm:w-auto">
           <Select value={selectedStatus} onValueChange={setSelectedStatus}>
             <SelectTrigger className="w-full sm:w-[150px]">
