@@ -2,9 +2,10 @@
 'use client';
 
 import { FC, useState, useEffect } from 'react';
-import { MultilingualText, LANGUAGES } from '@/lib/types/bibble';
+import { MultilingualText, Language } from '@/lib/types/bibble';
 import { Button } from '@/components/ui/button';
 import { Eye, Edit3 } from 'lucide-react';
+import ClientInstance from '@/shared/client';
 
 interface CKEditorComponentProps {
     value: MultilingualText;
@@ -16,8 +17,10 @@ interface CKEditorComponentProps {
 const CKEditorComponent: FC<CKEditorComponentProps> = ({ value, onChange, placeholder, className }) => {
     const [EditorComponent, setEditorComponent] = useState<any>(null);
     const [isClient, setIsClient] = useState(false);
-    const [activeLanguage, setActiveLanguage] = useState<'en' | 'sw' | 'fr' | 'rn'>('en');
+    const [activeLanguage, setActiveLanguage] = useState<string>('en');
     const [isPreviewMode, setIsPreviewMode] = useState(false);
+    const [languages, setLanguages] = useState<Language[]>([]);
+    const [isLoadingLanguages, setIsLoadingLanguages] = useState(true);
 
     useEffect(() => {
         setIsClient(true);
@@ -35,6 +38,57 @@ const CKEditorComponent: FC<CKEditorComponentProps> = ({ value, onChange, placeh
         });
     }, []);
 
+    // Fetch languages and language codes from API
+    useEffect(() => {
+        const fetchLanguages = async () => {
+            try {
+                setIsLoadingLanguages(true);
+                
+                // Fetch both language names and language codes
+                const [languageResponse, languageCodeResponse] = await Promise.all([
+                    ClientInstance.APP.getLanguage(),
+                    ClientInstance.APP.getLanguageCode()
+                ]);
+
+                if ((languageResponse as any)?.success && (languageResponse as any)?.data) {
+                    let languagesData = (languageResponse as any).data;
+                    
+                    // If we also have language codes, merge them with language data
+                    if ((languageCodeResponse as any)?.success && (languageCodeResponse as any)?.data) {
+                        const languageCodes = (languageCodeResponse as any).data;
+                        
+                        // Merge language codes with language data
+                        languagesData = languagesData.map((lang: any) => {
+                            const matchingCode = languageCodes.find((code: any) => 
+                                code.code === lang.code || code.name === lang.name
+                            );
+                            return {
+                                ...lang,
+                                code: matchingCode?.code || lang.code,
+                                name: lang.name,
+                                flag: lang.flag || '🌐'
+                            };
+                        });
+                    }
+                    
+                    setLanguages(languagesData);
+                    // Set first language as active if available
+                    if (languagesData.length > 0) {
+                        setActiveLanguage(languagesData[0].code);
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching languages:", error);
+                // No fallback - rely only on API data
+                setLanguages([]);
+            } finally {
+                setIsLoadingLanguages(false);
+            }
+        };
+
+        fetchLanguages();
+    }, []);
+
     // Helper function to check if rich text content is actually empty
     const isRichTextEmpty = (htmlContent: string): boolean => {
         if (!htmlContent) return true;
@@ -49,38 +103,19 @@ const CKEditorComponent: FC<CKEditorComponentProps> = ({ value, onChange, placeh
         return textContent.length === 0;
     };
 
-    const handleLanguageChange = (lang: 'en' | 'sw' | 'fr' | 'rn', newValue: string) => {
+    const handleLanguageChange = (lang: string, newValue: string) => {
         onChange({
             ...value,
             [lang]: newValue
         });
     };
 
-    // Don't render CKEditor until client-side and components are loaded
-    if (!isClient || !EditorComponent) {
+    // Show loading state while fetching languages or loading editor
+    if (isLoadingLanguages || !isClient || !EditorComponent) {
         return (
             <div className={`space-y-4 ${className || ''}`}>
-                {/* Language Tabs */}
-                <div className="flex border-b border-gray-200">
-                    {LANGUAGES.map((lang) => (
-                        <button
-                            key={lang.code}
-                            type="button"
-                            onClick={() => setActiveLanguage(lang.code)}
-                            className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
-                                activeLanguage === lang.code
-                                    ? 'border-theme-primary text-theme-primary'
-                                    : 'border-transparent text-theme-primary/60 hover:text-theme-primary hover:border-theme-primary/30'
-                            }`}
-                        >
-                            <span className="mr-1">{lang.flag}</span>
-                            {lang.name}
-                            {!isRichTextEmpty(value[lang.code] || '') && <span className="ml-1 text-green-500">✓</span>}
-                        </button>
-                    ))}
-                </div>
                 <div className="min-h-[200px] border border-gray-300 rounded-lg p-3 flex items-center justify-center text-gray-500">
-                    Loading editor...
+                    {isLoadingLanguages ? 'Loading languages...' : 'Loading editor...'}
                 </div>
             </div>
         );
@@ -88,17 +123,17 @@ const CKEditorComponent: FC<CKEditorComponentProps> = ({ value, onChange, placeh
 
     const { CKEditor, ClassicEditor } = EditorComponent;
 
-    const renderLanguageEditor = (lang: 'en' | 'sw' | 'fr' | 'rn', langLabel: string) => {
-        const langValue = value[lang] || '';
-        const isActive = activeLanguage === lang;
+    const renderLanguageEditor = (lang: Language) => {
+        const langValue = value[lang.code] || '';
+        const isActive = activeLanguage === lang.code;
         const hasContent = !isRichTextEmpty(langValue);
 
         return (
-            <div key={lang} className={`space-y-2 ${!isActive ? 'hidden' : ''}`}>
+            <div key={lang.code} className={`space-y-2 ${!isActive ? 'hidden' : ''}`}>
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <span className="text-lg">{LANGUAGES.find(l => l.code === lang)?.flag}</span>
-                        <span className="text-sm font-medium text-gray-700">{langLabel}</span>
+                        <span className="text-sm font-medium text-gray-700">{lang.name}</span>
+                        <span className="text-xs text-gray-500">({lang.code})</span>
                     </div>
                     <div className="flex items-center gap-2">
                         {hasContent && (
@@ -130,7 +165,7 @@ const CKEditorComponent: FC<CKEditorComponentProps> = ({ value, onChange, placeh
                             editor={ClassicEditor}
                             data={langValue}
                             config={{
-                                placeholder: `${placeholder || ''} (${langLabel})`,
+                                placeholder: `${placeholder || ''} (${lang.name})`,
                                 toolbar: {
                                     items: [
                                         "undo",
@@ -165,7 +200,7 @@ const CKEditorComponent: FC<CKEditorComponentProps> = ({ value, onChange, placeh
                             }}
                             onChange={(event: any, editor: any) => {
                                 const data = editor.getData();
-                                handleLanguageChange(lang, data);
+                                handleLanguageChange(lang.code, data);
                             }}
                         />
                     </div>
@@ -186,7 +221,7 @@ const CKEditorComponent: FC<CKEditorComponentProps> = ({ value, onChange, placeh
         <div className={`space-y-4 ${className || ''}`}>
             {/* Language Tabs */}
             <div className="flex border-b border-gray-200">
-                {LANGUAGES.map((lang) => (
+                {languages.map((lang) => (
                     <button
                         key={lang.code}
                         type="button"
@@ -206,10 +241,7 @@ const CKEditorComponent: FC<CKEditorComponentProps> = ({ value, onChange, placeh
 
             {/* Rich Text Editors */}
             <div className="space-y-4">
-                {renderLanguageEditor('en', 'English')}
-                {renderLanguageEditor('sw', 'Swahili')}
-                {renderLanguageEditor('fr', 'French')}
-                {renderLanguageEditor('rn', 'Kinyarwanda')}
+                {languages.map((lang) => renderLanguageEditor(lang))}
             </div>
         </div>
     );

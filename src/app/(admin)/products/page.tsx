@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Link from 'next/link';
-import { Product, LANGUAGES } from '@/lib/types/bibble';
+import { Product } from '@/lib/types/bibble';
 
 export default function ProductsPage() {
   const [searchTerm, setSearchTerm] = useState('');

@@ -2,11 +2,11 @@
 import { useState, useEffect } from "react";
 import { ProductFormData, PRODUCT_TYPES, MultilingualText, Language } from "@/lib/types/bibble";
 import { Button } from "@/components/ui/button";
-import { MultilingualRichEditor } from "@/components/ui/multilingual-rich-editor";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Save, Loader2 } from 'lucide-react';
 import Link from "next/link";
 import ClientInstance from "@/shared/client";
+import CKEditorComponent from "@/components/CKEditorComponent";
 
 const isRichTextEmpty = (htmlContent: string): boolean => {
     if (!htmlContent) return true;
@@ -40,16 +40,41 @@ export default function AddBookPage() {
         description: {},
     });
 
-    // Fetch languages from API on component mount
+    // Fetch languages and language codes from API on component mount
     useEffect(() => {
         const fetchLanguages = async () => {
             try {
-                const response: any = await ClientInstance.APP.getLanguage();
-                if (response?.success && response?.data) {
-                    setLanguages(response.data);
+                // Fetch both language names and language codes
+                const [languageResponse, languageCodeResponse] = await Promise.all([
+                    ClientInstance.APP.getLanguage(),
+                    ClientInstance.APP.getLanguageCode()
+                ]);
+
+                if ((languageResponse as any)?.success && (languageResponse as any)?.data) {
+                    let languagesData = (languageResponse as any).data;
+                    
+                    // If we also have language codes, merge them with language data
+                    if ((languageCodeResponse as any)?.success && (languageCodeResponse as any)?.data) {
+                        const languageCodes = (languageCodeResponse as any).data;
+                        
+                        // Merge language codes with language data
+                        languagesData = languagesData.map((lang: any) => {
+                            const matchingCode = languageCodes.find((code: any) => 
+                                code.code === lang.code || code.name === lang.name
+                            );
+                            return {
+                                ...lang,
+                                code: matchingCode?.code || lang.code,
+                                name: lang.name,
+                                flag: lang.flag || '🌐'
+                            };
+                        });
+                    }
+                    
+                    setLanguages(languagesData);
                     // Initialize multilingual fields with fetched languages
                     const initialMultilingualData: MultilingualText = {};
-                    response.data.forEach((lang: Language) => {
+                    languagesData.forEach((lang: Language) => {
                         initialMultilingualData[lang.code] = "";
                     });
                     setBookData(prev => ({
@@ -60,9 +85,8 @@ export default function AddBookPage() {
                 }
             } catch (error) {
                 console.error("Error fetching languages:", error);
-                // Fallback to default languages if API fails
-                const { LANGUAGES } = await import("@/lib/types/bibble");
-                setLanguages(LANGUAGES);
+                // No fallback - rely only on API data
+                setLanguages([]);
             }
         };
 
@@ -221,16 +245,13 @@ export default function AddBookPage() {
                             <label className="text-sm font-medium text-gray-700">
                                 Title <span className="text-red-500">*</span>
                             </label>
-                            <MultilingualRichEditor
-                                label=""
+                            <CKEditorComponent
                                 value={bookData.title}
                                 onChange={(val: MultilingualText) => {
                                     setBookData({ ...bookData, title: val });
                                     setValidationError("");
                                 }}
                                 placeholder="Enter multilingual title"
-                                required={true}
-                                languages={languages}
                             />
                         </div>
 
@@ -238,16 +259,13 @@ export default function AddBookPage() {
                             <label className="text-sm font-medium text-gray-700">
                                 Description <span className="text-red-500">*</span>
                             </label>
-                            <MultilingualRichEditor
-                                label=""
+                            <CKEditorComponent
                                 value={bookData.description}
                                 onChange={(val: MultilingualText) => {
                                     setBookData({ ...bookData, description: val });
                                     setValidationError("");
                                 }}
                                 placeholder="Enter multilingual description"
-                                required={true}
-                                languages={languages}
                             />
                         </div>
                     </div>

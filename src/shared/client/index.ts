@@ -2,8 +2,10 @@ import { API_ENDPOINTS } from "@/api/endpoints";
 import { HttpClient } from "./http-client";
 const {
   LOGIN,
+  ADMIN_DASHBOARD,
   ADD_PRODUCT,
   LANGUAGES,
+  GET_PRODUCTS,
   GET_LANGUAGE_CODE
 } = API_ENDPOINTS;
 class Client {
@@ -13,7 +15,7 @@ class Client {
  APP = {
     createProduct: (payload: any) =>
       HttpClient.post(ADD_PRODUCT, payload),
-    getProducts: () => HttpClient.get(`list/product`),
+    getProducts: () => HttpClient.get(GET_PRODUCTS),
     getLanguage: () => HttpClient.get(LANGUAGES),
     getLanguageCode: () => HttpClient.get(GET_LANGUAGE_CODE),
     getBioProfileById: (id: string) => HttpClient.get(`/${id}`),
