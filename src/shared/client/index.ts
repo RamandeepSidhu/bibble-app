@@ -4,6 +4,10 @@ const {
   LOGIN,
   ADMIN_DASHBOARD,
   ADD_PRODUCT,
+  UPDATE_PRODUCT,
+  DELETE_PRODUCT,
+  GET_PRODUCT_BY_ID,
+  CHANGE_PRODUCT_STATUS,
   LANGUAGES,
   GET_PRODUCTS,
   GET_LANGUAGE_CODE,
@@ -19,6 +23,14 @@ class Client {
  APP = {
     createProduct: (payload: any) =>
       HttpClient.post(ADD_PRODUCT, payload),
+    updateProduct: (id: string, payload: any) =>
+      HttpClient.put(UPDATE_PRODUCT.replace('{id}', id), payload),
+    deleteProduct: (id: string) =>
+      HttpClient.delete(DELETE_PRODUCT.replace('{id}', id)),
+    getProductById: (id: string) =>
+      HttpClient.get(GET_PRODUCT_BY_ID.replace('{id}', id)),
+    changeProductStatus: (id: string, payload: any) =>
+      HttpClient.post(CHANGE_PRODUCT_STATUS.replace('{id}', id), payload),
     getProducts: () => HttpClient.get(GET_PRODUCTS),
     getLanguage: () => HttpClient.get(LANGUAGES),
     getLanguageCode: () => HttpClient.get(GET_LANGUAGE_CODE),

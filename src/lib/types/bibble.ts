@@ -199,4 +199,45 @@ export const PRODUCT_TYPES = [
   { value: 'song', label: 'Hymns', icon: '🎵' }
 ] as const;
 
+// Product Management Types
+export interface ProductManagement {
+  _id: string;
+  productId?: string;
+  type: string;
+  title: MultilingualText;
+  description: MultilingualText;
+  contentType: string;
+  freePages?: number;
+  status: 'active' | 'inactive' | 'draft';
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CreateProductPayload {
+  productId?: string; // For updates
+  type: string;
+  title: MultilingualText;
+  description: MultilingualText;
+  contentType: string;
+  freePages?: number;
+}
+
+export interface UpdateProductPayload {
+  type: string;
+  title: MultilingualText;
+  description: MultilingualText;
+  contentType: string;
+  freePages?: number;
+}
+
+export interface ChangeProductStatusPayload {
+  status: 'active' | 'inactive' | 'draft';
+}
+
+export interface ProductApiResponse {
+  success: boolean;
+  data: ProductManagement | ProductManagement[] | {};
+  message: string;
+}
+
 // Content type options removed - admin can add all features

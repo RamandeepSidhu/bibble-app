@@ -2,8 +2,12 @@
 export const API_ENDPOINTS = {
   LOGIN: "auth/login",
   ADMIN_DASHBOARD:"admin",
-  GET_PRODUCTS:"/admin/product",
+  GET_PRODUCTS:"admin/product",
   ADD_PRODUCT: "admin/product",
+  UPDATE_PRODUCT: "admin/product/{id}",
+  DELETE_PRODUCT: "admin/product/{id}",
+  GET_PRODUCT_BY_ID: "admin/product/{id}",
+  CHANGE_PRODUCT_STATUS: "admin/change-product-status/{id}",
   ADD_HYMN:"admin/hymn",
   LANGUAGES:"admin/languages",
   CREATE_LANGUAGES:"admin/languages",

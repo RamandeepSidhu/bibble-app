@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
@@ -18,86 +18,98 @@ import {
   Search,
   Eye,
   Globe,
-  FileText
+  FileText,
+  Check,
+  X
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Link from 'next/link';
-import { Product } from '@/lib/types/bibble';
+import { ProductManagement, ChangeProductStatusPayload } from '@/lib/types/bibble';
+import ClientInstance from '@/shared/client';
+import { showToast } from '@/lib/toast';
 
 export default function ProductsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<string>('all');
-  
-  // Mock data - in real app, this would come from API
-  const [products, setProducts] = useState<Product[]>([
-    {
-      productId: '1',
-      type: 'book',
-      categoryId: 'cat1',
-      tags: ['bible', 'genesis'],
-      title: { 
-        en: 'Genesis', 
-        sw: 'Mwanzo', 
-        fr: 'Genèse', 
-        rn: 'Itanguriro' 
-      },
-      description: { 
-        en: 'The first book of the Bible, describing creation.', 
-        sw: 'Kitabu cha kwanza cha Biblia, kinaelezea uumbaji.', 
-        fr: 'Le premier livre de la Bible, décrivant la création.', 
-        rn: 'Igitabu ca mbere c\'uburimwo bw\'isi.' 
-      },
-      producer: 'Bibble Admin',
-      profile_image: 'https://cdn.mysite.com/images/genesis_cover.png',
-      images: [
-        'https://cdn.mysite.com/images/genesis1.png',
-        'https://cdn.mysite.com/images/genesis2.png'
-      ],
-      createdAt: '2024-01-15T10:30:00Z',
-      status: 'active'
-    },
-    {
-      productId: '2',
-      type: 'story',
-      categoryId: 'cat2',
-      tags: ['bible', 'creation'],
-      title: { 
-        en: 'The Creation Story', 
-        sw: 'Hadithi ya Uumbaji', 
-        fr: 'L\'Histoire de la Création', 
-        rn: 'Inkuru y\'Irema' 
-      },
-      description: { 
-        en: 'The story of how God created the world in seven days.', 
-        sw: 'Hadithi ya jinsi Mungu alivyoumba dunia katika siku saba.', 
-        fr: 'L\'histoire de comment Dieu a créé le monde en sept jours.', 
-        rn: 'Inkuru ivuga ukuntu Imana yaremye isi mu minsi irindwi.' 
-      },
-      producer: 'Bibble Admin',
-      profile_image: 'https://cdn.mysite.com/images/creation_cover.png',
-      images: [],
-      createdAt: '2024-01-16T14:20:00Z',
-      status: 'active'
-    }
-  ]);
+  const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [products, setProducts] = useState<ProductManagement[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [deletingProduct, setDeletingProduct] = useState<ProductManagement | null>(null);
 
-  // Filter products based on search and type
+  // Fetch products from API
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setIsLoading(true);
+        const response: any = await ClientInstance.APP.getProducts();
+        if (response?.success && response?.data) {
+          setProducts(response.data);
+        } else {
+          showToast.error("Error", response?.message || "Failed to fetch products");
+        }
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        showToast.error("Error", "Network error. Please check your connection and try again.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
+
+  // Filter products based on search, type, and status
   const filteredProducts = products.filter(product => {
     const matchesSearch = 
-      product.title.en.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.title.sw.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.title.fr.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.title.rn.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.description.en.toLowerCase().includes(searchTerm.toLowerCase());
+      (product.title.en || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (product.title.sw || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (product.title.fr || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (product.title.rn || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (product.description.en || '').toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesType = selectedType === 'all' || product.type === selectedType;
+    const matchesStatus = selectedStatus === 'all' || product.status === selectedStatus;
     
-    return matchesSearch && matchesType;
+    return matchesSearch && matchesType && matchesStatus;
   });
 
-  const handleDeleteProduct = (productId: string) => {
-    if (confirm('Are you sure you want to delete this product?')) {
-      setProducts(products.filter(p => p.productId !== productId));
+  const handleDeleteClick = (product: ProductManagement) => {
+    setDeletingProduct(product);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteProduct = async () => {
+    if (!deletingProduct) return;
+    try {
+      const response: any = await ClientInstance.APP.deleteProduct(deletingProduct._id);
+      if (response?.success) {
+        setProducts(products.filter(p => p._id !== deletingProduct._id));
+        setIsDeleteDialogOpen(false);
+        setDeletingProduct(null);
+        showToast.success("Product Deleted", "Product has been deleted successfully!");
+      } else {
+        showToast.error("Error", response?.message || "Failed to delete product");
+      }
+    } catch (error) {
+      showToast.error("Error", "Network error. Please check your connection and try again.");
+    }
+  };
+
+  const handleStatusChange = async (product: ProductManagement, newStatus: 'active' | 'inactive' | 'draft') => {
+    try {
+      const payload: ChangeProductStatusPayload = { status: newStatus };
+      const response: any = await ClientInstance.APP.changeProductStatus(product._id, payload);
+      if (response?.success) {
+        setProducts(products.map(p => 
+          p._id === product._id ? { ...p, status: newStatus } : p
+        ));
+        showToast.success("Status Updated", `Product status changed to ${newStatus}`);
+      } else {
+        showToast.error("Error", response?.message || "Failed to update product status");
+      }
+    } catch (error) {
+      showToast.error("Error", "Network error. Please check your connection and try again.");
     }
   };
 
@@ -119,13 +131,25 @@ export default function ProductsPage() {
     switch (type) {
       case 'book':
         return '📖';
-        return '📝';
-      case 'hymns':
+      case 'song':
         return '🎵';
       default:
         return '📄';
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-theme-primary mx-auto"></div>
+            <p className="mt-2 text-gray-600">Loading products...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -161,7 +185,7 @@ export default function ProductsPage() {
             className="block w-full sm:w-80 h-[40px] pl-10 pr-4 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
           />
         </div>
-        <div className="w-full sm:w-auto">
+        <div className="flex gap-3 w-full sm:w-auto">
           <Select value={selectedType} onValueChange={setSelectedType}>
             <SelectTrigger className="w-full sm:w-[150px]">
               <SelectValue placeholder="Filter by type" />
@@ -170,6 +194,17 @@ export default function ProductsPage() {
               <SelectItem value="all">All Types</SelectItem>
               <SelectItem value="book">Book</SelectItem>
               <SelectItem value="song">Hymns</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+            <SelectTrigger className="w-full sm:w-[150px]">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+              <SelectItem value="draft">Draft</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -203,31 +238,22 @@ export default function ProductsPage() {
             <TableBody>
               {filteredProducts.map((product, index) => (
                 <TableRow 
-                  key={product.productId} 
+                  key={product._id} 
                   className={`border-b border-[#EAECF0] hover:bg-gray-50 transition-colors ${
                     index % 2 === 0 ? 'bg-[#F9FAFB]' : 'bg-white'
                   }`}
                 >
                   <TableCell className="py-4 px-6">
                     <div className="flex items-center space-x-3">
-                      {product.profile_image ? (
-                        <img 
-                          src={product.profile_image} 
-                          alt={product.title.en} 
-                          className="h-10 w-10 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="h-10 w-10 rounded-full bg-theme-secondary text-theme-primary flex items-center justify-center font-semibold">
-                          {getTypeIcon(product.type)}
-                        </div>
-                      )}
+                      <div className="h-10 w-10 rounded-full bg-theme-secondary text-theme-primary flex items-center justify-center font-semibold">
+                        {getTypeIcon(product.type)}
+                      </div>
                       <div>
                         <div className="font-medium text-gray-900">
                           {product.title.en || 'Untitled'}
                         </div>
                         <div className="text-sm text-gray-500">
-                          {product.tags.slice(0, 2).join(', ')}
-                          {product.tags.length > 2 && ` +${product.tags.length - 2} more`}
+                          {product.contentType} • {product.type}
                         </div>
                       </div>
                     </div>
@@ -244,16 +270,42 @@ export default function ProductsPage() {
                     <div className="max-w-xs truncate" dangerouslySetInnerHTML={{ __html: product.title.sw || '-' }} />
                   </TableCell>
                   <TableCell className="py-4 px-6">
-                    <span className={getStatusBadge(product.status || 'inactive')}>
-                      {product.status || 'inactive'}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className={getStatusBadge(product.status || 'inactive')}>
+                        {product.status || 'inactive'}
+                      </span>
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => handleStatusChange(product, 'active')}
+                          className={`p-1 rounded ${
+                            product.status === 'active' 
+                              ? 'bg-green-100 text-green-700' 
+                              : 'text-gray-400 hover:text-green-600'
+                          }`}
+                          title="Set Active"
+                        >
+                          <Check className="h-3 w-3" />
+                        </button>
+                        <button
+                          onClick={() => handleStatusChange(product, 'inactive')}
+                          className={`p-1 rounded ${
+                            product.status === 'inactive' 
+                              ? 'bg-red-100 text-red-700' 
+                              : 'text-gray-400 hover:text-red-600'
+                          }`}
+                          title="Set Inactive"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    </div>
                   </TableCell>
                   <TableCell className="py-4 px-6 text-gray-700 text-sm">
                     {product.createdAt ? new Date(product.createdAt).toLocaleDateString() : '-'}
                   </TableCell>
                   <TableCell className="text-right py-4 px-6">
                     <div className="flex justify-end gap-2">
-                      <Link href={`/products/edit/${product.productId}`}>
+                      <Link href={`/products/edit/${product._id}`}>
                         <Button variant="outline" size="sm" className="!min-w-[80px]">
                           <Edit className="h-4 w-4 mr-1" />
                           Edit
@@ -263,7 +315,7 @@ export default function ProductsPage() {
                         variant="outline" 
                         size="sm" 
                         className="!min-w-[80px] bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
-                        onClick={() => handleDeleteProduct(product.productId || '')}
+                        onClick={() => handleDeleteClick(product)}
                       >
                         <Trash2 className="h-4 w-4 mr-1" />
                         Delete
@@ -276,6 +328,26 @@ export default function ProductsPage() {
           </Table>
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Product</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete the product "{deletingProduct?.title.en || 'Untitled'}"? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteProduct}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
