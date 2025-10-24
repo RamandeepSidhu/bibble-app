@@ -4,6 +4,9 @@ export interface Language {
   code: string;
   name: string;
   flag?: string;
+  isActive?: boolean;
+  isDefault?: boolean;
+  sortOrder?: number;
 }
 
 export interface MultilingualText {

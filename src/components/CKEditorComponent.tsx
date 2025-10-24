@@ -71,10 +71,11 @@ const CKEditorComponent: FC<CKEditorComponentProps> = ({ value, onChange, placeh
                         });
                     }
                     
-                    setLanguages(languagesData);
+                    setLanguages(languagesData.filter((lang: any) => lang.isActive !== false));
                     // Set first language as active if available
-                    if (languagesData.length > 0) {
-                        setActiveLanguage(languagesData[0].code);
+                    const activeLanguages = languagesData.filter((lang: any) => lang.isActive !== false);
+                    if (activeLanguages.length > 0) {
+                        setActiveLanguage(activeLanguages[0].code);
                     }
                 }
             } catch (error) {
