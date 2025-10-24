@@ -32,6 +32,7 @@ export interface Product {
 }
 
 export interface Story {
+  _id?: string;
   storyId?: string;
   productId: string;
   title: MultilingualText;
@@ -43,6 +44,7 @@ export interface Story {
 }
 
 export interface Chapter {
+  _id?: string;
   chapterId?: string;
   storyId: string;
   title: MultilingualText;
@@ -53,6 +55,7 @@ export interface Chapter {
 }
 
 export interface Verse {
+  _id?: string;
   verseId?: string;
   chapterId: string;
   number: number;

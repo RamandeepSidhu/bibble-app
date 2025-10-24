@@ -278,7 +278,7 @@ export default function EditProductPage() {
                     )}
 
                     {/* Title & Description */}
-                    <div className="space-y-8">
+                <div className="space-y-8">
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-gray-700">
                                 Title <span className="text-red-500">*</span>

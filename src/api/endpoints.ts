@@ -41,4 +41,5 @@ export const API_ENDPOINTS = {
   UPDATE_LANGUAGE: "admin/languages/{id}",
   DELETE_LANGUAGE: "admin/languages/{id}",
   GET_LANGUAGE_BY_ID: "admin/languages/{id}",
+  USER_LIST:"/admin/users"
 };

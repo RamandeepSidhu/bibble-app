@@ -38,6 +38,7 @@ const {
   DELETE_VERSE,
   GET_VERSE_BY_ID,
   GET_VERSES_BY_CHAPTER,
+  USER_LIST,
 } = API_ENDPOINTS;
 class Client {
   Auth = {
@@ -97,6 +98,7 @@ class Client {
     deleteVerse: (id: string) => HttpClient.delete(DELETE_VERSE.replace('{id}', id)),
     getVerseById: (id: string) => HttpClient.get(GET_VERSE_BY_ID.replace('{id}', id)),
     getVersesByChapter: (chapterId: string) => HttpClient.get(GET_VERSES_BY_CHAPTER.replace('{chapterId}', chapterId)),
+    getUserList: () => HttpClient.get(USER_LIST),
   }
 }
 
