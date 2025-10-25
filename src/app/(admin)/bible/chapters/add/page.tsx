@@ -57,7 +57,7 @@ export default function AddChapterPage() {
 
   const fetchLanguages = async () => {
     try {
-      const response: any = await ClientInstance.APP.getLanguages();
+      const response: any = await ClientInstance.APP.getLanguage();
       if (response?.success && response.data) {
         setLanguages(response.data);
         // Create language names mapping

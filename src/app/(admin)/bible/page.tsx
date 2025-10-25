@@ -765,12 +765,6 @@ export default function BiblePage() {
     }
   };
 
-  const getProductName = (productId: string) => {
-    const product = products.find((p) => p._id === productId);
-    return product
-      ? product.title.en || product.title.sw || "Untitled"
-      : "Unknown Product";
-  };
 
   const getStoryName = (storyId: string) => {
     const story = stories.find((s) => s._id === storyId);
@@ -1300,9 +1294,8 @@ export default function BiblePage() {
                         </span>
                         <span 
                           title={text} // Show full HTML content on hover
-                        >
-                          {stripHtmlTags(text)}
-                        </span>
+                          dangerouslySetInnerHTML={{ __html: text }}
+                        />
                       </div>
                     ))}
                     
@@ -1317,9 +1310,8 @@ export default function BiblePage() {
                         </span>
                         <span 
                           title={text} // Show full HTML content on hover
-                        >
-                          {stripHtmlTags(text)}
-                        </span>
+                          dangerouslySetInnerHTML={{ __html: text }}
+                        />
                       </div>
                     ))}
                   </div>
