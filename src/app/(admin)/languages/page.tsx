@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Table,
   TableBody,
@@ -373,36 +374,38 @@ export default function LanguagesPage() {
                 />
               </div>
               <div className="flex items-center space-x-6">
-                <label className="flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="isActive"
                     checked={formData.isActive}
-                    onChange={(e) => {
-                      if (e.target.checked) {
+                    onCheckedChange={(checked) => {
+                      if (checked) {
                         setFormData({...formData, isActive: true, isDefault: false});
                       } else {
                         setFormData({...formData, isActive: false});
                       }
                     }}
-                    className="w-4 h-4 text-theme-primary bg-gray-100 border-gray-300 rounded focus:ring-theme-primary focus:ring-2"
                   />
-                  <span className="ml-2 text-sm font-medium text-gray-700">Active</span>
-                </label>
-                <label className="flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
+                  <label htmlFor="isActive" className="text-sm font-medium text-gray-700 cursor-pointer">
+                    Active
+                  </label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="isDefault"
                     checked={formData.isDefault}
-                    onChange={(e) => {
-                      if (e.target.checked) {
+                    onCheckedChange={(checked) => {
+                      if (checked) {
                         setFormData({...formData, isDefault: true, isActive: false});
                       } else {
                         setFormData({...formData, isDefault: false});
                       }
                     }}
-                    className="w-4 h-4 text-theme-primary bg-gray-100 border-gray-300 rounded focus:ring-theme-primary focus:ring-2"
                   />
-                  <span className="ml-2 text-sm font-medium text-gray-700">Default</span>
-                </label>
+                  <label htmlFor="isDefault" className="text-sm font-medium text-gray-700 cursor-pointer">
+                    Default
+                  </label>
+                </div>
               </div>
             </div>
             <div className="flex justify-end space-x-2 mt-6">
@@ -454,36 +457,38 @@ export default function LanguagesPage() {
                 />
               </div>
               <div className="flex items-center space-x-6">
-                <label className="flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="isActive"
                     checked={formData.isActive}
-                    onChange={(e) => {
-                      if (e.target.checked) {
+                    onCheckedChange={(checked) => {
+                      if (checked) {
                         setFormData({...formData, isActive: true, isDefault: false});
                       } else {
                         setFormData({...formData, isActive: false});
                       }
                     }}
-                    className="w-4 h-4 text-theme-primary bg-gray-100 border-gray-300 rounded focus:ring-theme-primary focus:ring-2"
                   />
-                  <span className="ml-2 text-sm font-medium text-gray-700">Active</span>
-                </label>
-                <label className="flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
+                  <label htmlFor="isActive" className="text-sm font-medium text-gray-700 cursor-pointer">
+                    Active
+                  </label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="isDefault"
                     checked={formData.isDefault}
-                    onChange={(e) => {
-                      if (e.target.checked) {
+                    onCheckedChange={(checked) => {
+                      if (checked) {
                         setFormData({...formData, isDefault: true, isActive: false});
                       } else {
                         setFormData({...formData, isDefault: false});
                       }
                     }}
-                    className="w-4 h-4 text-theme-primary bg-gray-100 border-gray-300 rounded focus:ring-theme-primary focus:ring-2"
                   />
-                  <span className="ml-2 text-sm font-medium text-gray-700">Default</span>
-                </label>
+                  <label htmlFor="isDefault" className="text-sm font-medium text-gray-700 cursor-pointer">
+                    Default
+                  </label>
+                </div>
               </div>
             </div>
             <div className="flex justify-end space-x-2 mt-6">
