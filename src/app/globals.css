@@ -80,11 +80,9 @@
     @apply bg-background text-foreground;
   }
 }
-input {
-  &::-ms-reveal,
-  &::-ms-clear {
-      display: none;
-  }
+input::-ms-reveal,
+input::-ms-clear {
+  display: none;
 }
 .ck-editor__editable{
   min-height: 200px !important;
