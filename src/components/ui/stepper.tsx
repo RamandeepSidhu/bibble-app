@@ -51,7 +51,7 @@ export function Stepper({ steps, currentStep }: StepperProps) {
               {index < steps.length - 1 && (
                 <div
                   className={cn(
-                    "w-[560px] mr-[20px] ml-[20px] h-0.5 transition-colors ",
+                    "w-[520px] max-w-[560px] mr-[20px] ml-[20px] h-0.5 transition-colors ",
                     isCompleted ? "bg-theme-primary" : "bg-gray-300"
                   )}
                 />

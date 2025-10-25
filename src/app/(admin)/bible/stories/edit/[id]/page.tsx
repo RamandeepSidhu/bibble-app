@@ -232,14 +232,20 @@ export default function EditStoryPage() {
   };
 
   const isMultilingualFieldComplete = (field: MultilingualText) => {
-    return Object.values(field).some(val => val && val.trim() !== '');
+    // Get all available languages from the languages state
+    const availableLanguages = languages.map(lang => lang.code);
+    
+    // Check if all available languages have content
+    return availableLanguages.every(lang => 
+      field[lang] && field[lang].trim() !== ''
+    );
   };
 
   const validateForm = (): boolean => {
     setValidationError("");
     if (!formData.story.productId) { setValidationError("Please select a product"); return false; }
-    if (!isMultilingualFieldComplete(formData.story.title)) { setValidationError("Please fill in the story title in at least one language"); return false; }
-    if (!isMultilingualFieldComplete(formData.story.description)) { setValidationError("Please fill in the story description in at least one language"); return false; }
+    if (!isMultilingualFieldComplete(formData.story.title)) { setValidationError("Please fill in the story title in all languages"); return false; }
+    if (!isMultilingualFieldComplete(formData.story.description)) { setValidationError("Please fill in the story description in all languages"); return false; }
     return true;
   };
 

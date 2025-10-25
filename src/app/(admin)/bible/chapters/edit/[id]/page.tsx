@@ -182,8 +182,14 @@ export default function EditChapterPage() {
       setValidationError("Please select a story");
       return false;
     }
-    if (!Object.values(formData.chapter.title).some(val => val && val.trim() !== '')) {
-      setValidationError("Please fill in the chapter title in at least one language");
+    // Get all available languages and check if all have content
+    const availableLanguages = languages.map(lang => lang.code);
+    const allLanguagesFilled = availableLanguages.every(lang => 
+      formData.chapter.title[lang] && formData.chapter.title[lang].trim() !== ''
+    );
+    
+    if (!allLanguagesFilled) {
+      setValidationError("Please fill in the chapter title in all languages");
       return false;
     }
     return true;

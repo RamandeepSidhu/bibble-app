@@ -359,7 +359,13 @@ export default function BiblePage() {
   };
 
   const isMultilingualFieldComplete = (field: MultilingualText): boolean => {
-    return Object.values(field).some((val) => val && val.trim() !== "");
+    // Get all available languages from the languages state
+    const availableLanguages = languages.map(lang => lang.code);
+    
+    // Check if all available languages have content
+    return availableLanguages.every(lang => 
+      field[lang] && field[lang].trim() !== ''
+    );
   };
 
   const cleanMultilingualData = (data: MultilingualText): MultilingualText => {
@@ -384,13 +390,13 @@ export default function BiblePage() {
         }
         if (!isMultilingualFieldComplete(formData.story.title)) {
           setValidationError(
-            "Please fill in the story title in at least one language"
+            "Please fill in the story title in all languages"
           );
           return false;
         }
         if (!isMultilingualFieldComplete(formData.story.description)) {
           setValidationError(
-            "Please fill in the story description in at least one language"
+            "Please fill in the story description in all languages"
           );
           return false;
         }
@@ -403,7 +409,7 @@ export default function BiblePage() {
         }
         if (!isMultilingualFieldComplete(formData.chapter.title)) {
           setValidationError(
-            "Please fill in the chapter title in at least one language"
+            "Please fill in the chapter title in all languages"
           );
           return false;
         }
@@ -417,7 +423,7 @@ export default function BiblePage() {
         // Verse number is auto-calculated, no validation needed
         if (!isMultilingualFieldComplete(formData.verse.text)) {
           setValidationError(
-            "Please fill in the verse text in at least one language"
+            "Please fill in the verse text in all languages"
           );
           return false;
         }

@@ -372,24 +372,36 @@ export default function LanguagesPage() {
                   placeholder="Enter language symbol"
                 />
               </div>
-              <div className="flex items-center space-x-4">
-                <label className="flex items-center">
+              <div className="flex items-center space-x-6">
+                <label className="flex items-center cursor-pointer">
                   <input
                     type="checkbox"
                     checked={formData.isActive}
-                    onChange={(e) => setFormData({...formData, isActive: e.target.checked})}
-                    className="mr-2"
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setFormData({...formData, isActive: true, isDefault: false});
+                      } else {
+                        setFormData({...formData, isActive: false});
+                      }
+                    }}
+                    className="w-4 h-4 text-theme-primary bg-gray-100 border-gray-300 rounded focus:ring-theme-primary focus:ring-2"
                   />
-                  <span className="text-sm text-gray-700">Active</span>
+                  <span className="ml-2 text-sm font-medium text-gray-700">Active</span>
                 </label>
-                <label className="flex items-center">
+                <label className="flex items-center cursor-pointer">
                   <input
                     type="checkbox"
                     checked={formData.isDefault}
-                    onChange={(e) => setFormData({...formData, isDefault: e.target.checked})}
-                    className="mr-2"
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setFormData({...formData, isDefault: true, isActive: false});
+                      } else {
+                        setFormData({...formData, isDefault: false});
+                      }
+                    }}
+                    className="w-4 h-4 text-theme-primary bg-gray-100 border-gray-300 rounded focus:ring-theme-primary focus:ring-2"
                   />
-                  <span className="text-sm text-gray-700">Default</span>
+                  <span className="ml-2 text-sm font-medium text-gray-700">Default</span>
                 </label>
               </div>
             </div>
@@ -441,24 +453,36 @@ export default function LanguagesPage() {
                   placeholder="Enter language symbol"
                 />
               </div>
-              <div className="flex items-center space-x-4">
-                <label className="flex items-center">
+              <div className="flex items-center space-x-6">
+                <label className="flex items-center cursor-pointer">
                   <input
                     type="checkbox"
                     checked={formData.isActive}
-                    onChange={(e) => setFormData({...formData, isActive: e.target.checked})}
-                    className="mr-2"
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setFormData({...formData, isActive: true, isDefault: false});
+                      } else {
+                        setFormData({...formData, isActive: false});
+                      }
+                    }}
+                    className="w-4 h-4 text-theme-primary bg-gray-100 border-gray-300 rounded focus:ring-theme-primary focus:ring-2"
                   />
-                  <span className="text-sm text-gray-700">Active</span>
+                  <span className="ml-2 text-sm font-medium text-gray-700">Active</span>
                 </label>
-                <label className="flex items-center">
+                <label className="flex items-center cursor-pointer">
                   <input
                     type="checkbox"
                     checked={formData.isDefault}
-                    onChange={(e) => setFormData({...formData, isDefault: e.target.checked})}
-                    className="mr-2"
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setFormData({...formData, isDefault: true, isActive: false});
+                      } else {
+                        setFormData({...formData, isDefault: false});
+                      }
+                    }}
+                    className="w-4 h-4 text-theme-primary bg-gray-100 border-gray-300 rounded focus:ring-theme-primary focus:ring-2"
                   />
-                  <span className="text-sm text-gray-700">Default</span>
+                  <span className="ml-2 text-sm font-medium text-gray-700">Default</span>
                 </label>
               </div>
             </div>

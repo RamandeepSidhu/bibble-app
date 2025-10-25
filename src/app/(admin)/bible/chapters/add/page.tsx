@@ -90,13 +90,19 @@ export default function AddChapterPage() {
   };
 
   const isMultilingualFieldComplete = (field: MultilingualText) => {
-    return Object.values(field).some(val => val && val.trim() !== '');
+    // Get all available languages from the languages state
+    const availableLanguages = languages.map(lang => lang.code);
+    
+    // Check if all available languages have content
+    return availableLanguages.every(lang => 
+      field[lang] && field[lang].trim() !== ''
+    );
   };
 
   const validateForm = (): boolean => {
     setValidationError("");
     if (!formData.storyId) { setValidationError("Story ID is required"); return false; }
-    if (!isMultilingualFieldComplete(formData.title)) { setValidationError("Please fill in the chapter title in at least one language"); return false; }
+    if (!isMultilingualFieldComplete(formData.title)) { setValidationError("Please fill in the chapter title in all languages"); return false; }
     return true;
   };
 

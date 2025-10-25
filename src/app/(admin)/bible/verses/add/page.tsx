@@ -93,13 +93,19 @@ export default function AddVersePage() {
   };
 
   const isMultilingualFieldComplete = (field: MultilingualText) => {
-    return Object.values(field).some(val => val && val.trim() !== '');
+    // Get all available languages from the languages state
+    const availableLanguages = languages.map(lang => lang.code);
+    
+    // Check if all available languages have content
+    return availableLanguages.every(lang => 
+      field[lang] && field[lang].trim() !== ''
+    );
   };
 
   const validateForm = (): boolean => {
     setValidationError("");
     if (!formData.chapterId) { setValidationError("Chapter ID is required"); return false; }
-    if (!isMultilingualFieldComplete(formData.text)) { setValidationError("Please fill in the verse text in at least one language"); return false; }
+    if (!isMultilingualFieldComplete(formData.text)) { setValidationError("Please fill in the verse text in all languages"); return false; }
     return true;
   };
 

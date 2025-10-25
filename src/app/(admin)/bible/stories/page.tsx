@@ -4,14 +4,6 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { 
   Plus, 
   Edit, 
   Trash2, 
@@ -121,10 +113,6 @@ export default function StoriesPage() {
     }
   };
 
-  const getProductName = (productId: string) => {
-    const product = products.find(p => p._id === productId);
-    return product ? (product.title.en || product.title.sw || 'Untitled') : 'Unknown Product';
-  };
 
   if (isLoading) {
     return (
@@ -155,16 +143,10 @@ export default function StoriesPage() {
               Stories Management
             </h2>
           </div>
-          <p className="font-inter font-normal text-sm sm:text-[16px] leading-[24px] tracking-[0em] text-gray-600 mt-1">
+          <p className="font-inter font-normal text-sm sm:text-[16px] leading-[24px] tracking-[0em] text-gray-600 mt-1 ml-8">
             Manage stories across all products
           </p>
         </div>
-        <Link href="/bible/stories/add">
-          <Button className="bg-theme-primary text-theme-secondary hover:bg-theme-primary-dark">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Story
-          </Button>
-        </Link>
       </div>
 
       {/* Search */}
@@ -183,7 +165,7 @@ export default function StoriesPage() {
         </div>
       </div>
 
-      {/* Stories Table */}
+      {/* Stories Cards */}
       {filteredStories.length === 0 ? (
         <div className="text-center py-12">
           <div className="text-gray-500 text-lg">No stories found</div>
@@ -195,92 +177,217 @@ export default function StoriesPage() {
           </p>
         </div>
       ) : (
-        <div className="bg-white border border-[#EAECF0] rounded-lg overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow className="border-b border-[#EAECF0]">
-                <TableHead className="font-semibold text-[#475467] text-xs py-4 px-6">Story</TableHead>
-                <TableHead className="font-semibold text-[#475467] text-xs py-4 px-6">Product</TableHead>
-                <TableHead className="font-semibold text-[#475467] text-xs py-4 px-6">Order</TableHead>
-                <TableHead className="font-semibold text-[#475467] text-xs py-4 px-6 text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredStories.map((story, index) => (
-                <TableRow 
-                  key={story._id} 
-                  className={`border-b border-[#EAECF0] hover:bg-gray-50 transition-colors ${
-                    index % 2 === 0 ? 'bg-[#F9FAFB]' : 'bg-white'
-                  }`}
-                >
-                  <TableCell className="py-4 px-6">
-                    <div className="flex items-center space-x-3">
-                      <div className="h-10 w-10 rounded-full bg-theme-secondary text-theme-primary flex items-center justify-center font-semibold">
-                        <FileText className="h-5 w-5" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="font-medium text-gray-900 mb-2">
-                          Story #{story.order}
-                        </div>
-                        <div className="space-y-1">
-                          {Object.entries(story.title).map(([lang, text]) => (
-                            text && text.trim() && (
-                              <div key={lang} className="flex items-start gap-2">
-                                <span className="text-xs font-medium text-gray-500 uppercase min-w-[20px]">{lang}:</span>
-                                <span className="text-sm text-gray-700" dangerouslySetInnerHTML={{ __html: text }} />
-                              </div>
-                            )
-                          ))}
-                        </div>
-                        <div className="mt-2 text-xs text-gray-500">
-                          Description:
-                        </div>
-                        <div className="space-y-1">
-                          {Object.entries(story.description).map(([lang, text]) => (
-                            text && text.trim() && (
-                              <div key={lang} className="flex items-start gap-2">
-                                <span className="text-xs font-medium text-gray-500 uppercase min-w-[20px]">{lang}:</span>
-                                <span className="text-xs text-gray-600" dangerouslySetInnerHTML={{ __html: text }} />
-                              </div>
-                            )
-                          ))}
-                        </div>
-                      </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredStories.map((story) => (
+            <div key={story._id} className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow flex flex-col min-h-[400px]">
+              {/* Card Header */}
+              <div className="p-6 border-b border-gray-100">
+                <div className="flex items-center space-x-3">
+                  <div className="h-12 w-12 rounded-full bg-theme-secondary text-theme-primary flex items-center justify-center font-semibold">
+                    <FileText className="h-6 w-6" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-semibold text-lg text-gray-900">
+                      Story #{story.order}
                     </div>
-                  </TableCell>
-                  <TableCell className="py-4 px-6">
-                    <span className="text-sm text-gray-700">
-                      {getProductName(story.productId)}
-                    </span>
-                  </TableCell>
-                  <TableCell className="py-4 px-6">
-                    <span className="inline-flex items-center px-2 py-1 text-xs rounded-full bg-theme-secondary text-theme-primary border border-theme-primary">
-                      {story.order}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-right py-4 px-6">
-                    <div className="flex justify-end gap-2">
-                      <Link href={`/bible?edit=story&id=${story._id}`}>
-                        <Button variant="outline" size="sm" className="!min-w-[80px]">
-                          <Edit className="h-4 w-4 mr-1" />
-                          Edit
-                        </Button>
-                      </Link>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="!min-w-[80px] bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
-                        onClick={() => handleDeleteClick(story)}
-                      >
-                        <Trash2 className="h-4 w-4 mr-1" />
-                        Delete
-                      </Button>
+                    <div className="text-sm text-gray-500">
+                      {story.productId.title.en}
                     </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                  </div>
+                </div>
+              </div>
+
+              {/* Product Information with All Languages */}
+              <div className="p-6 flex-grow">
+                <div className="mb-4">
+                  <h4 className="text-lg font-bold text-gray-900 mb-3 border-b-2 border-theme-primary pb-2">Product Information</h4>
+                  
+                  <div className="space-y-1">
+                    {/* Product Title - All Languages */}
+                    {story.productId && typeof story.productId === 'object' && (story.productId as any).title && (
+                      <div className="space-y-1">
+                        {(story.productId as any).title.en && (
+                          <div className="text-sm p-3">
+                            <span className="text-sm font-bold text-gray-900 mr-3">EN:</span>
+                            <span className="text-gray-900 font-medium" dangerouslySetInnerHTML={{ __html: (story.productId as any).title.en }} />
+                          </div>
+                        )}
+                        {(story.productId as any).title.sw && (
+                          <div className="text-sm p-3">
+                            <span className="text-sm font-bold text-gray-900 mr-3">SW:</span>
+                            <span className="text-gray-900 font-medium" dangerouslySetInnerHTML={{ __html: (story.productId as any).title.sw }} />
+                          </div>
+                        )}
+                        {(story.productId as any).title.fr && (
+                          <div className="text-sm p-3">
+                            <span className="text-sm font-bold text-gray-900 mr-3">FR:</span>
+                            <span className="text-gray-900 font-medium" dangerouslySetInnerHTML={{ __html: (story.productId as any).title.fr }} />
+                          </div>
+                        )}
+                        {(story.productId as any).title.rn && (
+                          <div className="text-sm p-3">
+                            <span className="text-sm font-bold text-gray-900 mr-3">RN:</span>
+                            <span className="text-gray-900 font-medium" dangerouslySetInnerHTML={{ __html: (story.productId as any).title.rn }} />
+                          </div>
+                        )}
+                        {(story.productId as any).title.hi && (
+                          <div className="text-sm p-3">
+                            <span className="text-sm font-bold text-gray-900 mr-3">HI:</span>
+                            <span className="text-gray-900 font-medium" dangerouslySetInnerHTML={{ __html: (story.productId as any).title.hi }} />
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Product Description - All Languages */}
+                <div className="mb-4">
+                  <h4 className="text-lg font-bold text-gray-900 mb-3 border-b-2 border-theme-primary pb-2">Product Description</h4>
+                  <div className="space-y-2">
+                    {/* English */}
+                    {story.productId && typeof story.productId === 'object' && (story.productId as any).description && (story.productId as any).description.en && (
+                      <div className="text-sm p-3">
+                        <span className="text-sm font-bold text-gray-900 mr-3">EN:</span>
+                        <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: (story.productId as any).description.en }} />
+                      </div>
+                    )}
+                    {/* Swahili */}
+                    {story.productId && typeof story.productId === 'object' && (story.productId as any).description && (story.productId as any).description.sw && (
+                      <div className="text-sm p-3">
+                        <span className="text-sm font-bold text-gray-900 mr-3">SW:</span>
+                        <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: (story.productId as any).description.sw }} />
+                      </div>
+                    )}
+                    {/* French */}
+                    {story.productId && typeof story.productId === 'object' && (story.productId as any).description && (story.productId as any).description.fr && (
+                      <div className="text-sm p-3">
+                        <span className="text-sm font-bold text-gray-900 mr-3">FR:</span>
+                        <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: (story.productId as any).description.fr }} />
+                      </div>
+                    )}
+                    {/* Kinyarwanda */}
+                    {story.productId && typeof story.productId === 'object' && (story.productId as any).description && (story.productId as any).description.rn && (
+                      <div className="text-sm p-3">
+                        <span className="text-sm font-bold text-gray-900 mr-3">RN:</span>
+                        <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: (story.productId as any).description.rn }} />
+                      </div>
+                    )}
+                    {/* Hindi */}
+                    {story.productId && typeof story.productId === 'object' && (story.productId as any).description && (story.productId as any).description.hi && (
+                      <div className="text-sm p-3">
+                        <span className="text-sm font-bold text-gray-900 mr-3">HI:</span>
+                        <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: (story.productId as any).description.hi }} />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Story Title - All Languages */}
+                <div className="mb-4">
+                  <h4 className="text-lg font-bold text-gray-900 mb-3 border-b-2 border-theme-primary pb-2">Story Title</h4>
+                  <div className="space-y-2">
+                    {/* English */}
+                    {story.title.en && (
+                      <div className="text-sm p-3">
+                        <span className="text-sm font-bold text-gray-900 mr-3">EN:</span>
+                        <div className="text-gray-900 font-medium line-clamp-2" dangerouslySetInnerHTML={{ __html: story.title.en }} />
+                      </div>
+                    )}
+                    {/* Swahili */}
+                    {story.title.sw && (
+                      <div className="text-sm p-3">
+                        <span className="text-sm font-bold text-gray-900 mr-3">SW:</span>
+                        <div className="text-gray-900 font-medium line-clamp-2" dangerouslySetInnerHTML={{ __html: story.title.sw }} />
+                      </div>
+                    )}
+                    {/* French */}
+                    {story.title.fr && (
+                      <div className="text-sm p-3">
+                        <span className="text-sm font-bold text-gray-900 mr-3">FR:</span>
+                        <div className="text-gray-900 font-medium line-clamp-2" dangerouslySetInnerHTML={{ __html: story.title.fr }} />
+                      </div>
+                    )}
+                    {/* Kinyarwanda */}
+                    {story.title.rn && (
+                      <div className="text-sm p-3">
+                        <span className="text-sm font-bold text-gray-900 mr-3">RN:</span>
+                        <div className="text-gray-900 font-medium line-clamp-2" dangerouslySetInnerHTML={{ __html: story.title.rn }} />
+                      </div>
+                    )}
+                    {/* Hindi */}
+                    {story.title.hi && (
+                      <div className="text-sm p-3">
+                        <span className="text-sm font-bold text-gray-900 mr-3">HI:</span>
+                        <div className="text-gray-900 font-medium line-clamp-2" dangerouslySetInnerHTML={{ __html: story.title.hi }} />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Story Description - All Languages */}
+                <div className="mb-4">
+                  <h4 className="text-lg font-bold text-gray-900 mb-3 border-b-2 border-theme-primary pb-2">Story Description</h4>
+                  <div className="space-y-2">
+                    {/* English */}
+                    {story.description.en && (
+                      <div className="text-sm p-3">
+                        <span className="text-sm font-bold text-gray-900 mr-3">EN:</span>
+                        <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: story.description.en }} />
+                      </div>
+                    )}
+                    {/* Swahili */}
+                    {story.description.sw && (
+                      <div className="text-sm p-3">
+                        <span className="text-sm font-bold text-gray-900 mr-3">SW:</span>
+                        <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: story.description.sw }} />
+                      </div>
+                    )}
+                    {/* French */}
+                    {story.description.fr && (
+                      <div className="text-sm p-3">
+                        <span className="text-sm font-bold text-gray-900 mr-3">FR:</span>
+                        <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: story.description.fr }} />
+                      </div>
+                    )}
+                    {/* Kinyarwanda */}
+                    {story.description.rn && (
+                      <div className="text-sm p-3">
+                        <span className="text-sm font-bold text-gray-900 mr-3">RN:</span>
+                        <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: story.description.rn }} />
+                      </div>
+                    )}
+                    {/* Hindi */}
+                    {story.description.hi && (
+                      <div className="text-sm p-3">
+                        <span className="text-sm font-bold text-gray-900 mr-3">HI:</span>
+                        <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: story.description.hi }} />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Story Details */}
+                <div className="text-xs text-gray-500 space-y-1">
+                  <div>Order: {story.order}</div>
+                  <div>Created: {story.createdAt ? new Date(story.createdAt).toLocaleDateString() : 'N/A'}</div>
+                  <div>Updated: {story.updatedAt ? new Date(story.updatedAt).toLocaleDateString() : 'N/A'}</div>
+                </div>
+              </div>
+
+              {/* Card Footer */}
+              <div className="p-6 border-t border-gray-100 bg-gray-50">
+                <div className="flex justify-end gap-2">
+                  <Link href={`/bible/stories/edit/${story._id}`}>
+                    <Button variant="outline" size="sm" className="!min-w-[80px]">
+                      <Edit className="h-4 w-4 mr-1" />
+                      Edit
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
