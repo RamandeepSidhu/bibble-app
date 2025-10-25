@@ -53,7 +53,7 @@ const AdminMainLayoutComponent = ({
                 variant="ghost"
                 size="sm"
                 onClick={handleLogout}
-                className="hidden sm:flex"
+                className="sm:flex"
               >
                 <LogOut className="h-4 w-4" />
                 Sign out

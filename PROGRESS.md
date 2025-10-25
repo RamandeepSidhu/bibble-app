@@ -200,9 +200,13 @@ getVersesByChapter: (chapterId: string) => HttpClient.get(GET_VERSES_BY_CHAPTER.
 8. Shimmer loading effects
 9. Toast notifications
 10. Responsive UI components
+11. **Standardized Table Components** - Consistent styling across all tables
+12. **Logout Button Fix** - Logout button now visible and functional in admin sidebar
+13. **Unit Testing Framework** - Comprehensive unit tests for components and services
+14. **Table Styling Standardization** - All tables now use consistent padding, width, height, and margins
 
 ### 🔄 In Progress
-- Preview functionality in Bible tab
+- CRUD Operations Testing and Verification
 
 ### 📋 Pending
 - Enhanced preview functionality

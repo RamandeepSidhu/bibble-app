@@ -253,13 +253,15 @@ export default function AdminDashboard() {
                   </div>
                 </Button>
               </Link>
+              <Link href="/hymns">
               <Button variant="outline" className="w-full h-16 flex items-center justify-start">
-                <Activity className="h-5 w-5 mr-3" />
+                <Music className="h-5 w-5 mr-3" />
                 <div className="text-left">
-                  <div className="font-medium">View Analytics</div>
-                  <div className="text-sm text-gray-500">Platform usage statistics</div>
+                  <div className="font-medium">View Hymns</div>
+                  <div className="text-sm text-gray-500">Add and manage Hymns</div>
                 </div>
               </Button>
+              </Link>
             </div>
           </div>
         </div>

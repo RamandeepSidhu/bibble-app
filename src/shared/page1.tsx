@@ -3,7 +3,6 @@ import { useState } from "react";
 import { ProductFormData, PRODUCT_TYPES, MultilingualText } from "@/lib/types/bibble";
 import { Button } from "@/components/ui/button";
 import { Stepper } from "@/components/ui/stepper";
-import { MultilingualRichEditor } from "@/components/ui/multilingual-rich-editor";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Save } from 'lucide-react';
 import Link from "next/link";

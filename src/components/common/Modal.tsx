@@ -7,7 +7,7 @@ interface ModalProps {
   buttonText?: string;
   onClose: () => void;
   onConfirm?: () => void;
-  variant?: "primary" | "destructive" | "outline";
+  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -16,7 +16,7 @@ export const Modal: React.FC<ModalProps> = ({
   buttonText = "Close",
   onClose,
   onConfirm,
-  variant = "primary"
+  variant = "default"
 }) => {
   if (!isOpen) return null;
 
@@ -32,7 +32,7 @@ export const Modal: React.FC<ModalProps> = ({
       <div className="bg-white rounded-lg p-6 w-96 text-center shadow-lg m-10">
         <p className="mb-4">{message}</p>
         <div className="flex justify-center">
-          <Button
+          <Button 
             variant={variant}
             onClick={handleClick}
           >

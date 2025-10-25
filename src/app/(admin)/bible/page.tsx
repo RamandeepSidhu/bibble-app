@@ -53,11 +53,6 @@ const steps = [
   { id: "verse", title: "Admin - Verses", icon: Hash },
 ];
 
-const editSteps = [
-  { id: "story", title: "Edit Story", icon: FileText },
-  { id: "chapter", title: "Edit Chapter", icon: Book },
-  { id: "verse", title: "Edit Verse", icon: Hash },
-];
 
 interface BibleFormData {
   // Story data (step 1)
@@ -90,10 +85,6 @@ export default function BiblePage() {
   const [successMessage, setSuccessMessage] = useState<string>("");
   const [showAddForm, setShowAddForm] = useState(false);
 
-  // Editing states
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [editingContentType, setEditingContentType] = useState<string>("");
-  const [editingContentId, setEditingContentId] = useState<string>("");
 
   // Delete confirmation states
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -167,11 +158,9 @@ export default function BiblePage() {
     fetchAllBibleContent();
   }, []);
 
-  // Handle URL parameters for editing
+  // Handle URL parameters for stepper navigation
   useEffect(() => {
     const step = searchParams.get("step");
-    const edit = searchParams.get("edit");
-    const id = searchParams.get("id");
 
     if (step) {
       const stepIndex = steps.findIndex((s) => s.id === step);
@@ -180,103 +169,8 @@ export default function BiblePage() {
         setShowAddForm(true);
       }
     }
+  }, [searchParams]);
 
-    if (edit && id) {
-      setIsEditMode(true);
-      setEditingContentType(edit);
-      setEditingContentId(id);
-      setShowAddForm(true);
-
-      // Navigate to the appropriate step based on content type
-      const stepIndex = steps.findIndex((s) => s.id === edit);
-      if (stepIndex !== -1) {
-        setCurrentStep(stepIndex);
-      }
-
-      // Load the content for editing
-      loadContentForEditing(edit, id);
-    } else {
-      // If no edit parameters, ensure we're in main view and refresh data
-      if (!showAddForm) {
-        fetchAllBibleContent();
-      }
-    }
-  }, [searchParams, showAddForm]);
-
-  const loadContentForEditing = async (contentType: string, id: string) => {
-    try {
-      setIsLoading(true);
-      console.log(`Loading content for editing: ${contentType} with id: ${id}`);
-
-      switch (contentType) {
-        case "story":
-          console.log("Fetching story with ID:", id);
-          const storyResponse: any = await ClientInstance.APP.getStoryById(id);
-          console.log("Story response:", storyResponse);
-          if (storyResponse?.success && storyResponse?.data) {
-            const story = storyResponse.data;
-            console.log("Story data:", story);
-
-            setFormData((prev) => ({
-              ...prev,
-              story: {
-                productId: story.productId || "",
-                title: cleanMultilingualData(story.title || {}),
-                description: cleanMultilingualData(story.description || {}),
-                order: story.order || 1,
-              },
-            }));
-          } else {
-            console.error("Failed to load story:", storyResponse);
-            showToast.error("Error", "Failed to load story data");
-          }
-          break;
-
-        case "chapter":
-          const chapterResponse: any = await ClientInstance.APP.getChapterById(
-            id
-          );
-          if (chapterResponse?.success && chapterResponse?.data) {
-            const chapter = chapterResponse.data;
-            setFormData((prev) => ({
-              ...prev,
-              chapter: {
-                storyId: chapter.storyId || "",
-                title: cleanMultilingualData(chapter.title || {}),
-                order: chapter.order || 1,
-              },
-            }));
-          } else {
-            console.error("Failed to load chapter:", chapterResponse);
-            showToast.error("Error", "Failed to load chapter data");
-          }
-          break;
-
-        case "verse":
-          const verseResponse: any = await ClientInstance.APP.getVerseById(id);
-          if (verseResponse?.success && verseResponse?.data) {
-            const verse = verseResponse.data;
-            setFormData((prev) => ({
-              ...prev,
-              verse: {
-                chapterId: verse.chapterId || "",
-                number: verse.number || 1,
-                text: cleanMultilingualData(verse.text || {}),
-              },
-            }));
-          } else {
-            console.error("Failed to load verse:", verseResponse);
-            showToast.error("Error", "Failed to load verse data");
-          }
-          break;
-      }
-    } catch (error) {
-      console.error("Error loading content for editing:", error);
-      showToast.error("Error", "Failed to load content for editing");
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const fetchAllBibleContent = async () => {
     try {
@@ -527,35 +421,19 @@ export default function BiblePage() {
           order: formData.story.order,
         };
 
-        let response: any;
-        if (isEditMode && editingContentType === "story") {
-          response = await ClientInstance.APP.updateStory(
-            editingContentId,
-            storyPayload
+        const response: any = await ClientInstance.APP.createStory(storyPayload);
+        if (response?.success) {
+          showToast.success(
+            "Story Created",
+            "Story has been created successfully!"
           );
-          if (response?.success) {
-            showToast.success(
-              "Story Updated",
-              "Story has been updated successfully!"
-            );
-            setSuccessMessage("Story updated successfully!");
-            return; // Don't move to next step when editing
-          }
-        } else {
-          response = await ClientInstance.APP.createStory(storyPayload);
-          if (response?.success) {
-            showToast.success(
-              "Story Created",
-              "Story has been created successfully!"
-            );
-            setSuccessMessage(
-              "Story created successfully! Redirecting back to Bible page..."
-            );
-            // Redirect back to Bible page after successful creation
-            setTimeout(() => {
-              router.push("/bible");
-            }, 2000);
-          }
+          setSuccessMessage(
+            "Story created successfully! Redirecting back to Bible page..."
+          );
+          // Redirect back to Bible page after successful creation
+          setTimeout(() => {
+            router.push("/bible");
+          }, 2000);
         }
 
         if (!response?.success) {
@@ -573,35 +451,19 @@ export default function BiblePage() {
           order: formData.chapter.order,
         };
 
-        let response: any;
-        if (isEditMode && editingContentType === "chapter") {
-          response = await ClientInstance.APP.updateChapter(
-            editingContentId,
-            chapterPayload
+        const response: any = await ClientInstance.APP.createChapter(chapterPayload);
+        if (response?.success) {
+          showToast.success(
+            "Chapter Created",
+            "Chapter has been created successfully!"
           );
-          if (response?.success) {
-            showToast.success(
-              "Chapter Updated",
-              "Chapter has been updated successfully!"
-            );
-            setSuccessMessage("Chapter updated successfully!");
-            return; // Don't move to next step when editing
-          }
-        } else {
-          response = await ClientInstance.APP.createChapter(chapterPayload);
-          if (response?.success) {
-            showToast.success(
-              "Chapter Created",
-              "Chapter has been created successfully!"
-            );
-            setSuccessMessage(
-              "Chapter created successfully! Redirecting back to Bible page..."
-            );
-            // Redirect back to Bible page after successful creation
-            setTimeout(() => {
-              router.push("/bible");
-            }, 2000);
-          }
+          setSuccessMessage(
+            "Chapter created successfully! Redirecting back to Bible page..."
+          );
+          // Redirect back to Bible page after successful creation
+          setTimeout(() => {
+            router.push("/bible");
+          }, 2000);
         }
 
         if (!response?.success) {
@@ -619,41 +481,25 @@ export default function BiblePage() {
           text: cleanMultilingualData(formData.verse.text),
         };
 
-        let response: any;
-        if (isEditMode && editingContentType === "verse") {
-          response = await ClientInstance.APP.updateVerse(
-            editingContentId,
-            versePayload
+        const response: any = await ClientInstance.APP.createVerse(versePayload);
+        if (response?.success) {
+          showToast.success(
+            "Verse Created",
+            "Verse has been created successfully!"
           );
-          if (response?.success) {
-            showToast.success(
-              "Verse Updated",
-              "Verse has been updated successfully!"
-            );
-            setSuccessMessage("Verse updated successfully!");
-            return; // Don't reset form when editing
-          }
+          setSuccessMessage(
+            "All content created successfully! Redirecting back to Bible page..."
+          );
+          // Redirect back to Bible page after successful creation
+          setTimeout(() => {
+            router.push("/bible");
+          }, 2000);
         } else {
-          response = await ClientInstance.APP.createVerse(versePayload);
-          if (response?.success) {
-            showToast.success(
-              "Verse Created",
-              "Verse has been created successfully!"
-            );
-            setSuccessMessage(
-              "All content created successfully! Redirecting back to Bible page..."
-            );
-            // Redirect back to Bible page after successful creation
-            setTimeout(() => {
-              router.push("/bible");
-            }, 2000);
-          } else {
-            showToast.error(
-              "Error",
-              response?.message || "Failed to create verse"
-            );
-            return;
-          }
+          showToast.error(
+            "Error",
+            response?.message || "Failed to create verse"
+          );
+          return;
         }
       }
     } catch (error) {
@@ -716,9 +562,6 @@ export default function BiblePage() {
     setCurrentStep(0);
     setValidationError("");
     setSuccessMessage("");
-    setIsEditMode(false);
-    setEditingContentType("");
-    setEditingContentId("");
 
     // Clear URL parameters
     const url = new URL(window.location.href);
@@ -766,9 +609,6 @@ export default function BiblePage() {
     url.searchParams.delete("edit");
     url.searchParams.delete("id");
     window.history.pushState({}, "", url.toString());
-    setIsEditMode(false);
-    setEditingContentType("");
-    setEditingContentId("");
     setShowAddForm(false);
     setCurrentStep(0);
     setValidationError("");
@@ -780,26 +620,20 @@ export default function BiblePage() {
   };
 
   const handleEditContent = (contentType: string, id: string) => {
-    // Navigate to the stepper with edit parameters
-    const url = new URL(window.location.href);
-    url.searchParams.set("edit", contentType);
-    url.searchParams.set("id", id);
-    window.history.pushState({}, "", url.toString());
-
-    // Trigger the useEffect for URL parameters
-    setIsEditMode(true);
-    setEditingContentType(contentType);
-    setEditingContentId(id);
-    setShowAddForm(true);
-
-    // Navigate to the appropriate step
-    const stepIndex = steps.findIndex((s) => s.id === contentType);
-    if (stepIndex !== -1) {
-      setCurrentStep(stepIndex);
+    // Navigate to the dedicated edit pages
+    switch (contentType) {
+      case 'story':
+        router.push(`/bible/stories/edit/${id}`);
+        break;
+      case 'chapter':
+        router.push(`/bible/chapters/edit/${id}`);
+        break;
+      case 'verse':
+        router.push(`/bible/verses/edit/${id}`);
+        break;
+      default:
+        console.error('Unknown content type:', contentType);
     }
-
-    // Load the content for editing
-    loadContentForEditing(contentType, id);
   };
 
   const getProductName = (productId: string) => {
@@ -877,19 +711,12 @@ export default function BiblePage() {
             <ArrowLeft className="h-6 w-6" />
             </Button>
           <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-900">
-                {isEditMode
-                  ? `Edit ${
-                      editingContentType.charAt(0).toUpperCase() +
-                      editingContentType.slice(1)
-                    }`
-                  : "Add Bible Content"}
-              </h1>
-              <p className="text-gray-500">
-                {isEditMode
-                  ? `Edit existing ${editingContentType} content`
-                  : "Create hierarchical content: Story → Chapter → Verse"}
-              </p>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Add Bible Content
+            </h1>
+            <p className="text-gray-500">
+              Create hierarchical content: Story → Chapter → Verse
+            </p>
           </div>
           <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-blue-400 rounded-full animate-pulse"></div>
@@ -902,10 +729,7 @@ export default function BiblePage() {
 
       {/* Stepper */}
         <div className="mx-auto px-2">
-          <Stepper
-            steps={isEditMode ? editSteps : steps}
-            currentStep={currentStep}
-          />
+        <Stepper steps={steps} currentStep={currentStep} />
 
         <div className="mt-10 bg-white border border-gray-100 shadow-md rounded-2xl overflow-hidden">
           <div className="p-10 space-y-8">
@@ -916,12 +740,10 @@ export default function BiblePage() {
                     <FileText className="h-8 w-8 text-theme-primary" />
                     <div>
                       <h2 className="text-2xl font-semibold text-gray-900">
-                        {isEditMode ? "Edit Story" : "Create Story"}
+                        Create Story
                       </h2>
                       <p className="text-gray-600">
-                        {isEditMode
-                          ? "Update story information"
-                          : "Create a new story under an existing product"}
+                        Create a new story under an existing product
                       </p>
                     </div>
                   </div>
@@ -1030,12 +852,10 @@ export default function BiblePage() {
                     <Book className="h-8 w-8 text-theme-primary" />
                     <div>
                       <h2 className="text-2xl font-semibold text-gray-900">
-                        {isEditMode ? "Edit Chapter" : "Create Chapter"}
+                        Create Chapter
                       </h2>
                       <p className="text-gray-600">
-                        {isEditMode
-                          ? "Update chapter information"
-                          : "Create a new chapter under the story"}
+                        Create a new chapter under the story
                       </p>
                     </div>
                   </div>
@@ -1090,12 +910,10 @@ export default function BiblePage() {
                     <Hash className="h-8 w-8 text-theme-primary" />
                     <div>
                       <h2 className="text-2xl font-semibold text-gray-900">
-                        {isEditMode ? "Edit Verse" : "Create Verse"}
+                        Create Verse
                       </h2>
                       <p className="text-gray-600">
-                        {isEditMode
-                          ? "Update verse information"
-                          : "Create a new verse under the selected chapter"}
+                        Create a new verse under the selected chapter
                       </p>
                     </div>
                   </div>
@@ -1222,7 +1040,7 @@ export default function BiblePage() {
                 ) : currentStep === 2 ? (
                   <div className="flex items-center gap-2">
                     <Save className="h-5 w-5" />
-                    {isEditMode ? "Update Verse" : "Create Verse"}
+                    Create Verse
                   </div>
                 ) : (
                   "Next Step"
