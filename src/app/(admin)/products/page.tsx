@@ -341,7 +341,7 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className={`container mx-auto px-4 py-8 ${filteredProducts.length === 0 && !isLoading ? 'bg-transparent' : ''}`}>
       {/* Header */}
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 lg:gap-6 border-b border-gray-200 pb-4 lg:pb-6">
         <div className="w-full">
@@ -360,8 +360,9 @@ export default function ProductsPage() {
         </Link>
       </div>
 
-      {/* Search and Filter */}
-      <div className="space-y-4 mb-6 mt-5">
+      {/* Search and Filter - Only show if there are products or if user has applied filters */}
+      {(filteredProducts.length > 0 || hasActiveFilters()) && (
+        <div className="space-y-4 mb-6 mt-5">
         {/* Search Bar */}
         <div className="relative w-full md:w-96">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -437,24 +438,26 @@ export default function ProductsPage() {
             </Select>
           </div>
 
-          {/* Language Filter */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Language</label>
-            <Select value={selectedLanguage} onValueChange={(value) => {
-              setSelectedLanguage(value);
-            }}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select language" />
-              </SelectTrigger>
-              <SelectContent>
-                {languages.map((language) => (
-                  <SelectItem key={language._id} value={language.code}>
-                    {language.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Language Filter - Only show if there are products or if user has applied filters */}
+          {(filteredProducts.length > 0 || searchTerm || selectedType !== 'all' || selectedStatus !== 'all' || contentType !== 'all' || selectedLanguage !== 'en') && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Language</label>
+              <Select value={selectedLanguage} onValueChange={(value) => {
+                setSelectedLanguage(value);
+              }}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select language" />
+                </SelectTrigger>
+                <SelectContent>
+                  {languages.map((language) => (
+                    <SelectItem key={language._id} value={language.code}>
+                      {language.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           {/* Sort By */}
           <div className="space-y-2">
@@ -507,18 +510,22 @@ export default function ProductsPage() {
            </div>
          )}
         
-      </div>
+        </div>
+      )}
 
       {/* Products Cards */}
       {filteredProducts.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="text-gray-500 text-lg">No products found</div>
-          <p className="text-gray-400 mt-2">
-            {searchTerm || selectedType !== 'all' 
-              ? 'Try adjusting your search or filter criteria'
-              : 'Get started by adding your first product'
-            }
-          </p>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <div className="text-gray-500 text-lg mb-2">No products found</div>
+            <p className="text-gray-400">
+              {hasActiveFilters() 
+                ? 'Try adjusting your search or filter criteria'
+                : 'Get started by adding your first product'
+              }
+            </p>
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

@@ -235,8 +235,8 @@ export default function AddHymnPage() {
 
             <div className="mx-auto px-12 ">
                 <div className="space-y-8">
-                    {/* Product Selection and Hymn Number */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Product Selection */}
+                    <div className="grid grid-cols-1 gap-6">
                         {/* Product Selection */}
                         <div className="space-y-3">
                             <label className="text-sm font-medium text-gray-700">
@@ -293,23 +293,6 @@ export default function AddHymnPage() {
                             </div>
                         </div>
 
-                        {/* Hymn Number */}
-                        <div className="space-y-3">
-                            <label className="text-sm font-medium text-gray-700">
-                                Hymn Number <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="number"
-                                value={hymnData.number}
-                                onChange={(e) => {
-                                    setHymnData({ ...hymnData, number: parseInt(e.target.value) || 1 });
-                                    setValidationError("");
-                                }}
-                                placeholder="Enter hymn number"
-                                className="w-full h-[40px] px-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none"
-                                min="1"
-                            />
-                        </div>
                     </div>
 
                     {/* Hymn Text */}

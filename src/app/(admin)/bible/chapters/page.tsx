@@ -174,7 +174,7 @@ export default function ChaptersPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className={`container mx-auto px-4 py-8 ${Object.keys(groupedChapters).length === 0 && !isLoading ? 'bg-transparent' : ''}`}>
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-3">
@@ -190,8 +190,9 @@ export default function ChaptersPage() {
         </p>
       </div>
 
-      {/* Search and Filter */}
-      <div className="flex flex-col lg:flex-row gap-4 mb-8">
+      {/* Search and Filter - Only show if there are chapters or if user has applied filters */}
+      {(Object.keys(groupedChapters).length > 0 || searchTerm || selectedLanguage !== 'en') && (
+        <div className="flex flex-col lg:flex-row gap-4 mb-8">
         <div className="relative flex-1">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <Search className="h-5 w-5 text-gray-400" />
@@ -204,35 +205,39 @@ export default function ChaptersPage() {
             className="block w-full sm:w-80 h-[40px] pl-10 pr-4 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
           />
         </div>
-        <div className="lg:w-64">
-          <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
-            <SelectTrigger className="w-full h-[40px] border-gray-200 bg-white">
-              <SelectValue placeholder="Select language" />
-            </SelectTrigger>
-            <SelectContent>
-              {languages.map((language) => (
-                <SelectItem key={language._id} value={language.code}>
-                  {language.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        {/* Only show language filter if there are chapters or if user has applied filters */}
+        {(Object.keys(groupedChapters).length > 0 || searchTerm || selectedLanguage !== 'en') && (
+          <div className="lg:w-64">
+            <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+              <SelectTrigger className="w-full h-[40px] border-gray-200 bg-white">
+                <SelectValue placeholder="Select language" />
+              </SelectTrigger>
+              <SelectContent>
+                {languages.map((language) => (
+                  <SelectItem key={language._id} value={language.code}>
+                    {language.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
         </div>
-      </div>
+      )}
 
       {/* Chapters by Story */}
       {Object.keys(groupedChapters).length === 0 ? (
-        <div className="text-center py-16">
-          <div className="w-24 h-24 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
-            <Book className="h-12 w-12 text-gray-400" />
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <Book className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <div className="text-gray-500 text-lg mb-2">No chapters found</div>
+            <p className="text-gray-400">
+              {searchTerm || selectedLanguage !== 'en'
+                ? 'Try adjusting your search criteria or language filter'
+                : 'Get started by adding your first chapter to organize your Bible content'
+              }
+            </p>
           </div>
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">No chapters found</h3>
-          <p className="text-gray-500 max-w-md mx-auto">
-            {searchTerm 
-              ? 'Try adjusting your search criteria or language filter'
-              : 'Get started by adding your first chapter to organize your Bible content'
-            }
-          </p>
         </div>
       ) : (
         <div className="space-y-4">

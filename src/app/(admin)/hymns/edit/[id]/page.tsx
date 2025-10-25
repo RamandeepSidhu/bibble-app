@@ -204,23 +204,6 @@ export default function EditHymnPage() {
 
             <div className="mx-auto px-12 ">
                 <div className="space-y-8">
-                    {/* Hymn Number */}
-                    <div className="space-y-3">
-                        <label className="text-sm font-medium text-gray-700">
-                            Hymn Number <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                            type="number"
-                            value={hymnData.number}
-                            onChange={(e) => {
-                                setHymnData({ ...hymnData, number: parseInt(e.target.value) || 1 });
-                                setValidationError("");
-                            }}
-                            placeholder="Enter hymn number"
-                            className="w-full h-[40px] px-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none"
-                            min="1"
-                        />
-                    </div>
 
                     {/* Hymn Text */}
                     <div className="space-y-2">

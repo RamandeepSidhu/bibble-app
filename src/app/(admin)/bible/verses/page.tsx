@@ -34,7 +34,6 @@ export default function VersesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deletingVerse, setDeletingVerse] = useState<Verse | null>(null);
-  const [loadingProgress, setLoadingProgress] = useState({ current: 0, total: 0, message: '' });
 
   // Fetch verses and languages
   useEffect(() => {
@@ -76,7 +75,6 @@ export default function VersesPage() {
   const fetchAllVerses = async () => {
     try {
       console.log("🔄 Starting to fetch verses...");
-      setLoadingProgress({ current: 0, total: 0, message: 'Fetching products...' });
       
       // First, get all products
       const productsResponse: any = await ClientInstance.APP.getProducts({ type: 'book' });
@@ -87,11 +85,6 @@ export default function VersesPage() {
       }
 
       console.log(`📚 Found ${productsResponse.data.length} products`);
-      setLoadingProgress({ 
-        current: 0, 
-        total: productsResponse.data.length, 
-        message: `Processing ${productsResponse.data.length} products...` 
-      });
       
       const allVerses: Verse[] = [];
       const productPromises = [];
@@ -127,13 +120,6 @@ export default function VersesPage() {
   const fetchVersesForProduct = async (productId: string, currentIndex: number, totalProducts: number): Promise<Verse[]> => {
     try {
       const allVerses: Verse[] = [];
-      
-      // Update progress
-      setLoadingProgress({ 
-        current: currentIndex, 
-        total: totalProducts, 
-        message: `Processing product ${currentIndex} of ${totalProducts}...` 
-      });
       
       // Get stories for this product
       const storiesResponse: any = await ClientInstance.APP.getStoriesByProduct(productId);
@@ -189,15 +175,41 @@ export default function VersesPage() {
     }
   };
 
-  // Filter verses based on search
+  // Filter verses based on search and language
   const filteredVerses = verses.filter(verse => {
     const matchesSearch = 
       verse.number.toString().includes(searchTerm) ||
       Object.values(verse.text).some(text => 
         text.toLowerCase().includes(searchTerm.toLowerCase())
       );
-    return matchesSearch;
+    
+    // Filter by language - only show verses that have content in the selected language
+    const hasContentInLanguage = verse.text[selectedLanguage] && 
+      verse.text[selectedLanguage].trim() !== '';
+    
+    return matchesSearch && hasContentInLanguage;
   });
+
+  // Group verses by chapter
+  const groupedVerses = filteredVerses.reduce((acc: any, verse: any) => {
+    const chapterId = verse.chapterId?._id || verse.chapterId;
+    const chapterTitle = verse.chapterId?.title?.[selectedLanguage] || verse.chapterId?.title?.en || 'Unknown Chapter';
+    
+    if (!acc[chapterTitle]) {
+      acc[chapterTitle] = {
+        chapterTitle,
+        chapterData: verse.chapterId,
+        verses: []
+      };
+    }
+    acc[chapterTitle].verses.push(verse);
+    return acc;
+  }, {});
+
+  // Helper function to strip HTML tags
+  const stripHtmlTags = (html: string) => {
+    return html.replace(/<[^>]*>/g, '');
+  };
 
   const handleDeleteClick = (verse: Verse) => {
     setDeletingVerse(verse);
@@ -225,28 +237,15 @@ export default function VersesPage() {
 
 
   if (isLoading) {
-    const progressPercentage = loadingProgress.total > 0 ? (loadingProgress.current / loadingProgress.total) * 100 : 0;
-    
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col items-center justify-center min-h-[400px] space-y-6">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 border-4 border-theme-primary border-t-transparent rounded-full animate-spin"></div>
-            <span className="text-lg font-medium text-gray-700">Loading verses...</span>
-          </div>
-          <div className="text-center space-y-2">
-            <p className="text-gray-600">{loadingProgress.message || 'Fetching all verses from products, stories, and chapters'}</p>
-            {loadingProgress.total > 0 && (
-              <p className="text-sm text-gray-500">
-                Progress: {loadingProgress.current} / {loadingProgress.total} products
-              </p>
-            )}
-          </div>
-          <div className="w-full max-w-md bg-gray-200 rounded-full h-2">
-            <div 
-              className="bg-theme-primary h-2 rounded-full transition-all duration-300" 
-              style={{width: `${progressPercentage}%`}}
-            ></div>
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+          <div className="space-y-3">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="h-16 bg-gray-200 rounded"></div>
+            ))}
           </div>
         </div>
       </div>
@@ -254,7 +253,7 @@ export default function VersesPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className={`container mx-auto px-4 py-8 ${Object.keys(groupedVerses).length === 0 && !isLoading ? 'bg-transparent' : ''}`}>
       {/* Header */}
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 lg:gap-6 border-b border-gray-200 pb-4 lg:pb-6">
         <div className="w-full">
@@ -272,8 +271,9 @@ export default function VersesPage() {
         </div>
       </div>
 
-      {/* Search and Filter */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-3 md:gap-4 mt-5">
+      {/* Search and Filter - Only show if there are verses or if user has applied filters */}
+      {(Object.keys(groupedVerses).length > 0 || searchTerm || selectedLanguage !== 'en') && (
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-3 md:gap-4 mt-5">
         <div className="relative w-full md:w-96">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <Search className="h-5 w-5 text-gray-400" />
@@ -286,118 +286,111 @@ export default function VersesPage() {
             className="block w-full sm:w-80 h-[40px] pl-10 pr-4 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
           />
         </div>
-        <div className="w-full sm:w-auto">
-          <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
-            <SelectTrigger className="w-full sm:w-[200px]">
-              <SelectValue placeholder="Select language" />
-            </SelectTrigger>
-            <SelectContent>
-              {languages.map((language) => (
-                <SelectItem key={language._id} value={language.code}>
-                  {language.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        {/* Only show language filter if there are verses or if user has applied filters */}
+        {(Object.keys(groupedVerses).length > 0 || searchTerm || selectedLanguage !== 'en') && (
+          <div className="w-full sm:w-auto">
+            <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+              <SelectTrigger className="w-full sm:w-[200px]">
+                <SelectValue placeholder="Select language" />
+              </SelectTrigger>
+              <SelectContent>
+                {languages.map((language) => (
+                  <SelectItem key={language._id} value={language.code}>
+                    {language.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
         </div>
-      </div>
+      )}
 
-      {/* Verses Table */}
-      {filteredVerses.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="text-gray-500 text-lg">No verses found</div>
-          <p className="text-gray-400 mt-2">
-            {searchTerm 
-              ? 'Try adjusting your search criteria'
-              : 'Get started by adding your first verse'
-            }
-          </p>
+      {/* Verses Cards */}
+      {Object.keys(groupedVerses).length === 0 ? (
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <Hash className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <div className="text-gray-500 text-lg mb-2">No verses found</div>
+            <p className="text-gray-400">
+              {searchTerm || selectedLanguage !== 'en'
+                ? 'Try adjusting your search criteria'
+                : 'Get started by adding your first verse'
+              }
+            </p>
+          </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredVerses.map((verse) => (
-            <Link key={verse._id} href={`/bible/verses/${verse._id}`} className="block">
-              <div className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col min-h-[400px]">
-                {/* Card Header */}
-                <div className="p-6 border-b border-gray-100">
-                      <div className="flex items-center space-x-3">
-                    <div className="h-12 w-12 rounded-full bg-theme-secondary text-theme-primary flex items-center justify-center font-semibold">
-                      <Hash className="h-6 w-6" />
-                        </div>
-                        <div className="flex-1">
-                      <div className="font-semibold text-lg text-gray-900">
-                            Verse #{verse.number}
-                          </div>
-                      <div className="text-sm text-gray-500">
-                        {verse.chapterId && typeof verse.chapterId === 'object' && (verse.chapterId as any).title && (verse.chapterId as any).title.en ? (
-                          <span dangerouslySetInnerHTML={{ __html: (verse.chapterId as any).title.en }} />
+        <div className="space-y-4">
+          {Object.values(groupedVerses).map((group: any, index: number) => (
+            <div key={`${group?.chapterTitle}-${index}`} className="bg-white rounded-lg shadow-sm">
+              {/* Chapter Header - Clean Theme Card */}
+              <div className="bg-theme-secondary text-theme-primary p-4 rounded-t-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="h-10 w-10 bg-white/20 rounded-lg flex items-center justify-center">
+                      <Hash className="h-5 w-5 text-theme-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold">
+                        {stripHtmlTags(group?.chapterTitle)}
+                      </h3>
+                      <div className="text-gray-700 text-sm">
+                        {group.chapterData && group.chapterData.description && group.chapterData.description[selectedLanguage] ? (
+                          <span dangerouslySetInnerHTML={{ __html: group.chapterData.description[selectedLanguage] }} />
                         ) : (
-                          'Unknown Chapter'
+                          'Chapter description'
                         )}
                       </div>
                     </div>
                   </div>
-                </div>
-
-                {/* Chapter Information - All Languages */}
-                <div className="p-6 flex-grow">
-                  <div className="mb-4">
-                    <h4 className="text-lg font-bold text-gray-900 mb-3 border-b-2 border-theme-primary pb-2">Chapter Information</h4>
-                    <div className="space-y-2">
-                      {/* Dynamic Language Display */}
-                      {verse.chapterId && typeof verse.chapterId === 'object' && (verse.chapterId as any).title &&
-                        Object.entries((verse.chapterId as any).title).map(([lang, text]) => (
-                          text && typeof text === 'string' && text.trim() && (
-                            <div key={lang} className="text-sm p-3">
-                              <span className="text-sm font-bold text-gray-900 mr-3">{getLanguageName(lang)}:</span>
-                              <div className="text-gray-900 font-medium line-clamp-2" dangerouslySetInnerHTML={{ __html: text }} />
-                            </div>
-                          )
-                        ))
-                      }
-                    </div>
-                  </div>
-
-                  {/* Verse Text - Selected Language */}
-                  <div className="mb-4">
-                    <h4 className="text-lg font-bold text-gray-900 mb-3 border-b-2 border-theme-primary pb-2">
-                      Verse Text ({selectedLanguage.toUpperCase()})
-                    </h4>
-                    <div className="space-y-2">
-                      {verse.text[selectedLanguage] ? (
-                        <div className="text-sm p-3">
-                          <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: verse.text[selectedLanguage] }} />
-                        </div>
-                      ) : (
-                        <div className="text-sm p-3 text-gray-500 italic">
-                          No text available in {selectedLanguage.toUpperCase()}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Verse Details */}
-                  <div className="text-xs text-gray-500 space-y-1">
-                    <div>Number: {verse.number}</div>
-                    <div>Created: {verse.createdAt ? new Date(verse.createdAt).toLocaleDateString() : 'N/A'}</div>
-                    <div>Updated: {verse.updatedAt ? new Date(verse.updatedAt).toLocaleDateString() : 'N/A'}</div>
-                      </div>
-                      </div>
-
-                {/* Card Footer */}
-                <div className="p-6 border-t border-gray-100 bg-gray-50">
-                      <div className="flex justify-between items-center gap-2">
-                    <Link href={`/bible/verses/edit/${verse._id}`}>
-                          <Button variant="outline" size="sm" className="!min-w-[80px]">
-                            <Edit className="h-4 w-4 mr-1" />
-                            Edit
-                          </Button>
-                        </Link>
+                  <div className="text-right">
+                    <div className="text-2xl font-bold">{group.verses.length}</div>
+                    <div className="text-theme-primary text-sm">Verses</div>
                   </div>
                 </div>
               </div>
-            </Link>
-              ))}
+
+              {/* Verses Grid - Clean White Cards */}
+              <div className="p-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {group.verses.map((verse: any) => (
+                    <div key={verse._id} className="bg-white rounded-lg p-3 border border-gray-100 hover:shadow-md transition-shadow">
+                      <div className="flex items-center space-x-3">
+                        {/* Verse Number - Theme Circle */}
+                        <div className="h-8 w-8 bg-theme-secondary rounded-full flex items-center justify-center text-theme-primary font-bold text-sm flex-shrink-0">
+                          {verse.number}
+                        </div>
+                        
+                        {/* Verse Content */}
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-gray-900 text-sm">
+                            Verse {verse.number}
+                          </div>
+                          <div className="text-xs text-gray-600 whitespace-pre-wrap break-words">
+                            {verse.text[selectedLanguage] ? (
+                              <span dangerouslySetInnerHTML={{ __html: verse.text[selectedLanguage] }} />
+                            ) : (
+                              <span className="italic">No text</span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Edit Button - Square with Pencil */}
+                        <div className="flex-shrink-0">
+                          <Link href={`/bible/verses/edit/${verse._id}`}>
+                            <Button variant="outline" size="sm" className="h-8 w-8 p-0 border-gray-300 text-gray-500 hover:bg-gray-100">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 

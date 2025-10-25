@@ -196,7 +196,7 @@ export default function UsersPage() {
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className={`p-6 min-h-screen ${users.length === 0 && !loading ? 'bg-transparent' : 'bg-gray-50'}`}>
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <div>
@@ -218,75 +218,79 @@ export default function UsersPage() {
         </div>
       </div>
 
-      {/* Filters */}
-      <div className=" p-6 mb-6">
-        <div className="flex flex-col lg:flex-row gap-4">
-          {/* Search */}
-          <div className="flex-1">
-            <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-                placeholder="Search by name or email..."
-              value={searchTerm}
-                onChange={(e) => handleSearch(e.target.value)}
-                className="pl-10 w-[50%] bg-white h-[40px]"
-              />
-              
+      {/* Filters - Only show if there are users or if user has applied filters */}
+      {(users.length > 0 || hasActiveFilters) && (
+        <div className=" p-6 mb-6">
+          <div className="flex flex-col lg:flex-row gap-4">
+            {/* Search */}
+            <div className="flex-1">
+              <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                  placeholder="Search by name or email..."
+                value={searchTerm}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  className="pl-10 w-[50%] bg-white h-[40px]"
+                />
+                
+              </div>
+            </div>
+
+            {/* Status Filter */}
+            <div className="w-full lg:w-48">
+              <Select value={statusFilter} onValueChange={handleStatusFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="verified">Verified</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="suspended">Suspended</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Plan Filter */}
+            <div className="w-full lg:w-48">
+              <Select value={planFilter} onValueChange={handlePlanFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter by plan" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Plans</SelectItem>
+                  <SelectItem value="free">Free</SelectItem>
+                  <SelectItem value="premium">Premium</SelectItem>
+                  <SelectItem value="enterprise">Enterprise</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Clear Filters */}
+            {hasActiveFilters && (
+              <Button 
+                variant="outline" 
+                onClick={clearFilters}
+                className="flex items-center gap-2"
+              >
+                <Filter className="h-4 w-4" />
+                Clear Filters
+              </Button>
+            )}
             </div>
           </div>
-
-          {/* Status Filter */}
-          <div className="w-full lg:w-48">
-            <Select value={statusFilter} onValueChange={handleStatusFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="verified">Verified</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="suspended">Suspended</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Plan Filter */}
-          <div className="w-full lg:w-48">
-            <Select value={planFilter} onValueChange={handlePlanFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filter by plan" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Plans</SelectItem>
-                <SelectItem value="free">Free</SelectItem>
-                <SelectItem value="premium">Premium</SelectItem>
-                <SelectItem value="enterprise">Enterprise</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Clear Filters */}
-          {hasActiveFilters && (
-            <Button 
-              variant="outline" 
-              onClick={clearFilters}
-              className="flex items-center gap-2"
-            >
-              <Filter className="h-4 w-4" />
-              Clear Filters
-            </Button>
-          )}
-          </div>
-        </div>
+      )}
 
         {/* Users Table */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        {loading ? (
+      {loading ? (
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           <UsersTableShimmer />
-        ) : users.length === 0 ? (
-          <div className="p-8 text-center">
+        </div>
+      ) : users.length === 0 ? (
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
             <User className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <div className="text-gray-500 text-lg mb-2">No users found</div>
             <p className="text-gray-400">
@@ -296,7 +300,9 @@ export default function UsersPage() {
               }
             </p>
           </div>
-        ) : (
+        </div>
+      ) : (
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           <>
           <Table>
             <TableHeader>
@@ -388,8 +394,8 @@ export default function UsersPage() {
               </div>
             )}
           </>
-          )}
         </div>
+      )}
     </div>
   );
 }

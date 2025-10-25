@@ -107,6 +107,27 @@ export default function StoriesPage() {
     return matchesSearch;
   });
 
+  // Group stories by product
+  const groupedStories = filteredStories.reduce((acc: any, story: any) => {
+    const productId = story.productId?._id || story.productId;
+    const productTitle = story.productId?.title?.[selectedLanguage] || story.productId?.title?.en || 'Unknown Product';
+    
+    if (!acc[productTitle]) {
+      acc[productTitle] = {
+        productTitle,
+        productData: story.productId,
+        stories: []
+      };
+    }
+    acc[productTitle].stories.push(story);
+    return acc;
+  }, {});
+
+  // Helper function to strip HTML tags
+  const stripHtmlTags = (html: string) => {
+    return html.replace(/<[^>]*>/g, '');
+  };
+
   const handleDeleteClick = (story: Story) => {
     setDeletingStory(story);
     setIsDeleteDialogOpen(true);
@@ -149,7 +170,7 @@ export default function StoriesPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className={`container mx-auto px-4 py-8 ${Object.keys(groupedStories).length === 0 && !isLoading ? 'bg-transparent' : ''}`}>
       {/* Header */}
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 lg:gap-6 border-b border-gray-200 pb-4 lg:pb-6">
         <div className="w-full">
@@ -167,8 +188,9 @@ export default function StoriesPage() {
         </div>
       </div>
 
-      {/* Search and Filter */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-3 md:gap-4 mt-5">
+      {/* Search and Filter - Only show if there are stories or if user has applied filters */}
+      {(Object.keys(groupedStories).length > 0 || searchTerm || selectedLanguage !== 'en') && (
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-3 md:gap-4 mt-5">
         <div className="relative w-full md:w-96">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <Search className="h-5 w-5 text-gray-400" />
@@ -181,154 +203,111 @@ export default function StoriesPage() {
             className="block w-full sm:w-80 h-[40px] pl-10 pr-4 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
           />
         </div>
-        <div className="w-full sm:w-auto">
-          <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
-            <SelectTrigger className="w-full sm:w-[200px]">
-              <SelectValue placeholder="Select language" />
-            </SelectTrigger>
-            <SelectContent>
-              {languages.map((language) => (
-                <SelectItem key={language._id} value={language.code}>
-                  {language.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        {/* Only show language filter if there are stories or if user has applied filters */}
+        {(Object.keys(groupedStories).length > 0 || searchTerm || selectedLanguage !== 'en') && (
+          <div className="w-full sm:w-auto">
+            <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+              <SelectTrigger className="w-full sm:w-[200px]">
+                <SelectValue placeholder="Select language" />
+              </SelectTrigger>
+              <SelectContent>
+                {languages.map((language) => (
+                  <SelectItem key={language._id} value={language.code}>
+                    {language.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
         </div>
-      </div>
+      )}
 
       {/* Stories Cards */}
-      {filteredStories.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="text-gray-500 text-lg">No stories found</div>
-          <p className="text-gray-400 mt-2">
-            {searchTerm 
-              ? 'Try adjusting your search criteria'
-              : 'Get started by adding your first story'
-            }
-          </p>
+      {Object.keys(groupedStories).length === 0 ? (
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <div className="text-gray-500 text-lg mb-2">No stories found</div>
+            <p className="text-gray-400">
+              {searchTerm || selectedLanguage !== 'en'
+                ? 'Try adjusting your search criteria'
+                : 'Get started by adding your first story'
+              }
+            </p>
+          </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredStories.map((story) => (
-            <div key={story._id} className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow flex flex-col min-h-[400px]">
-              {/* Card Header */}
-              <div className="p-6 border-b border-gray-100">
-                    <div className="flex items-center space-x-3">
-                  <div className="h-12 w-12 rounded-full bg-theme-secondary text-theme-primary flex items-center justify-center font-semibold">
-                    <FileText className="h-6 w-6" />
-                      </div>
-                      <div className="flex-1">
-                    <div className="font-semibold text-lg text-gray-900">
-                          Story #{story.order}
-                        </div>
-                    <div className="text-sm text-gray-500">
-                      {story.productId.title.en}
+        <div className="space-y-4">
+          {Object.values(groupedStories).map((group: any, index: number) => (
+            <div key={`${group?.productTitle}-${index}`} className="bg-white rounded-lg shadow-sm">
+              {/* Product Header - Clean Theme Card */}
+              <div className="bg-theme-secondary text-theme-primary p-4 rounded-t-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="h-10 w-10 bg-white/20 rounded-lg flex items-center justify-center">
+                      <FileText className="h-5 w-5 text-theme-primary" />
                     </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Product Information with All Languages */}
-              <div className="p-6 flex-grow">
-                <div className="mb-4">
-                  <h4 className="text-lg font-bold text-gray-900 mb-3 border-b-2 border-theme-primary pb-2">
-                    Product Information ({selectedLanguage.toUpperCase()})
-                  </h4>
-                  
-                  <div className="space-y-1">
-                    {/* Product Title - Selected Language */}
-                    {story.productId && typeof story.productId === 'object' && (story.productId as any).title && (
-                        <div className="space-y-1">
-                        {(story.productId as any).title[selectedLanguage] ? (
-                          <div className="text-sm p-3">
-                            <span className="text-gray-900 font-medium" dangerouslySetInnerHTML={{ __html: (story.productId as any).title[selectedLanguage] }} />
-                          </div>
+                    <div>
+                      <h3 className="text-lg font-bold">
+                        {stripHtmlTags(group?.productTitle)}
+                      </h3>
+                      <div className="text-gray-700 text-sm">
+                        {group.productData && group.productData.description && group.productData.description[selectedLanguage] ? (
+                          <span dangerouslySetInnerHTML={{ __html: group.productData.description[selectedLanguage] }} />
                         ) : (
-                          <div className="text-sm p-3 text-gray-500 italic">
-                            No product information available in {selectedLanguage.toUpperCase()}
-                          </div>
+                          'Product description'
                         )}
                       </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Product Description - Selected Language */}
-                <div className="mb-4">
-                  <h4 className="text-lg font-bold text-gray-900 mb-3 border-b-2 border-theme-primary pb-2">
-                    Product Description ({selectedLanguage.toUpperCase()})
-                  </h4>
-                  <div className="space-y-2">
-                    {story.productId && typeof story.productId === 'object' && (story.productId as any).description && (story.productId as any).description[selectedLanguage] ? (
-                      <div className="text-sm p-3">
-                        <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: (story.productId as any).description[selectedLanguage] }} />
-                      </div>
-                    ) : (
-                      <div className="text-sm p-3 text-gray-500 italic">
-                        No product description available in {selectedLanguage.toUpperCase()}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Story Title - Selected Language */}
-                <div className="mb-4">
-                  <h4 className="text-lg font-bold text-gray-900 mb-3 border-b-2 border-theme-primary pb-2">
-                    Story Title ({selectedLanguage.toUpperCase()})
-                  </h4>
-                  <div className="space-y-2">
-                    {story.title[selectedLanguage] ? (
-                      <div className="text-sm p-3">
-                        <div className="text-gray-900 font-medium line-clamp-2" dangerouslySetInnerHTML={{ __html: story.title[selectedLanguage] }} />
-                      </div>
-                    ) : (
-                      <div className="text-sm p-3 text-gray-500 italic">
-                        No title available in {selectedLanguage.toUpperCase()}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Story Description - Selected Language */}
-                <div className="mb-4">
-                  <h4 className="text-lg font-bold text-gray-900 mb-3 border-b-2 border-theme-primary pb-2">
-                    Story Description ({selectedLanguage.toUpperCase()})
-                  </h4>
-                  <div className="space-y-2">
-                    {story.description[selectedLanguage] ? (
-                      <div className="text-sm p-3">
-                        <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: story.description[selectedLanguage] }} />
-                      </div>
-                    ) : (
-                      <div className="text-sm p-3 text-gray-500 italic">
-                        No description available in {selectedLanguage.toUpperCase()}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Story Details */}
-                <div className="text-xs text-gray-500 space-y-1">
-                  <div>Order: {story.order}</div>
-                  <div>Created: {story.createdAt ? new Date(story.createdAt).toLocaleDateString() : 'N/A'}</div>
-                  <div>Updated: {story.updatedAt ? new Date(story.updatedAt).toLocaleDateString() : 'N/A'}</div>
-                </div>
                     </div>
-
-              {/* Card Footer */}
-              <div className="p-6 border-t border-gray-100 bg-gray-50">
-                    <div className="flex justify-end gap-2">
-                  <Link href={`/bible/stories/edit/${story._id}`}>
-                        <Button variant="outline" size="sm" className="!min-w-[80px]">
-                          <Edit className="h-4 w-4 mr-1" />
-                          Edit
-                        </Button>
-                      </Link>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-2xl font-bold">{group.stories.length}</div>
+                    <div className="text-theme-primary text-sm">Stories</div>
+                  </div>
                 </div>
               </div>
+
+              {/* Stories Grid - Clean White Cards */}
+              <div className="p-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {group.stories.map((story: any) => (
+                    <div key={story._id} className="bg-white rounded-lg p-3 border border-gray-100 hover:shadow-md transition-shadow">
+                      <div className="flex items-center space-x-3">
+                        {/* Story Number - Theme Circle */}
+                        <div className="h-8 w-8 bg-theme-secondary rounded-full flex items-center justify-center text-theme-primary font-bold text-sm flex-shrink-0">
+                          {story.order}
+                        </div>
+                        
+                        {/* Story Content */}
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-gray-900 text-sm">
+                            Story {story.order}
+                          </div>
+                          <div className="text-xs text-gray-600 truncate">
+                            {story.title[selectedLanguage] ? (
+                              <span>{stripHtmlTags(story.title[selectedLanguage])}</span>
+                            ) : (
+                              <span className="italic">No title</span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Edit Button - Square with Pencil */}
+                        <div className="flex-shrink-0">
+                          <Link href={`/bible/stories/edit/${story._id}`}>
+                            <Button variant="outline" size="sm" className="h-8 w-8 p-0 border-gray-300 text-gray-500 hover:bg-gray-100">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                        </div>
+                      </div>
                     </div>
-              ))}
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 

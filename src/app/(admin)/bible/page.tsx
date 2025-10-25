@@ -1156,9 +1156,9 @@ export default function BiblePage() {
 
   // Main list view
   return (
-    <div className="bg-white min-h-screen rounded-lg shadow-sky-100 space-y-6 container mx-auto px-4 py-8">
+    <div className={`min-h-screen rounded-lg shadow-sky-100 space-y-6 container mx-auto px-4 py-8 ${products.length === 0 && !isLoading ? 'bg-transparent' : 'bg-white'}`}>
       {/* Header */}
-      <div className="border-b border-gray-100 bg-white">
+      <div className="border-b border-gray-100">
         <div className="mx-auto px-5 py-6 flex items-center gap-4">
           <button
             onClick={handleBackToBible}
@@ -1180,16 +1180,17 @@ export default function BiblePage() {
               <Plus className="h-4 w-4" />
               Add Bible Content
             </Button>
-            <Link href="/bible/chapters">
-              <Button variant="outline" className="flex items-center gap-2">
-                <Book className="h-4 w-4" />
-                Manage Chapters
-              </Button>
-            </Link>
+           
             <Link href="/bible/stories">
               <Button variant="outline" className="flex items-center gap-2">
                 <FileText className="h-4 w-4" />
                 Manage Stories
+              </Button>
+            </Link>
+            <Link href="/bible/chapters">
+              <Button variant="outline" className="flex items-center gap-2">
+                <Book className="h-4 w-4" />
+                Manage Chapters
               </Button>
             </Link>
             <Link href="/bible/verses">
@@ -1202,8 +1203,9 @@ export default function BiblePage() {
         </div>
       </div>
 
-      {/* Content Overview - 4 Focus Boxes */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Content Overview - Only show if there are products */}
+      {products.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Products Overview */}
         <div className="bg-white border border-gray-200 rounded-lg p-6">
           <div className="flex items-center gap-3 mb-4">
@@ -1267,7 +1269,18 @@ export default function BiblePage() {
             </div>
           </div>
         </div>
-      </div>
+        </div>
+      ) : (
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <Book className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <div className="text-gray-500 text-lg mb-2">Book not have</div>
+            <p className="text-gray-400">
+              No Bible books available yet.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Recent Activity - Unified List/Table */}
       {products.length > 0 ? (
@@ -1293,15 +1306,14 @@ export default function BiblePage() {
             // If no products have content, show message
             if (productsWithContent.length === 0) {
               return (
-                <div className="text-center py-12 text-gray-500">
-                  <div className="text-6xl mb-4">📚</div>
-                  <h3 className="text-xl font-semibold text-gray-700 mb-2">No Bible Content Yet</h3>
-                  <p className="text-gray-600 mb-4">
-                    No products have stories, chapters, or verses created yet.
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Click "Add Bible Content" to create your first story, chapter, and verse.
-                  </p>
+                <div className="flex items-center justify-center min-h-[400px]">
+                  <div className="text-center">
+                    <Book className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <div className="text-gray-500 text-lg mb-2">Bible book not found</div>
+                    <p className="text-gray-400">
+                      No products have stories, chapters, or verses created yet.
+                    </p>
+                  </div>
                 </div>
               );
             }
