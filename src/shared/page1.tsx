@@ -284,7 +284,7 @@ export default function AddBookPageDummyOld() {
           )}
 
           {/* Navigation Buttons */}
-          <div className="flex justify-between items-center px-10 py-6 border-t border-gray-200 bg-gray-50">
+          <div className="flex justify-between items-center py-6 border-t border-gray-200">
             <Button
               variant="outline"
               onClick={handlePrevStep}
@@ -306,7 +306,7 @@ export default function AddBookPageDummyOld() {
                 return (
                   <Button
                     onClick={handleSave}
-                    className="px-8 py-3 bg-theme-primary hover:bg-theme-primary text-white font-semibold rounded-lg shadow-md transition-colors"
+                    className="py-3 bg-theme-primary hover:bg-theme-primary text-white font-semibold rounded-lg shadow-md transition-colors"
                   >
                     <Save className="h-5 w-5 mr-2" />
                     Save Product
@@ -317,7 +317,7 @@ export default function AddBookPageDummyOld() {
                   <Button
                     onClick={handleNextStep}
                     disabled={!isFirstStepComplete}
-                    className={`px-8 py-3 font-semibold rounded-lg shadow-md transition-colors ${isFirstStepComplete
+                    className={`py-3 font-semibold rounded-lg shadow-md transition-colors ${isFirstStepComplete
                       ? "bg-theme-primary hover:bg-theme-primary text-white"
                       : "bg-gray-300 text-gray-500 cursor-not-allowed"
                       }`}

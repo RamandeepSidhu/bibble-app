@@ -31,8 +31,6 @@ import {
   FileText,
   BookOpen,
   Hash,
-  ChevronDown,
-  Package,
 } from "lucide-react";
 import Link from "next/link";
 import CKEditorComponent from "@/components/CKEditorComponent";
@@ -46,11 +44,16 @@ import {
   Verse,
   Language,
 } from "@/lib/types/bibble";
+import {
+  getNextStoryOrder,
+  getNextChapterOrder,
+  getNextVerseNumber,
+} from "@/lib/utils/order-utils";
 
 const steps = [
-  { id: "story", title: "Admin - Stories", icon: FileText },
-  { id: "chapter", title: "Admin - Chapters", icon: Book },
-  { id: "verse", title: "Admin - Verses", icon: Hash },
+  { id: "story", title: "Stories", icon: FileText },
+  { id: "chapter", title: "Chapters", icon: Book },
+  { id: "verse", title: "Verses", icon: Hash },
 ];
 
 
@@ -85,7 +88,6 @@ export default function BiblePage() {
   const [successMessage, setSuccessMessage] = useState<string>("");
   const [showAddForm, setShowAddForm] = useState(false);
 
-
   // Delete confirmation states
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [productToDelete, setProductToDelete] =
@@ -97,10 +99,14 @@ export default function BiblePage() {
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [verses, setVerses] = useState<Verse[]>([]);
   const [languages, setLanguages] = useState<Language[]>([]);
+  const [languageNames, setLanguageNames] = useState<{ [key: string]: string }>({});
   const [selectedProduct, setSelectedProduct] =
     useState<ProductManagement | null>(null);
-  const [selectedStory, setSelectedStory] = useState<Story | null>(null);
-  const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
+
+  // Track created content IDs for edit mode
+  const [createdStoryId, setCreatedStoryId] = useState<string | null>(null);
+  const [createdChapterId, setCreatedChapterId] = useState<string | null>(null);
+  const [createdVerseId, setCreatedVerseId] = useState<string | null>(null);
 
   // Form data
   const [formData, setFormData] = useState<BibleFormData>({
@@ -171,13 +177,12 @@ export default function BiblePage() {
     }
   }, [searchParams]);
 
-
   const fetchAllBibleContent = async () => {
     try {
       setIsLoading(true);
       // Fetch all products first
       const productsResponse: any = await ClientInstance.APP.getProducts({
-    type: "book",
+        type: "book",
       });
       if (productsResponse?.success && productsResponse?.data) {
         setProducts(productsResponse.data);
@@ -283,11 +288,31 @@ export default function BiblePage() {
         }
 
         setLanguages(languagesData);
+        
+        // Create language names mapping for display
+        const namesMapping: { [key: string]: string } = {};
+        languagesData.forEach((lang: any) => {
+          if (lang.code && lang.name) {
+            namesMapping[lang.code] = lang.name;
+          }
+        });
+        setLanguageNames(namesMapping);
       }
     } catch (error) {
       console.error("Error fetching languages:", error);
       setLanguages([]);
+      setLanguageNames({});
     }
+  };
+
+  // Helper function to get language name from API data
+  const getLanguageName = (code: string) => {
+    return languageNames[code] || code.toUpperCase();
+  };
+
+  // Helper function to strip HTML tags for clean display
+  const stripHtmlTags = (html: string) => {
+    return html.replace(/<[^>]*>/g, '');
   };
 
   const fetchProducts = async () => {
@@ -340,7 +365,8 @@ export default function BiblePage() {
   const cleanMultilingualData = (data: MultilingualText): MultilingualText => {
     const cleaned: MultilingualText = {};
     Object.entries(data).forEach(([key, value]) => {
-      if (value && value.trim() !== "") {
+      // Exclude Hindi language (hi) from payload
+      if (key !== 'hi' && value && value.trim() !== "") {
         cleaned[key] = value;
       }
     });
@@ -357,7 +383,7 @@ export default function BiblePage() {
           return false;
         }
         if (!isMultilingualFieldComplete(formData.story.title)) {
-      setValidationError(
+          setValidationError(
             "Please fill in the story title in at least one language"
           );
           return false;
@@ -388,10 +414,7 @@ export default function BiblePage() {
           setValidationError("Please select a chapter");
           return false;
         }
-        if (!formData.verse.number || formData.verse.number <= 0) {
-          setValidationError("Please enter a valid verse number");
-          return false;
-        }
+        // Verse number is auto-calculated, no validation needed
         if (!isMultilingualFieldComplete(formData.verse.text)) {
           setValidationError(
             "Please fill in the verse text in at least one language"
@@ -402,6 +425,16 @@ export default function BiblePage() {
     }
 
     return true;
+  };
+
+  // Smart ordering - finds gaps in sequence
+  const getNextStoryOrderSmart = async (productId: string) => {
+    return await getNextStoryOrder(productId, ClientInstance);
+  };
+
+  // Smart ordering for chapters
+  const getNextChapterOrderSmart = async (storyId: string) => {
+    return await getNextChapterOrder(storyId, ClientInstance);
   };
 
   const handleNextStep = async () => {
@@ -418,22 +451,55 @@ export default function BiblePage() {
           productId: formData.story.productId,
           title: cleanMultilingualData(formData.story.title),
           description: cleanMultilingualData(formData.story.description),
-          order: formData.story.order,
         };
 
-        const response: any = await ClientInstance.APP.createStory(storyPayload);
+        let response: any;
+        if (createdStoryId) {
+          // Update existing story
+          response = await ClientInstance.APP.updateStory(createdStoryId, storyPayload);
+        } else {
+          // Create new story
+          const nextOrder = await getNextStoryOrderSmart(formData.story.productId);
+          response = await ClientInstance.APP.createStory({
+            ...storyPayload,
+            order: nextOrder,
+          });
+        }
         if (response?.success) {
-          showToast.success(
-            "Story Created",
-            "Story has been created successfully!"
-          );
-          setSuccessMessage(
-            "Story created successfully! Redirecting back to Bible page..."
-          );
-          // Redirect back to Bible page after successful creation
+          const storyId = response.data._id || response.data.id;
+          
+          if (createdStoryId) {
+            showToast.success(
+              "Story Updated",
+              "Story has been updated successfully!"
+            );
+            setSuccessMessage(
+              "Story updated successfully! Moving to next step..."
+            );
+          } else {
+            showToast.success(
+              "Story Created",
+              "Story has been created successfully!"
+            );
+            setSuccessMessage(
+              "Story created successfully! Moving to next step..."
+            );
+            setCreatedStoryId(storyId);
+          }
+          
+          // Update form data with the story ID and move to next step
+          setFormData(prev => ({
+            ...prev,
+            chapter: {
+              ...prev.chapter,
+              storyId: storyId
+            }
+          }));
+          // Move to next step after a short delay to ensure state is updated
           setTimeout(() => {
-            router.push("/bible");
-          }, 2000);
+            setCurrentStep(1);
+            setSuccessMessage("");
+          }, 1000);
         }
 
         if (!response?.success) {
@@ -448,22 +514,55 @@ export default function BiblePage() {
         const chapterPayload = {
           storyId: formData.chapter.storyId,
           title: cleanMultilingualData(formData.chapter.title),
-          order: formData.chapter.order,
         };
 
-        const response: any = await ClientInstance.APP.createChapter(chapterPayload);
+        let response: any;
+        if (createdChapterId) {
+          // Update existing chapter
+          response = await ClientInstance.APP.updateChapter(createdChapterId, chapterPayload);
+        } else {
+          // Create new chapter
+          const nextOrder = await getNextChapterOrderSmart(formData.chapter.storyId);
+          response = await ClientInstance.APP.createChapter({
+            ...chapterPayload,
+            order: nextOrder,
+          });
+        }
         if (response?.success) {
-          showToast.success(
-            "Chapter Created",
-            "Chapter has been created successfully!"
-          );
-          setSuccessMessage(
-            "Chapter created successfully! Redirecting back to Bible page..."
-          );
-          // Redirect back to Bible page after successful creation
+          const chapterId = response.data._id || response.data.id;
+          
+          if (createdChapterId) {
+            showToast.success(
+              "Chapter Updated",
+              "Chapter has been updated successfully!"
+            );
+            setSuccessMessage(
+              "Chapter updated successfully! Moving to next step..."
+            );
+          } else {
+            showToast.success(
+              "Chapter Created",
+              "Chapter has been created successfully!"
+            );
+            setSuccessMessage(
+              "Chapter created successfully! Moving to next step..."
+            );
+            setCreatedChapterId(chapterId);
+          }
+          
+          // Update form data with the chapter ID and move to next step
+          setFormData(prev => ({
+            ...prev,
+            verse: {
+              ...prev.verse,
+              chapterId: chapterId
+            }
+          }));
+          // Move to next step after a short delay to ensure state is updated
           setTimeout(() => {
-            router.push("/bible");
-          }, 2000);
+            setCurrentStep(2);
+            setSuccessMessage("");
+          }, 1500);
         }
 
         if (!response?.success) {
@@ -477,20 +576,44 @@ export default function BiblePage() {
         // Create or Update Verse (Step 3)
         const versePayload = {
           chapterId: formData.verse.chapterId,
-          number: formData.verse.number,
           text: cleanMultilingualData(formData.verse.text),
         };
 
-        const response: any = await ClientInstance.APP.createVerse(versePayload);
+        let response: any;
+        if (createdVerseId) {
+          // Update existing verse
+          response = await ClientInstance.APP.updateVerse(createdVerseId, versePayload);
+        } else {
+          // Create new verse
+          const nextNumber = await getNextVerseNumber(formData.verse.chapterId, ClientInstance);
+          response = await ClientInstance.APP.createVerse({
+            ...versePayload,
+            number: nextNumber,
+          });
+        }
         if (response?.success) {
-          showToast.success(
-            "Verse Created",
-            "Verse has been created successfully!"
-          );
-          setSuccessMessage(
-            "All content created successfully! Redirecting back to Bible page..."
-          );
-          // Redirect back to Bible page after successful creation
+          const verseId = response.data._id || response.data.id;
+          
+          if (createdVerseId) {
+            showToast.success(
+              "Verse Updated",
+              "Verse has been updated successfully!"
+            );
+            setSuccessMessage(
+              "All content updated successfully! Redirecting back to Bible page..."
+            );
+          } else {
+            showToast.success(
+              "Verse Created",
+              "Verse has been created successfully!"
+            );
+            setSuccessMessage(
+              "All content created successfully! Redirecting back to Bible page..."
+            );
+            setCreatedVerseId(verseId);
+          }
+          
+          // Redirect back to Bible page after successful creation/update
           setTimeout(() => {
             router.push("/bible");
           }, 2000);
@@ -520,19 +643,29 @@ export default function BiblePage() {
     }
   };
 
+  // Reset created IDs when starting new Bible creation
+  const resetCreatedIds = () => {
+    setCreatedStoryId(null);
+    setCreatedChapterId(null);
+    setCreatedVerseId(null);
+  };
+
   const handleProductSelect = (productId: string) => {
     const product = products.find((p) => p._id === productId);
     setSelectedProduct(product || null);
     setFormData((prev) => ({
       ...prev,
-      chapter: { ...prev.chapter, productId },
+      story: {
+        ...prev.story,
+        productId: productId,
+      },
     }));
     setValidationError("");
+    // Reset created IDs when selecting a new product
+    resetCreatedIds();
   };
 
   const handleStorySelect = (storyId: string) => {
-    const story = stories.find((s) => s._id === storyId);
-    setSelectedStory(story || null);
     setFormData((prev) => ({
       ...prev,
       story: { ...prev.story, storyId },
@@ -541,8 +674,6 @@ export default function BiblePage() {
   };
 
   const handleChapterSelect = (chapterId: string) => {
-    const chapter = chapters.find((c) => c._id === chapterId);
-    setSelectedChapter(chapter || null);
     setFormData((prev) => ({
       ...prev,
       verse: { ...prev.verse, chapterId },
@@ -597,8 +728,6 @@ export default function BiblePage() {
       },
     });
     setSelectedProduct(null);
-    setSelectedStory(null);
-    setSelectedChapter(null);
     setStories([]);
     setChapters([]);
   };
@@ -622,17 +751,17 @@ export default function BiblePage() {
   const handleEditContent = (contentType: string, id: string) => {
     // Navigate to the dedicated edit pages
     switch (contentType) {
-      case 'story':
+      case "story":
         router.push(`/bible/stories/edit/${id}`);
         break;
-      case 'chapter':
+      case "chapter":
         router.push(`/bible/chapters/edit/${id}`);
         break;
-      case 'verse':
+      case "verse":
         router.push(`/bible/verses/edit/${id}`);
         break;
       default:
-        console.error('Unknown content type:', contentType);
+        console.error("Unknown content type:", contentType);
     }
   };
 
@@ -698,44 +827,44 @@ export default function BiblePage() {
   };
 
   if (showAddForm) {
-  return (
+    return (
       <div className="bg-white min-h-screen rounded-lg shadow-sky-100 space-y-6 container mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="border-b border-gray-100 bg-white">
+        {/* Header */}
+        <div className="border-b border-gray-100 bg-white">
           <div className="mx-auto px-5 py-6 flex items-center gap-4">
             <Button
               variant="outline"
               onClick={handleCancelAdd}
               className="text-gray-600 hover:text-gray-900"
             >
-            <ArrowLeft className="h-6 w-6" />
+              <ArrowLeft className="h-6 w-6" />
             </Button>
-          <div className="flex-1">
-            <h1 className="text-3xl font-bold text-gray-900">
-              Add Bible Content
-            </h1>
-            <p className="text-gray-500">
-              Create hierarchical content: Story → Chapter → Verse
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold text-gray-900">
+                Add Bible Content
+              </h1>
+              <p className="text-gray-500">
+                Create hierarchical content: Story → Chapter → Verse
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-blue-400 rounded-full animate-pulse"></div>
               <span className="text-sm text-gray-500">
                 Step {currentStep + 1} of 3
               </span>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Stepper */}
+        {/* Stepper */}
         <div className="mx-auto px-2">
-        <Stepper steps={steps} currentStep={currentStep} />
+          <Stepper steps={steps} currentStep={currentStep} />
 
-        <div className="mt-10 bg-white border border-gray-100 shadow-md rounded-2xl overflow-hidden">
-          <div className="p-10 space-y-8">
+          <div className="mt-10 bg-white border border-gray-100 shadow-md rounded-2xl overflow-hidden">
+            <div className="p-10 space-y-8">
               {/* STEP 1: STORY CREATION */}
-            {currentStep === 0 && (
-              <>
+              {currentStep === 0 && (
+                <>
                   <div className="flex items-center gap-3 mb-6">
                     <FileText className="h-8 w-8 text-theme-primary" />
                     <div>
@@ -749,46 +878,55 @@ export default function BiblePage() {
                   </div>
 
                   {/* Product Selection */}
-                <div className="space-y-3">
-                  <label className="text-sm font-medium text-gray-700">
+                  <div className="space-y-3">
+                    <label className="text-sm font-medium text-gray-700">
                       Select Product (Book){" "}
                       <span className="text-red-500">*</span>
-                  </label>
-                  <Select
+                    </label>
+                    <Select
                       value={formData.story.productId}
-                    onValueChange={(value) => {
+                      onValueChange={(value) => {
                         setFormData((prev) => ({
                           ...prev,
                           story: { ...prev.story, productId: value },
                         }));
                         setValidationError("");
-                    }}
-                  >
-                    <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Choose a product to create story under" />
-                    </SelectTrigger>
-                    <SelectContent>
+                      }}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Choose a product to create story under">
+                          {formData.story.productId && (() => {
+                            const selectedProduct = products.find(p => p._id === formData.story.productId);
+                            if (selectedProduct) {
+                              const firstTitle = Object.values(selectedProduct.title || {})[0] || '';
+                              return stripHtmlTags(firstTitle);
+                            }
+                            return '';
+                          })()}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
                         {products.map((product) => (
                           <SelectItem key={product._id} value={product._id}>
                             <div className="flex items-center gap-2">
                               <span>📖</span>
                               <span>
-                                {product.title.en ||
+                                {stripHtmlTags(product.title.en ||
                                   product.title.sw ||
-                                  "Untitled"}
-                          </span>
+                                  "Untitled")}
+                              </span>
                             </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
                   {/* Story Title */}
                   <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">
+                    <label className="text-sm font-medium text-gray-700">
                       Story Title <span className="text-red-500">*</span>
-                  </label>
+                    </label>
                     <CKEditorComponent
                       value={formData.story.title}
                       onChange={(val) => {
@@ -800,7 +938,7 @@ export default function BiblePage() {
                       }}
                       placeholder="Enter story title in multiple languages"
                     />
-                </div>
+                  </div>
 
                   {/* Story Description */}
                   <div className="space-y-2">
@@ -820,28 +958,6 @@ export default function BiblePage() {
                     />
                   </div>
 
-                  {/* Story Order */}
-                  <div className="space-y-3">
-                    <label className="text-sm font-medium text-gray-700">
-                      Story Order <span className="text-red-500">*</span>
-                    </label>
-                    <Input
-                      type="number"
-                      value={formData.story.order}
-                      onChange={(e) => {
-                        setFormData((prev) => ({
-                          ...prev,
-                          story: {
-                            ...prev.story,
-                            order: parseInt(e.target.value) || 1,
-                          },
-                        }));
-                        setValidationError("");
-                      }}
-                      placeholder="Enter story order number"
-                      min="1"
-                    />
-                  </div>
                 </>
               )}
 
@@ -878,28 +994,6 @@ export default function BiblePage() {
                     />
                   </div>
 
-                  {/* Chapter Order */}
-                  <div className="space-y-3">
-                    <label className="text-sm font-medium text-gray-700">
-                      Chapter Order <span className="text-red-500">*</span>
-                    </label>
-                    <Input
-                      type="number"
-                      value={formData.chapter.order}
-                      onChange={(e) => {
-                        setFormData((prev) => ({
-                          ...prev,
-                          chapter: {
-                            ...prev.chapter,
-                            order: parseInt(e.target.value) || 1,
-                          },
-                        }));
-                        setValidationError("");
-                      }}
-                      placeholder="Enter chapter order"
-                      min="1"
-                    />
-                  </div>
                 </>
               )}
 
@@ -928,7 +1022,16 @@ export default function BiblePage() {
                       onValueChange={handleChapterSelect}
                     >
                       <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Choose a chapter to create verse under" />
+                        <SelectValue placeholder="Choose a chapter to create verse under">
+                          {formData.verse.chapterId && (() => {
+                            const selectedChapter = chapters.find(c => c._id === formData.verse.chapterId);
+                            if (selectedChapter) {
+                              const firstTitle = Object.values(selectedChapter.title || {})[0] || '';
+                              return stripHtmlTags(firstTitle);
+                            }
+                            return '';
+                          })()}
+                        </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         {chapters.map((chapter) => (
@@ -936,13 +1039,25 @@ export default function BiblePage() {
                             key={chapter._id}
                             value={chapter._id || ""}
                           >
-                            <div className="flex items-center gap-2">
-                              <BookOpen className="h-4 w-4" />
-                              <span>
-                                {chapter.title.en ||
-                                  chapter.title.sw ||
-                                  "Untitled"}
-                              </span>
+                            <div className="flex flex-col gap-1">
+                              <div className="flex items-center gap-2">
+                                <BookOpen className="h-4 w-4" />
+                                <span className="font-medium">Chapter:</span>
+                              </div>
+                              {/* Chapter Title - All Languages */}
+                              {Object.entries(chapter.title || {}).map(([lang, text]) => (
+                                <div key={lang} className="text-xs text-gray-600 flex gap-1 ml-4">
+                                  <span className="text-gray-500 font-medium">
+                                    {getLanguageName(lang)}:
+                                  </span>
+                                  <span 
+                                    className="truncate"
+                                    title={text} // Show full HTML content on hover
+                                  >
+                                    {stripHtmlTags(text)}
+                                  </span>
+                                </div>
+                              ))}
                             </div>
                           </SelectItem>
                         ))}
@@ -950,28 +1065,6 @@ export default function BiblePage() {
                     </Select>
                   </div>
 
-                  {/* Verse Number */}
-                  <div className="space-y-3">
-                    <label className="text-sm font-medium text-gray-700">
-                      Verse Number <span className="text-red-500">*</span>
-                    </label>
-                    <Input
-                      type="number"
-                      value={formData.verse.number}
-                      onChange={(e) => {
-                        setFormData((prev) => ({
-                          ...prev,
-                          verse: {
-                            ...prev.verse,
-                            number: parseInt(e.target.value) || 1,
-                          },
-                        }));
-                        setValidationError("");
-                      }}
-                      placeholder="Enter verse number"
-                      min="1"
-                    />
-                  </div>
 
                   {/* Verse Text */}
                   <div className="space-y-2">
@@ -989,48 +1082,49 @@ export default function BiblePage() {
                       }}
                       placeholder="Enter verse text"
                     />
+                  </div>
+
+                </>
+              )}
+            </div>
+
+            {/* Validation Error Message */}
+            {validationError && (
+              <div className="mx-10 mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex items-center">
+                  <div className="text-red-600 text-sm font-medium">
+                    ⚠️ {validationError}
+                  </div>
                 </div>
-              </>
+              </div>
             )}
-          </div>
 
-          {/* Validation Error Message */}
-          {validationError && (
-            <div className="mx-10 mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <div className="flex items-center">
-                <div className="text-red-600 text-sm font-medium">
-                  ⚠️ {validationError}
+            {/* Success Message */}
+            {successMessage && (
+              <div className="mx-10 mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-center">
+                  <div className="text-green-600 text-sm font-medium">
+                    ✅ {successMessage}
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Success Message */}
-          {successMessage && (
-            <div className="mx-10 mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-              <div className="flex items-center">
-                <div className="text-green-600 text-sm font-medium">
-                  ✅ {successMessage}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Navigation Buttons */}
-          <div className="flex justify-between items-center px-10 py-6 border-t border-gray-200 bg-gray-50">
-            <Button
-              variant="outline"
-              onClick={handlePrevStep}
-              disabled={currentStep === 0}
-              className="px-6 py-3 border-gray-300 text-gray-700 hover:bg-gray-100"
-            >
-              Previous
-            </Button>
+            {/* Navigation Buttons */}
+            <div className="flex justify-between items-center py-6 border-t border-gray-200">
+              <Button
+                variant="outline"
+                onClick={handlePrevStep}
+                disabled={currentStep === 0}
+                className=" py-3 border-gray-300 text-gray-700 hover:bg-gray-100"
+              >
+                Previous
+              </Button>
 
               <Button
                 onClick={handleNextStep}
                 disabled={isLoading}
-                className="px-8 py-3 bg-theme-primary hover:bg-theme-primary text-white font-semibold rounded-lg shadow-md transition-colors disabled:opacity-50"
+                className="py-3 bg-theme-primary hover:bg-theme-primary text-white font-semibold rounded-lg shadow-md transition-colors disabled:opacity-50"
               >
                 {isLoading ? (
                   <div className="flex items-center gap-2">
@@ -1040,8 +1134,12 @@ export default function BiblePage() {
                 ) : currentStep === 2 ? (
                   <div className="flex items-center gap-2">
                     <Save className="h-5 w-5" />
-                    Create Verse
+                    {createdVerseId ? "Update Verse" : "Create Verse"}
                   </div>
+                ) : currentStep === 1 ? (
+                  createdChapterId ? "Update Chapter" : "Next Step"
+                ) : currentStep === 0 ? (
+                  createdStoryId ? "Update Story" : "Next Step"
                 ) : (
                   "Next Step"
                 )}
@@ -1054,7 +1152,7 @@ export default function BiblePage() {
   }
 
   // Main list view
-                return (
+  return (
     <div className="bg-white min-h-screen rounded-lg shadow-sky-100 space-y-6 container mx-auto px-4 py-8">
       {/* Header */}
       <div className="border-b border-gray-100 bg-white">
@@ -1072,13 +1170,13 @@ export default function BiblePage() {
             <p className="text-gray-500">Manage your Bible content hierarchy</p>
           </div>
           <div className="flex gap-3">
-                  <Button
+            <Button
               onClick={handleAddBible}
               className="bg-theme-primary text-theme-secondary hover:bg-theme-primary-dark flex items-center gap-2"
-                  >
+            >
               <Plus className="h-4 w-4" />
               Add Bible Content
-                  </Button>
+            </Button>
             <Link href="/bible/chapters">
               <Button variant="outline" className="flex items-center gap-2">
                 <Book className="h-4 w-4" />
@@ -1184,19 +1282,46 @@ export default function BiblePage() {
                   : s.productId) === product._id
             );
 
-                return (
+            return (
               <div
                 key={product._id}
                 className="bg-gradient-to-br from-gray-50 to-white border border-gray-200 rounded-xl p-5 shadow-sm mb-6"
               >
                 <div className="flex justify-between items-start mb-3">
                   <div>
-                    <h4 className="text-xl font-semibold text-theme-primary">
-                      {product.title.en}
+                    <h4 className="text-xl font-semibold text-theme-primary mb-2">
+                      Product Title
                     </h4>
-                    <p className="text-sm text-gray-600">
-                      {product.description.en}
-                    </p>
+                    {/* Product Title - All Languages */}
+                    {Object.entries(product.title || {}).map(([lang, text]) => (
+                      <div key={lang} className="text-sm text-gray-700 flex gap-1 mb-1">
+                        <span className="text-gray-500 font-medium">
+                          {getLanguageName(lang)}:
+                        </span>
+                        <span 
+                          title={text} // Show full HTML content on hover
+                        >
+                          {stripHtmlTags(text)}
+                        </span>
+                      </div>
+                    ))}
+                    
+                    <h5 className="text-lg font-semibold text-gray-800 mt-3 mb-2">
+                      Product Description
+                    </h5>
+                    {/* Product Description - All Languages */}
+                    {Object.entries(product.description || {}).map(([lang, text]) => (
+                      <div key={lang} className="text-sm text-gray-600 flex gap-1 mb-1">
+                        <span className="text-gray-500 font-medium">
+                          {getLanguageName(lang)}:
+                        </span>
+                        <span 
+                          title={text} // Show full HTML content on hover
+                        >
+                          {stripHtmlTags(text)}
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
@@ -1220,7 +1345,7 @@ export default function BiblePage() {
                           <summary className="cursor-pointer text-theme-primary font-semibold flex justify-between items-center">
                             <span>📖 Story #{story.order}</span>
                             <div className="flex gap-2">
-                  <Button
+                              <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={() =>
@@ -1228,23 +1353,45 @@ export default function BiblePage() {
                                 }
                               >
                                 <Edit className="h-4 w-4 mr-1" /> Edit
-                  </Button>
+                              </Button>
                             </div>
                           </summary>
 
                           <div className="mt-3 ml-2 border-l-2 border-blue-100 pl-4 space-y-3">
+                            {/* Story Title */}
                             {Object.entries(story.title || {}).map(
                               ([lang, text]) => (
                                 <div
                                   key={lang}
                                   className="text-sm text-gray-700 flex gap-1"
                                 >
-                                  <span className="uppercase text-gray-400">
-                                    {lang}:
+                                  <span className="text-gray-500 font-medium">
+                                    {getLanguageName(lang)}:
                                   </span>
                                   <span
-                                    dangerouslySetInnerHTML={{ __html: text }}
-                                  />
+                                    title={text} // Show full HTML content on hover
+                                  >
+                                    {stripHtmlTags(text)}
+                                  </span>
+                                </div>
+                              )
+                            )}
+
+                            {/* Story Description */}
+                            {Object.entries(story.description || {}).map(
+                              ([lang, text]) => (
+                                <div
+                                  key={lang}
+                                  className="text-xs text-gray-600 flex gap-1 ml-2"
+                                >
+                                  <span className="text-gray-500 font-medium">
+                                    {getLanguageName(lang)}:
+                                  </span>
+                                  <span
+                                    title={text} // Show full HTML content on hover
+                                  >
+                                    {stripHtmlTags(text)}
+                                  </span>
                                 </div>
                               )
                             )}
@@ -1266,18 +1413,24 @@ export default function BiblePage() {
                                   >
                                     <summary className="cursor-pointer font-medium text-gray-800 flex justify-between">
                                       <div>
-                                        <div className="font-semibold">📑 Chapter #{chapter.order}</div>
-                                        {Object.entries(chapter.title || {}).map(([lang, text]) => (
+                                        <div className="font-semibold">
+                                          📑 Chapter #{chapter.order}
+                                        </div>
+                                        {Object.entries(
+                                          chapter.title || {}
+                                        ).map(([lang, text]) => (
                                           <div
                                             key={lang}
                                             className="text-xs text-gray-600 flex gap-1 mt-1"
                                           >
-                                            <span className="uppercase text-gray-400">
-                                              {lang}:
+                                            <span className="text-gray-500 font-medium">
+                                              {getLanguageName(lang)}:
                                             </span>
                                             <span
-                                              dangerouslySetInnerHTML={{ __html: text }}
-                                            />
+                                              title={text} // Show full HTML content on hover
+                                            >
+                                              {stripHtmlTags(text)}
+                                            </span>
                                           </div>
                                         ))}
                                       </div>
@@ -1294,60 +1447,63 @@ export default function BiblePage() {
                                         >
                                           <Edit className="h-4 w-4 mr-1" /> Edit
                                         </Button>
-          </div>
+                                      </div>
                                     </summary>
 
-                           {/* Verses */}
-                           <div className="mt-2 ml-2 border-l pl-4 space-y-2">
-                             {chapterVerses.length > 0 ? (
-                               chapterVerses.map((verse) => (
-                                        <div
-                                          key={verse._id}
-                                          className="bg-white p-2 rounded border border-gray-100 flex justify-between"
-                                        >
-                                          <div>
-                                            <div className="text-xs font-semibold text-theme-primary">
-                                              🔢 Verse #{verse.number}
-        </div>
-                                            {Object.entries(
-                                              verse.text || {}
-                                            ).map(([lang, text]) => (
-                                              <div
-                                                key={lang}
-                                                className="text-xs text-gray-700 flex gap-1 ml-2"
-                                              >
-                                                <span className="uppercase text-gray-400">
-                                                  {lang}:
-                                                </span>
-                                                <span
-                                                  dangerouslySetInnerHTML={{
-                                                    __html: text,
-                                                  }}
-                                                />
-      </div>
-                                            ))}
-    </div>
+                                    {/* Verses */}
+                                    <div className="mt-2 ml-2 border-l pl-4 space-y-2">
+                                      {chapterVerses.length > 0 ? (
+                                        chapterVerses.map((verse) => (
+                                          <div
+                                            key={verse._id}
+                                            className="bg-white p-2 rounded border border-gray-100 flex justify-between"
+                                          >
+                                            <div>
+                                              <div className="text-xs font-semibold text-theme-primary">
+                                                🔢 Verse #{verse.number}
+                                              </div>
+                                              {Object.entries(
+                                                verse.text || {}
+                                              ).map(([lang, text]) => (
+                                                <div
+                                                  key={lang}
+                                                  className="text-xs text-gray-700 flex gap-1 ml-2"
+                                                >
+                                                  <span className="text-gray-500 font-medium">
+                                                    {getLanguageName(lang)}:
+                                                  </span>
+                                                  <span
+                                                    title={text} // Show full HTML content on hover
+                                                  >
+                                                    {stripHtmlTags(text)}
+                                                  </span>
+                                                </div>
+                                              ))}
+                                            </div>
 
-                                          <div className="flex gap-2">
-                                            <Button
-                                              variant="outline"
-                                              size="sm"
-                                              onClick={() =>
-                                                handleEditContent(
-                                                  "verse",
-                                                  verse._id
-                                                )
-                                              }
-                                            >
-                                              <Edit className="h-3 w-3 mr-1" />{" "}
-                                              Edit
-                                            </Button>
+                                            <div className="flex gap-2">
+                                              <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() =>
+                                                  handleEditContent(
+                                                    "verse",
+                                                    verse._id
+                                                  )
+                                                }
+                                              >
+                                                <Edit className="h-3 w-3 mr-1" />{" "}
+                                                Edit
+                                              </Button>
+                                            </div>
                                           </div>
-                                        </div>
-                                      ))
+                                        ))
                                       ) : (
                                         <div className="text-center py-2 text-gray-500 text-xs">
-                                          <p>No verses created yet for this chapter.</p>
+                                          <p>
+                                            No verses created yet for this
+                                            chapter.
+                                          </p>
                                         </div>
                                       )}
                                     </div>
@@ -1403,8 +1559,13 @@ export default function BiblePage() {
               variant="destructive"
               onClick={() => {
                 if (productToDelete) {
-                  setProducts(prev => prev.filter(p => p._id !== productToDelete._id));
-                  showToast.success("Product Removed", "Product has been removed from the list");
+                  setProducts((prev) =>
+                    prev.filter((p) => p._id !== productToDelete._id)
+                  );
+                  showToast.success(
+                    "Product Removed",
+                    "Product has been removed from the list"
+                  );
                 }
                 setIsDeleteDialogOpen(false);
                 setProductToDelete(null);

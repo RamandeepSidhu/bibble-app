@@ -38,6 +38,15 @@ export default function EditVersePage() {
   const router = useRouter();
   const verseId = params.id as string;
   
+  // Determine current step based on URL path
+  const getCurrentStep = () => {
+    const path = window.location.pathname;
+    if (path.includes('/verses/edit/')) return 2; // Edit Verse
+    if (path.includes('/chapters/edit/')) return 1; // Edit Chapter  
+    if (path.includes('/stories/edit/')) return 0; // Edit Story
+    return 2; // Default to verse
+  };
+  
   const [isLoading, setIsLoading] = useState(false);
   const [validationError, setValidationError] = useState<string>("");
   const [successMessage, setSuccessMessage] = useState<string>("");
@@ -45,6 +54,7 @@ export default function EditVersePage() {
   // Data states
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [languages, setLanguages] = useState<Language[]>([]);
+  const [languageNames, setLanguageNames] = useState<{ [key: string]: string }>({});
   
   // Form data
   const [formData, setFormData] = useState<VerseFormData>({
@@ -80,22 +90,19 @@ export default function EditVersePage() {
     fetchChapters();
     fetchLanguages();
     loadVerseData();
-  }, []);
+  }, [verseId]);
 
   const loadVerseData = async () => {
     try {
       setIsLoading(true);
-      console.log("Loading verse with ID:", verseId);
       const verseResponse: any = await ClientInstance.APP.getVerseById(verseId);
-      console.log("Verse response:", verseResponse);
       
       if (verseResponse?.success && verseResponse?.data) {
         const verse = verseResponse.data;
-        console.log("Verse data:", verse);
         
         setFormData({
           verse: {
-            chapterId: verse.chapterId || '',
+            chapterId: typeof verse.chapterId === 'object' ? verse.chapterId._id : verse.chapterId || '',
             number: verse.number || 1,
             text: cleanMultilingualData(verse.text || {})
           }
@@ -141,11 +148,40 @@ export default function EditVersePage() {
         }
         
         setLanguages(languagesData);
+        
+        // Create language names mapping for display
+        const namesMapping: { [key: string]: string } = {};
+        languagesData.forEach((lang: any) => {
+          if (lang.code && lang.name) {
+            namesMapping[lang.code] = lang.name;
+          }
+        });
+        setLanguageNames(namesMapping);
       }
     } catch (error) {
       console.error("Error fetching languages:", error);
       setLanguages([]);
+      setLanguageNames({});
     }
+  };
+
+  // Helper function to get language name from API data
+  const getLanguageName = (code: string) => {
+    return languageNames[code] || code.toUpperCase();
+  };
+
+  // Helper function to strip HTML tags and entities for clean display
+  const stripHtmlTags = (html: string) => {
+    if (!html) return '';
+    return html
+      .replace(/<[^>]*>/g, '') // Remove HTML tags
+      .replace(/&nbsp;/g, ' ') // Replace &nbsp; with regular space
+      .replace(/&amp;/g, '&') // Replace &amp; with &
+      .replace(/&lt;/g, '<') // Replace &lt; with <
+      .replace(/&gt;/g, '>') // Replace &gt; with >
+      .replace(/&quot;/g, '"') // Replace &quot; with "
+      .replace(/&#39;/g, "'") // Replace &#39; with '
+      .trim(); // Remove leading/trailing whitespace
   };
 
   const fetchChapters = async () => {
@@ -186,7 +222,8 @@ export default function EditVersePage() {
   const cleanMultilingualData = (data: MultilingualText): MultilingualText => {
     const cleaned: MultilingualText = {};
     Object.entries(data).forEach(([key, value]) => {
-      if (value && value.trim() !== '') {
+      // Exclude Hindi language (hi) from payload
+      if (key !== 'hi' && value && value.trim() !== '') {
         cleaned[key] = value;
       }
     });
@@ -202,10 +239,6 @@ export default function EditVersePage() {
 
     if (!formData.verse.chapterId) {
       setValidationError("Please select a chapter");
-      return false;
-    }
-    if (!formData.verse.number || formData.verse.number <= 0) {
-      setValidationError("Please enter a valid verse number");
       return false;
     }
     if (!isMultilingualFieldComplete(formData.verse.text)) {
@@ -273,7 +306,7 @@ export default function EditVersePage() {
 
       {/* Stepper */}
       <div className="mx-auto px-2">
-        <Stepper steps={steps} currentStep={2} />
+        <Stepper steps={steps} currentStep={getCurrentStep()} />
 
         <div className="mt-10 bg-white border border-gray-100 shadow-md rounded-2xl overflow-hidden">
           {isLoading ? (
@@ -311,14 +344,39 @@ export default function EditVersePage() {
                 }}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Choose a chapter" />
+                  <SelectValue placeholder="Choose a chapter">
+                    {formData.verse.chapterId && (() => {
+                      const selectedChapter = chapters.find(c => c._id === formData.verse.chapterId);
+                      if (selectedChapter) {
+                        const firstTitle = Object.values(selectedChapter.title || {})[0] || '';
+                        return stripHtmlTags(firstTitle);
+                      }
+                      return '';
+                    })()}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {chapters.map((chapter) => (
                     <SelectItem key={chapter._id} value={chapter._id || ''}>
-                      <div className="flex items-center gap-2">
-                        <BookOpen className="h-4 w-4" />
-                        <span>{chapter.title.en || chapter.title.sw || 'Untitled'}</span>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                          <BookOpen className="h-4 w-4" />
+                          <span className="font-medium">Chapter:</span>
+                        </div>
+                        {/* Chapter Title - All Languages */}
+                        {Object.entries(chapter.title || {}).map(([lang, text]) => (
+                          <div key={lang} className="text-xs text-gray-600 flex gap-1 ml-4">
+                            <span className="text-gray-500 font-medium">
+                              {getLanguageName(lang)}:
+                            </span>
+                            <span 
+                              className="truncate"
+                              title={text} // Show full HTML content on hover
+                            >
+                              {stripHtmlTags(text)}
+                            </span>
+                          </div>
+                        ))}
                       </div>
                     </SelectItem>
                   ))}
@@ -326,25 +384,6 @@ export default function EditVersePage() {
               </Select>
             </div>
 
-            {/* Verse Number */}
-            <div className="space-y-3">
-              <label className="text-sm font-medium text-gray-700">
-                Verse Number <span className="text-red-500">*</span>
-              </label>
-              <Input
-                type="number"
-                value={formData.verse.number}
-                onChange={(e) => {
-                  setFormData(prev => ({
-                    ...prev,
-                    verse: { ...prev.verse, number: parseInt(e.target.value) || 1 }
-                  }));
-                  setValidationError("");
-                }}
-                placeholder="Enter verse number"
-                min="1"
-              />
-            </div>
 
             {/* Verse Text */}
             <div className="space-y-2">
@@ -387,11 +426,11 @@ export default function EditVersePage() {
             )}
 
             {/* Navigation Buttons */}
-            <div className="flex justify-between items-center px-10 py-6 border-t border-gray-200 bg-gray-50">
+            <div className="flex justify-between items-center py-6 border-t border-gray-200">
               <Button
                 variant="outline"
                 onClick={handleBackToBible}
-                className="px-6 py-3 border-gray-300 text-gray-700 hover:bg-gray-100"
+                className="py-3 border-gray-300 text-gray-700 hover:bg-gray-100"
               >
                 Cancel
               </Button>
@@ -399,7 +438,7 @@ export default function EditVersePage() {
               <Button
                 onClick={handleUpdateVerse}
                 disabled={isLoading}
-                className="px-8 py-3 bg-theme-primary hover:bg-theme-primary text-white font-semibold rounded-lg shadow-md transition-colors disabled:opacity-50"
+                className="px-5 py-3 bg-theme-primary hover:bg-theme-primary text-white font-semibold rounded-lg shadow-md transition-colors disabled:opacity-50"
               >
                 {isLoading ? (
                   <div className="flex items-center gap-2">

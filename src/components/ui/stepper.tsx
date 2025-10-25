@@ -17,6 +17,7 @@ export function Stepper({ steps, currentStep }: StepperProps) {
         {steps.map((step, index) => {
           const isCompleted = index < currentStep;
           const isCurrent = index === currentStep;
+          const isDisabled = index > currentStep;
 
           return (
             <div key={step.id} className="flex items-center">
@@ -24,9 +25,9 @@ export function Stepper({ steps, currentStep }: StepperProps) {
               <div
                 className={cn(
                   "flex items-center justify-center w-8 h-8 rounded-full border-2 transition-colors",
-                  isCompleted && "bg-theme-primary border-theme-primary text-theme-secondary",
                   isCurrent && "border-theme-primary text-theme-primary bg-theme-secondary",
-                  !isCompleted && !isCurrent && "border-gray-300 text-gray-400 bg-white"
+                  isCompleted && "bg-theme-primary border-theme-primary text-theme-secondary",
+                  isDisabled && "border-gray-300 text-gray-400 bg-white"
                 )}
               >
                 <span className="text-sm font-medium">{index + 1}</span>
@@ -37,9 +38,9 @@ export function Stepper({ steps, currentStep }: StepperProps) {
                 <div
                   className={cn(
                     "text-sm font-medium",
-                    isCurrent && "text-theme-primary",
-                    isCompleted && "text-theme-primary",
-                    !isCompleted && !isCurrent && "text-gray-500"
+                    isCurrent && "text-theme-primary font-bold",
+                    isCompleted && "text-gray-600",
+                    isDisabled && "text-gray-500"
                   )}
                 >
                   {step.title}
@@ -50,7 +51,7 @@ export function Stepper({ steps, currentStep }: StepperProps) {
               {index < steps.length - 1 && (
                 <div
                   className={cn(
-                    "w-[490px] mr-[20px] ml-[20px] h-0.5 transition-colors ",
+                    "w-[560px] mr-[20px] ml-[20px] h-0.5 transition-colors ",
                     isCompleted ? "bg-theme-primary" : "bg-gray-300"
                   )}
                 />
