@@ -303,10 +303,10 @@ export default function UsersPage() {
               <TableRow className="border-b border-gray-200">
                   <TableHead className="font-semibold text-gray-700 py-4 px-6">User</TableHead>
                   <TableHead className="font-semibold text-gray-700 py-4 px-6">Role</TableHead>
-                  <TableHead className="font-semibold text-gray-700 py-4 px-6">Status</TableHead>
                   <TableHead className="font-semibold text-gray-700 py-4 px-6">Plan</TableHead>
                   <TableHead className="font-semibold text-gray-700 py-4 px-6">Joined</TableHead>
-                  <TableHead className="font-semibold text-gray-700 py-4 px-6 text-right">Actions</TableHead>
+                  <TableHead className="font-semibold text-gray-700 py-4 px-6 text-right">Status</TableHead>
+                  {/* <TableHead className="font-semibold text-gray-700 py-4 px-6 text-right">Actions</TableHead> */}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -346,29 +346,30 @@ export default function UsersPage() {
                         </span>
                       </div>
                     </TableCell>
+                    
                     <TableCell className="py-4 px-6">
-                      <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-900 capitalize">
+                        {user.subscription?.plan || 'Free'}
+                    </span>
+                  </TableCell>
+                    <TableCell className="py-4 px-6 text-righ">
+                      <span className="text-sm text-gray-500">
+                        {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-right py-4 px-6">
+                      <div className="flex items-center gap-2 justify-end">
                         {getStatusIcon(user.status)}
                         <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(user.status)}`}>
                           {user.status}
                         </span>
                     </div>
                   </TableCell>
-                    <TableCell className="py-4 px-6">
-                      <span className="text-sm text-gray-900 capitalize">
-                        {user.subscription?.plan || 'Free'}
-                    </span>
-                  </TableCell>
-                    <TableCell className="py-4 px-6">
-                      <span className="text-sm text-gray-500">
-                        {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-right py-4 px-6">
+                  {/* <TableCell className="text-right py-4 px-6">
                       <Button variant="outline" size="sm" className="!min-w-[30px]">
                         <MoreHorizontal className="h-4 w-4 mr-1" />
                       </Button>
-                  </TableCell>
+                  </TableCell> */}
                 </TableRow>
               ))}
             </TableBody>

@@ -272,7 +272,6 @@ export default function LanguagesPage() {
                 <TableHead className="font-semibold text-[#475467] text-xs py-4 px-6">Code</TableHead>
                 <TableHead className="font-semibold text-[#475467] text-xs py-4 px-6">Symbol</TableHead>
                 <TableHead className="font-semibold text-[#475467] text-xs py-4 px-6">Status</TableHead>
-                <TableHead className="font-semibold text-[#475467] text-xs py-4 px-6">Default</TableHead>
                 <TableHead className="font-semibold text-[#475467] text-xs py-4 px-6 text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -307,11 +306,6 @@ export default function LanguagesPage() {
                   <TableCell className="py-4 px-6">
                     <span className={getStatusBadge(language.isActive)}>
                       {language.isActive ? 'Active' : 'Inactive'}
-                    </span>
-                  </TableCell>
-                  <TableCell className="py-4 px-6">
-                    <span className={getDefaultBadge(language.isDefault)}>
-                      {language.isDefault ? 'Default' : 'No'}
                     </span>
                   </TableCell>
                   <TableCell className="text-right py-4 px-6">
