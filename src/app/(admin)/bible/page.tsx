@@ -109,6 +109,9 @@ export default function BiblePage() {
   const [expandedProducts, setExpandedProducts] = useState<Set<string>>(new Set());
   const [expandedStories, setExpandedStories] = useState<Set<string>>(new Set());
   const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set());
+  
+  // Language filter state
+  const [selectedLanguage, setSelectedLanguage] = useState<string>('en');
 
   // Track created content IDs for edit mode
   const [createdStoryId, setCreatedStoryId] = useState<string | null>(null);
@@ -1338,6 +1341,25 @@ return (
            </div>
          </div>
 
+         {/* Language Filter */}
+         <div className="mb-6">
+           <div className="flex items-center justify-end gap-4">
+             <label className="text-sm font-medium text-gray-700">Filter by Language:</label>
+             <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+               <SelectTrigger className="w-48">
+                 <SelectValue placeholder="Select Language" />
+               </SelectTrigger>
+               <SelectContent>
+                 {languages.map((lang) => (
+                   <SelectItem key={lang.code} value={lang.code}>
+                     {lang.name}
+                   </SelectItem>
+                 ))}
+               </SelectContent>
+             </Select>
+           </div>
+         </div>
+
          {/* Accordion Container */}
          <div className="space-y-4 w-full">
 
@@ -1394,10 +1416,10 @@ return (
                         </div>
                         <div>
                           <h2 className="text-xl font-bold text-theme-primary">
-                            {product.title?.en ? (
+                            {product.title?.[selectedLanguage] ? (
                               <span
                                 dangerouslySetInnerHTML={{
-                                  __html: product.title.en,
+                                  __html: product.title[selectedLanguage],
                                 }}
                               />
                             ) : (
@@ -1425,13 +1447,13 @@ return (
                   {/* Product Content - Collapsible */}
                   {isProductExpanded && (
                     <div className="p-6 bg-gray-50">
-                      {product.description?.en && (
+                      {product.description?.[selectedLanguage] && (
                         <div className="mb-6 p-4 bg-white rounded-lg border border-gray-200">
                           <h3 className="text-lg font-semibold text-gray-800 mb-2">Description</h3>
                           <p className="text-gray-700 italic">
                             <span
                               dangerouslySetInnerHTML={{
-                                __html: product.description.en,
+                                __html: product.description[selectedLanguage],
                               }}
                             />
                           </p>
@@ -1467,10 +1489,10 @@ return (
                                       </div>
                                       <div>
                                         <h3 className="text-lg font-bold text-theme-primary">
-                                          {story.title?.en ? (
+                                          {story.title?.[selectedLanguage] ? (
                                             <span
                                               dangerouslySetInnerHTML={{
-                                                __html: story.title.en,
+                                                __html: story.title[selectedLanguage],
                                               }}
                                             />
                                           ) : (
@@ -1498,42 +1520,40 @@ return (
                                 {/* Story Content - Collapsible */}
                                 {isStoryExpanded && (
                                   <div className="p-4 bg-gray-50">
-                                    {/* Story Details */}
-                                    <div className="mb-4 p-4 bg-white rounded-lg border border-gray-200">
-                                      <h4 className="text-md font-semibold text-gray-800 mb-2">Story Details</h4>
-                                      <div className="space-y-2">
-                                        {Object.entries(story.title || {}).map(
-                                          ([lang, text]) => (
-                                            <div
-                                              key={lang}
-                                              className="text-sm text-gray-700 flex gap-1"
-                                            >
-                                              <span className="text-gray-500 font-medium">
-                                                {getLanguageName(lang)}:
-                                              </span>
-                                              <span title={text}>
-                                                {stripHtmlTags(text)}
-                                              </span>
-                                            </div>
-                                          )
-                                        )}
-                                        {Object.entries(story.description || {}).map(
-                                          ([lang, text]) => (
-                                            <div
-                                              key={lang}
-                                              className="text-xs text-gray-600 flex gap-1 ml-2"
-                                            >
-                                              <span className="text-gray-500 font-medium">
-                                                {getLanguageName(lang)}:
-                                              </span>
-                                              <span title={text}>
-                                                {stripHtmlTags(text)}
-                                              </span>
-                                            </div>
-                                          )
-                                        )}
-                                      </div>
-                                    </div>
+                                     {/* Story Details */}
+                                     <div className="mb-4 p-4 bg-white rounded-lg border border-gray-200">
+                                       <h4 className="text-md font-semibold text-gray-800 mb-2">Story Details</h4>
+                                       <div className="space-y-2">
+                                         {story.title?.[selectedLanguage] && (
+                                           <div className="text-sm text-gray-700">
+                                             <span className="text-gray-500 font-medium">
+                                               Title:
+                                             </span>
+                                             <span className="ml-2">
+                                               <span
+                                                 dangerouslySetInnerHTML={{
+                                                   __html: story.title[selectedLanguage],
+                                                 }}
+                                               />
+                                             </span>
+                                           </div>
+                                         )}
+                                         {story.description?.[selectedLanguage] && (
+                                           <div className="text-sm text-gray-700">
+                                             <span className="text-gray-500 font-medium">
+                                               Description:
+                                             </span>
+                                             <span className="ml-2">
+                                               <span
+                                                 dangerouslySetInnerHTML={{
+                                                   __html: story.description[selectedLanguage],
+                                                 }}
+                                               />
+                                             </span>
+                                           </div>
+                                         )}
+                                       </div>
+                                     </div>
 
                                     {/* Chapters Accordion */}
                                     <div className="space-y-2">
@@ -1565,9 +1585,9 @@ return (
                                                     <div>
                                                       <h4 className="text-md font-bold text-theme-primary">
                                                         Chapter {chapter.order}
-                                                        {chapter.title?.en && (
+                                                        {chapter.title?.[selectedLanguage] && (
                                                           <span className="text-sm font-normal ml-2">
-                                                            - <span dangerouslySetInnerHTML={{ __html: chapter.title.en }} />
+                                                            - <span dangerouslySetInnerHTML={{ __html: chapter.title[selectedLanguage] }} />
                                                           </span>
                                                         )}
                                                       </h4>
@@ -1623,15 +1643,15 @@ return (
                                                           
                                                           {/* Verse Text */}
                                                           <div className="text-gray-800 leading-relaxed">
-                                                            {verse.text?.en ? (
+                                                            {verse.text?.[selectedLanguage] ? (
                                                               <span
                                                                 dangerouslySetInnerHTML={{
-                                                                  __html: verse.text.en,
+                                                                  __html: verse.text[selectedLanguage],
                                                                 }}
                                                               />
                                                             ) : (
                                                               <span className="italic text-gray-500">
-                                                                No verse text available
+                                                                No verse text available in {getLanguageName(selectedLanguage)}
                                                               </span>
                                                             )}
                                                           </div>
