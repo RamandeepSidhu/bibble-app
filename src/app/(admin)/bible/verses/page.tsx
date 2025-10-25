@@ -11,6 +11,7 @@ import {
   Hash,
   ArrowLeft
 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Dialog,
   DialogContent,
@@ -26,8 +27,10 @@ import Link from 'next/link';
 
 export default function VersesPage() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedLanguage, setSelectedLanguage] = useState<string>('en');
   const [verses, setVerses] = useState<Verse[]>([]);
   const [languageNames, setLanguageNames] = useState<{[key: string]: string}>({});
+  const [languages, setLanguages] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deletingVerse, setDeletingVerse] = useState<Verse | null>(null);
@@ -47,6 +50,7 @@ export default function VersesPage() {
       if (languagesResponse?.success && languagesResponse?.data) {
         // Filter out Hindi language from available languages
         const filteredLangs = languagesResponse.data.filter((lang: any) => lang.code !== 'hi');
+        setLanguages(filteredLangs);
         // Create language names mapping (excluding Hindi)
         const names: {[key: string]: string} = {};
         filteredLangs.forEach((lang: any) => {
@@ -268,7 +272,7 @@ export default function VersesPage() {
         </div>
       </div>
 
-      {/* Search */}
+      {/* Search and Filter */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-3 md:gap-4 mt-5">
         <div className="relative w-full md:w-96">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -281,6 +285,20 @@ export default function VersesPage() {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="block w-full sm:w-80 h-[40px] pl-10 pr-4 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
           />
+        </div>
+        <div className="w-full sm:w-auto">
+          <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+            <SelectTrigger className="w-full sm:w-[200px]">
+              <SelectValue placeholder="Select language" />
+            </SelectTrigger>
+            <SelectContent>
+              {languages.map((language) => (
+                <SelectItem key={language._id} value={language.code}>
+                  {language.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -340,19 +358,21 @@ export default function VersesPage() {
                     </div>
                   </div>
 
-                  {/* Verse Text - All Languages */}
+                  {/* Verse Text - Selected Language */}
                   <div className="mb-4">
-                    <h4 className="text-lg font-bold text-gray-900 mb-3 border-b-2 border-theme-primary pb-2">Verse Text</h4>
+                    <h4 className="text-lg font-bold text-gray-900 mb-3 border-b-2 border-theme-primary pb-2">
+                      Verse Text ({selectedLanguage.toUpperCase()})
+                    </h4>
                     <div className="space-y-2">
-                      {/* Dynamic Language Display */}
-                      {Object.entries(verse.text).map(([lang, text]) => (
-                        text && typeof text === 'string' && text.trim() && (
-                          <div key={lang} className="text-sm p-3">
-                            <span className="text-sm font-bold text-gray-900 mr-3">{getLanguageName(lang)}:</span>
-                            <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: text }} />
-                          </div>
-                        )
-                      ))}
+                      {verse.text[selectedLanguage] ? (
+                        <div className="text-sm p-3">
+                          <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: verse.text[selectedLanguage] }} />
+                        </div>
+                      ) : (
+                        <div className="text-sm p-3 text-gray-500 italic">
+                          No text available in {selectedLanguage.toUpperCase()}
+                        </div>
+                      )}
                     </div>
                   </div>
 

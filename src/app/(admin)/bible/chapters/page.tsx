@@ -27,11 +27,28 @@ import Link from 'next/link';
 
 export default function ChaptersPage() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedLanguage, setSelectedLanguage] = useState<string>('en');
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [products, setProducts] = useState<ProductManagement[]>([]);
+  const [languages, setLanguages] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deletingChapter, setDeletingChapter] = useState<Chapter | null>(null);
+
+  // Fetch languages
+  useEffect(() => {
+    const fetchLanguages = async () => {
+      try {
+        const languagesResponse: any = await ClientInstance.APP.getLanguage();
+        if (languagesResponse?.success && languagesResponse?.data) {
+          setLanguages(languagesResponse.data);
+        }
+      } catch (error) {
+        console.error("Error fetching languages:", error);
+      }
+    };
+    fetchLanguages();
+  }, []);
 
   // Fetch chapters and products
   useEffect(() => {
@@ -93,6 +110,28 @@ export default function ChaptersPage() {
     return matchesSearch;
   });
 
+  // Helper function to strip HTML tags
+  const stripHtmlTags = (html: string) => {
+    return html.replace(/<[^>]*>/g, '');
+  };
+
+  // Group chapters by story
+  const groupedChapters = filteredChapters.reduce((groups, chapter) => {
+    const storyId = chapter.storyId && typeof chapter.storyId === 'object' ? chapter.storyId._id : 'unknown';
+    const storyTitle = chapter.storyId && typeof chapter.storyId === 'object' && chapter.storyId.title ? 
+      (chapter.storyId.title[selectedLanguage] || chapter.storyId.title.en || 'Unknown Story') : 'Unknown Story';
+    
+    if (!groups[storyId]) {
+      groups[storyId] = {
+        storyTitle,
+        storyData: chapter.storyId,
+        chapters: []
+      };
+    }
+    groups[storyId].chapters.push(chapter);
+    return groups;
+  }, {} as any);
+
   const handleDeleteClick = (chapter: Chapter) => {
     setDeletingChapter(chapter);
     setIsDeleteDialogOpen(true);
@@ -137,25 +176,23 @@ export default function ChaptersPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 lg:gap-6 border-b border-gray-200 pb-4 lg:pb-6">
-        <div className="w-full">
-          <div className="flex items-center gap-3 mb-2">
-            <Link href="/bible" className="text-gray-600 hover:text-gray-900">
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
-            <h2 className="font-inter font-semibold text-2xl sm:text-[30px] leading-[38px] tracking-[0em] text-gray-800">
-              Chapters Management
-            </h2>
-          </div>
-          <p className="font-inter font-normal text-sm sm:text-[16px] leading-[24px] tracking-[0em] text-gray-600 mt-1">
-            Manage chapters across all stories and products
-          </p>
+      <div className="mb-8">
+        <div className="flex items-center gap-3 mb-3">
+          <Link href="/bible" className="text-gray-600 hover:text-gray-900 transition-colors">
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Chapters Management
+          </h1>
         </div>
+        <p className="text-gray-600 text-lg ml-8">
+          Manage and organize Bible chapters across all stories and products
+        </p>
       </div>
 
-      {/* Search */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-3 md:gap-4 mt-5">
-        <div className="relative w-full md:w-96">
+      {/* Search and Filter */}
+      <div className="flex flex-col lg:flex-row gap-4 mb-8">
+        <div className="relative flex-1">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <Search className="h-5 w-5 text-gray-400" />
           </div>
@@ -167,190 +204,103 @@ export default function ChaptersPage() {
             className="block w-full sm:w-80 h-[40px] pl-10 pr-4 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
           />
         </div>
+        <div className="lg:w-64">
+          <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+            <SelectTrigger className="w-full h-[40px] border-gray-200 bg-white">
+              <SelectValue placeholder="Select language" />
+            </SelectTrigger>
+            <SelectContent>
+              {languages.map((language) => (
+                <SelectItem key={language._id} value={language.code}>
+                  {language.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      {/* Chapters Table */}
-      {filteredChapters.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="text-gray-500 text-lg">No chapters found</div>
-          <p className="text-gray-400 mt-2">
+      {/* Chapters by Story */}
+      {Object.keys(groupedChapters).length === 0 ? (
+        <div className="text-center py-16">
+          <div className="w-24 h-24 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
+            <Book className="h-12 w-12 text-gray-400" />
+          </div>
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">No chapters found</h3>
+          <p className="text-gray-500 max-w-md mx-auto">
             {searchTerm 
-              ? 'Try adjusting your search criteria'
-              : 'Get started by adding your first chapter'
+              ? 'Try adjusting your search criteria or language filter'
+              : 'Get started by adding your first chapter to organize your Bible content'
             }
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredChapters.map((chapter) => (
-            <div key={chapter._id} className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow flex flex-col min-h-[300px]">
-              {/* Card Header */}
-              <div className="p-6 border-b border-gray-100">
-                <div className="flex items-center space-x-3">
-                  <div className="h-12 w-12 rounded-full bg-theme-secondary text-theme-primary flex items-center justify-center font-semibold">
-                    <Book className="h-6 w-6" />
+        <div className="space-y-4">
+          {Object.values(groupedChapters).map((group: any, index: number) => (
+            <div key={`${group?.storyTitle}-${index}`} className="bg-white rounded-lg shadow-sm">
+              {/* Story Header - Clean Red Card */}
+              <div className="bg-theme-secondary text-theme-primary p-4 rounded-t-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="h-10 w-10 bg-white/20 rounded-lg flex items-center justify-center">
+                      <Book className="h-5 w-5 ttext-theme-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold">
+                        {stripHtmlTags(group?.storyTitle)}
+                      </h3>
+                      <div className="text-gray-700 text-sm">
+                        {group.storyData && group.storyData.description && group.storyData.description[selectedLanguage] ? (
+                          <span dangerouslySetInnerHTML={{ __html: group.storyData.description[selectedLanguage] }} />
+                        ) : (
+                          'Story description'
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <div className="font-semibold text-lg text-gray-900">
-                      Chapter #{chapter.order}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      {chapter.storyId && typeof chapter.storyId === 'object' && (chapter.storyId as any).title && (chapter.storyId as any).title.en ? (
-                        <span dangerouslySetInnerHTML={{ __html: (chapter.storyId as any).title.en }} />
-                      ) : (
-                        'Unknown Story'
-                      )}
-                    </div>
+                  <div className="text-right">
+                    <div className="text-2xl font-bold">{group.chapters.length}</div>
+                    <div className="text-theme-primary text-sm">Chapters</div>
                   </div>
                 </div>
               </div>
 
-              {/* Story Information with All Languages */}
-              <div className="p-6 flex-grow">
-                <div className="mb-4">
-                  <h4 className="text-lg font-bold text-gray-900 mb-3 border-b-2 border-theme-primary pb-2">Story Information</h4>
-                  
-                  <div className="space-y-1">
-                    {/* Story Title - All Languages */}
-                    {chapter.storyId && typeof chapter.storyId === 'object' && (chapter.storyId as any).title && (
-                      <div className="space-y-1">
-                        {(chapter.storyId as any).title.en && (
-                          <div className="text-sm p-3">
-                            <span className="text-sm font-bold text-gray-900 mr-3">EN:</span>
-                            <span className="text-gray-900 font-medium" dangerouslySetInnerHTML={{ __html: (chapter.storyId as any).title.en }} />
+              {/* Chapters Grid - Clean White Cards */}
+              <div className="p-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {group.chapters.map((chapter: any) => (
+                    <div key={chapter._id} className="bg-white rounded-lg p-3 border border-gray-100 hover:shadow-md transition-shadow">
+                      <div className="flex items-center space-x-3">
+                        {/* Chapter Number - Red Circle */}
+                        <div className="h-8 w-8 bg-theme-secondary rounded-full flex items-center justify-center text-theme-primary font-bold text-sm flex-shrink-0">
+                          {chapter.order}
+                        </div>
+                        
+                        {/* Chapter Content */}
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-gray-900 text-sm">
+                            Chapter {chapter.order}
                           </div>
-                        )}
-                        {(chapter.storyId as any).title.sw && (
-                          <div className="text-sm p-3">
-                            <span className="text-sm font-bold text-gray-900 mr-3">SW:</span>
-                            <span className="text-gray-900 font-medium" dangerouslySetInnerHTML={{ __html: (chapter.storyId as any).title.sw }} />
+                          <div className="text-xs text-gray-600 truncate">
+                            {chapter.title[selectedLanguage] ? (
+                              <span>{stripHtmlTags(chapter.title[selectedLanguage])}</span>
+                            ) : (
+                              <span className="italic">No title</span>
+                            )}
                           </div>
-                        )}
-                        {(chapter.storyId as any).title.fr && (
-                          <div className="text-sm p-3">
-                            <span className="text-sm font-bold text-gray-900 mr-3">FR:</span>
-                            <span className="text-gray-900 font-medium" dangerouslySetInnerHTML={{ __html: (chapter.storyId as any).title.fr }} />
-                          </div>
-                        )}
-                        {(chapter.storyId as any).title.rn && (
-                          <div className="text-sm p-3">
-                            <span className="text-sm font-bold text-gray-900 mr-3">RN:</span>
-                            <span className="text-gray-900 font-medium" dangerouslySetInnerHTML={{ __html: (chapter.storyId as any).title.rn }} />
-                          </div>
-                        )}
-                        {(chapter.storyId as any).title.hi && (
-                          <div className="text-sm p-3">
-                            <span className="text-sm font-bold text-gray-900 mr-3">HI:</span>
-                            <span className="text-gray-900 font-medium" dangerouslySetInnerHTML={{ __html: (chapter.storyId as any).title.hi }} />
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
+                        </div>
 
-                {/* Story Description - All Languages */}
-                <div className="mb-4">
-                  <h4 className="text-lg font-bold text-gray-900 mb-3 border-b-2 border-theme-primary pb-2">Story Description</h4>
-                  <div className="space-y-2">
-                    {/* English */}
-                    {chapter.storyId && typeof chapter.storyId === 'object' && (chapter.storyId as any).description && (chapter.storyId as any).description.en && (
-                      <div className="text-sm p-3">
-                        <span className="text-sm font-bold text-gray-900 mr-3">EN:</span>
-                        <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: (chapter.storyId as any).description.en }} />
+                        {/* Edit Button - Square with Pencil */}
+                        <div className="flex-shrink-0">
+                          <Link href={`/bible/chapters/edit/${chapter._id}`}>
+                            <Button variant="outline" size="sm" className="h-8 w-8 p-0 border-gray-300 text-gray-500 hover:bg-gray-100">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                        </div>
                       </div>
-                    )}
-                    {/* Swahili */}
-                    {chapter.storyId && typeof chapter.storyId === 'object' && (chapter.storyId as any).description && (chapter.storyId as any).description.sw && (
-                      <div className="text-sm p-3">
-                        <span className="text-sm font-bold text-gray-900 mr-3">SW:</span>
-                        <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: (chapter.storyId as any).description.sw }} />
-                      </div>
-                    )}
-                    {/* French */}
-                    {chapter.storyId && typeof chapter.storyId === 'object' && (chapter.storyId as any).description && (chapter.storyId as any).description.fr && (
-                      <div className="text-sm p-3">
-                        <span className="text-sm font-bold text-gray-900 mr-3">FR:</span>
-                        <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: (chapter.storyId as any).description.fr }} />
-                      </div>
-                    )}
-                    {/* Kinyarwanda */}
-                    {chapter.storyId && typeof chapter.storyId === 'object' && (chapter.storyId as any).description && (chapter.storyId as any).description.rn && (
-                      <div className="text-sm p-3">
-                        <span className="text-sm font-bold text-gray-900 mr-3">RN:</span>
-                        <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: (chapter.storyId as any).description.rn }} />
-                      </div>
-                    )}
-                    {/* Hindi */}
-                    {chapter.storyId && typeof chapter.storyId === 'object' && (chapter.storyId as any).description && (chapter.storyId as any).description.hi && (
-                      <div className="text-sm p-3">
-                        <span className="text-sm font-bold text-gray-900 mr-3">HI:</span>
-                        <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: (chapter.storyId as any).description.hi }} />
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Chapter Title - All Languages */}
-                <div className="mb-4">
-                  <h4 className="text-lg font-bold text-gray-900 mb-3 border-b-2 border-theme-primary pb-2">Chapter Title</h4>
-                  <div className="space-y-2">
-                    {/* English */}
-                    {chapter.title.en && (
-                      <div className="text-sm p-3">
-                        <span className="text-sm font-bold text-gray-900 mr-3">EN:</span>
-                        <div className="text-gray-900 font-medium line-clamp-2" dangerouslySetInnerHTML={{ __html: chapter.title.en }} />
-                      </div>
-                    )}
-                    {/* Swahili */}
-                    {chapter.title.sw && (
-                      <div className="text-sm p-3">
-                        <span className="text-sm font-bold text-gray-900 mr-3">SW:</span>
-                        <div className="text-gray-900 font-medium line-clamp-2" dangerouslySetInnerHTML={{ __html: chapter.title.sw }} />
-                      </div>
-                    )}
-                    {/* French */}
-                    {chapter.title.fr && (
-                      <div className="text-sm p-3">
-                        <span className="text-sm font-bold text-gray-900 mr-3">FR:</span>
-                        <div className="text-gray-900 font-medium line-clamp-2" dangerouslySetInnerHTML={{ __html: chapter.title.fr }} />
-                      </div>
-                    )}
-                    {/* Kinyarwanda */}
-                    {chapter.title.rn && (
-                      <div className="text-sm p-3">
-                        <span className="text-sm font-bold text-gray-900 mr-3">RN:</span>
-                        <div className="text-gray-900 font-medium line-clamp-2" dangerouslySetInnerHTML={{ __html: chapter.title.rn }} />
-                      </div>
-                    )}
-                    {/* Hindi */}
-                    {chapter.title.hi && (
-                      <div className="text-sm p-3">
-                        <span className="text-sm font-bold text-gray-900 mr-3">HI:</span>
-                        <div className="text-gray-900 font-medium line-clamp-2" dangerouslySetInnerHTML={{ __html: chapter.title.hi }} />
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Chapter Details */}
-                <div className="text-xs text-gray-500 space-y-1">
-                  <div>Order: {chapter.order}</div>
-                  <div>Created: {chapter.createdAt ? new Date(chapter.createdAt).toLocaleDateString() : 'N/A'}</div>
-                  <div>Updated: {chapter.updatedAt ? new Date(chapter.updatedAt).toLocaleDateString() : 'N/A'}</div>
-                </div>
-              </div>
-
-              {/* Card Footer */}
-              <div className="p-6 border-t border-gray-100 bg-gray-50">
-                <div className="flex justify-end gap-2">
-                  <Link href={`/bible/chapters/edit/${chapter._id}`}>
-                    <Button variant="outline" size="sm" className="!min-w-[80px]">
-                      <Edit className="h-4 w-4 mr-1" />
-                      Edit
-                    </Button>
-                  </Link>
-                 
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

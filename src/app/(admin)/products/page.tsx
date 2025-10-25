@@ -27,7 +27,9 @@ export default function ProductsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [selectedLanguage, setSelectedLanguage] = useState<string>('en');
   const [products, setProducts] = useState<ProductManagement[]>([]);
+  const [languages, setLanguages] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deletingProduct, setDeletingProduct] = useState<ProductManagement | null>(null);
@@ -45,6 +47,21 @@ export default function ProductsPage() {
   const [contentType, setContentType] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('createdAt');
   const [sortOrder, setSortOrder] = useState<string>('desc');
+
+  // Fetch languages from API
+  useEffect(() => {
+    const fetchLanguages = async () => {
+      try {
+        const languagesResponse: any = await ClientInstance.APP.getLanguage();
+        if (languagesResponse?.success && languagesResponse?.data) {
+          setLanguages(languagesResponse.data);
+        }
+      } catch (error) {
+        console.error("Error fetching languages:", error);
+      }
+    };
+    fetchLanguages();
+  }, []);
 
   // Fetch products from API
   useEffect(() => {
@@ -109,6 +126,11 @@ export default function ProductsPage() {
 
   // Products are now filtered server-side, so we use them directly
   const filteredProducts = products;
+
+  // Helper function to strip HTML tags
+  const stripHtmlTags = (html: string) => {
+    return html.replace(/<[^>]*>/g, '');
+  };
 
   const handleDeleteClick = (product: ProductManagement) => {
     setDeletingProduct(product);
@@ -358,7 +380,7 @@ export default function ProductsPage() {
         </div>
 
         {/* Filter Controls */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5  gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6  gap-4">
           {/* Type Filter */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700">Type</label>
@@ -411,6 +433,25 @@ export default function ProductsPage() {
                 <SelectItem value="inactive">Inactive</SelectItem>
                 <SelectItem value="active">Active</SelectItem>
                 <SelectItem value="block">Block</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Language Filter */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">Language</label>
+            <Select value={selectedLanguage} onValueChange={(value) => {
+              setSelectedLanguage(value);
+            }}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select language" />
+              </SelectTrigger>
+              <SelectContent>
+                {languages.map((language) => (
+                  <SelectItem key={language._id} value={language.code}>
+                    {language.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -503,86 +544,45 @@ export default function ProductsPage() {
               {/* Product Information with All Languages */}
               <div className="p-6 flex-grow">
                 <div className="mb-4">
-                  <h4 className="text-lg font-bold text-gray-900 mb-3 border-b-2 border-theme-primary pb-2">Product Title</h4>
+                  <h4 className="text-lg font-bold text-gray-900 mb-3 border-b-2 border-theme-primary pb-2">
+                    Product Title ({selectedLanguage.toUpperCase()})
+                  </h4>
                   
                   <div className="space-y-1">
-                    {/* Product Title - All Languages */}
+                    {/* Product Title - Selected Language */}
                     <div className="space-y-1">
-                      {product.title.en && (
+                      {product.title[selectedLanguage] ? (
                         <div className="text-sm p-3">
-                          <span className="text-sm font-bold text-gray-900 mr-3">EN:</span>
-                          <span className="text-gray-900 font-medium" dangerouslySetInnerHTML={{ __html: product.title.en }} />
+                          <span className="text-sm font-bold text-gray-900 mr-3">{selectedLanguage.toUpperCase()}:</span>
+                          <span className="text-gray-900 font-medium" dangerouslySetInnerHTML={{ __html: product.title[selectedLanguage] }} />
                         </div>
-                      )}
-                      {product.title.sw && (
-                        <div className="text-sm p-3">
-                          <span className="text-sm font-bold text-gray-900 mr-3">SW:</span>
-                          <span className="text-gray-900 font-medium" dangerouslySetInnerHTML={{ __html: product.title.sw }} />
-                        </div>
-                      )}
-                      {product.title.fr && (
-                        <div className="text-sm p-3">
-                          <span className="text-sm font-bold text-gray-900 mr-3">FR:</span>
-                          <span className="text-gray-900 font-medium" dangerouslySetInnerHTML={{ __html: product.title.fr }} />
-                        </div>
-                      )}
-                      {product.title.rn && (
-                        <div className="text-sm p-3">
-                          <span className="text-sm font-bold text-gray-900 mr-3">RN:</span>
-                          <span className="text-gray-900 font-medium" dangerouslySetInnerHTML={{ __html: product.title.rn }} />
-                        </div>
-                      )}
-                      {product.title.hi && (
-                        <div className="text-sm p-3">
-                          <span className="text-sm font-bold text-gray-900 mr-3">HI:</span>
-                          <span className="text-gray-900 font-medium" dangerouslySetInnerHTML={{ __html: product.title.hi }} />
+                      ) : (
+                        <div className="text-sm p-3 text-gray-500 italic">
+                          No title available in {selectedLanguage.toUpperCase()}
                         </div>
                       )}
                     </div>
                   </div>
                 </div>
 
-                {/* Product Description - All Languages */}
+                {/* Product Description - Selected Language */}
                 <div className="mb-4">
-                  <h4 className="text-lg font-bold text-gray-900 mb-3 border-b-2 border-theme-primary pb-2">Description</h4>
+                  <h4 className="text-lg font-bold text-gray-900 mb-3 border-b-2 border-theme-primary pb-2">
+                    Description ({selectedLanguage.toUpperCase()})
+                  </h4>
                   <div className="space-y-2">
-                    {/* English */}
-                    {product.description.en && (
+                    {product.description[selectedLanguage] ? (
                       <div className="text-sm p-3">
-                        <span className="text-sm font-bold text-gray-900 mr-3">EN:</span>
-                        <div className="text-gray-900 font-medium line-clamp-4" dangerouslySetInnerHTML={{ __html: product.description.en }} />
+                        <span className="text-sm font-bold text-gray-900 mr-3">{selectedLanguage.toUpperCase()}:</span>
+                        <div className="text-gray-900 font-medium line-clamp-4" dangerouslySetInnerHTML={{ __html: product.description[selectedLanguage] }} />
                       </div>
-                    )}
-                    {/* Swahili */}
-                    {product.description.sw && (
-                      <div className="text-sm p-3">
-                        <span className="text-sm font-bold text-gray-900 mr-3">SW:</span>
-                        <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: product.description.sw }} />
-                      </div>
-                    )}
-                    {/* French */}
-                    {product.description.fr && (
-                      <div className="text-sm p-3">
-                        <span className="text-sm font-bold text-gray-900 mr-3">FR:</span>
-                        <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: product.description.fr }} />
-                      </div>
-                    )}
-                    {/* Kinyarwanda */}
-                    {product.description.rn && (
-                      <div className="text-sm p-3">
-                        <span className="text-sm font-bold text-gray-900 mr-3">RN:</span>
-                        <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: product.description.rn }} />
-                      </div>
-                    )}
-                    {/* Hindi */}
-                    {product.description.hi && (
-                      <div className="text-sm p-3">
-                        <span className="text-sm font-bold text-gray-900 mr-3">HI:</span>
-                        <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: product.description.hi }} />
+                    ) : (
+                      <div className="text-sm p-3 text-gray-500 italic">
+                        No description available in {selectedLanguage.toUpperCase()}
                       </div>
                     )}
                   </div>
-                    </div>
+                </div>
 
                 {/* Product Stats */}
                 <div className="mb-4">
@@ -644,7 +644,7 @@ export default function ProductsPage() {
                           Edit
                         </Button>
                       </Link>
-                      <Button 
+                      {/* <Button 
                         variant="outline" 
                         size="sm" 
                     className="!min-w-[80px] text-red-600 hover:text-red-700 hover:bg-red-50"
@@ -652,7 +652,7 @@ export default function ProductsPage() {
                       >
                         <Trash2 className="h-4 w-4 mr-1" />
                         Delete
-                      </Button>
+                      </Button> */}
                     </div>
               </div>
             </div>
@@ -676,7 +676,7 @@ export default function ProductsPage() {
           <DialogHeader>
             <DialogTitle>Delete Product</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete the product "{deletingProduct?.title.en || 'Untitled'}"? This action cannot be undone.
+              Are you sure you want to delete the product "{deletingProduct?.title[selectedLanguage] ? stripHtmlTags(deletingProduct.title[selectedLanguage]) : 'Untitled'}"? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

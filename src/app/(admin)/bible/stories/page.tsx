@@ -11,6 +11,7 @@ import {
   FileText,
   ArrowLeft
 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Dialog,
   DialogContent,
@@ -26,11 +27,28 @@ import Link from 'next/link';
 
 export default function StoriesPage() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedLanguage, setSelectedLanguage] = useState<string>('en');
   const [stories, setStories] = useState<Story[]>([]);
   const [products, setProducts] = useState<ProductManagement[]>([]);
+  const [languages, setLanguages] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deletingStory, setDeletingStory] = useState<Story | null>(null);
+
+  // Fetch languages
+  useEffect(() => {
+    const fetchLanguages = async () => {
+      try {
+        const languagesResponse: any = await ClientInstance.APP.getLanguage();
+        if (languagesResponse?.success && languagesResponse?.data) {
+          setLanguages(languagesResponse.data);
+        }
+      } catch (error) {
+        console.error("Error fetching languages:", error);
+      }
+    };
+    fetchLanguages();
+  }, []);
 
   // Fetch stories and products
   useEffect(() => {
@@ -149,7 +167,7 @@ export default function StoriesPage() {
         </div>
       </div>
 
-      {/* Search */}
+      {/* Search and Filter */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-3 md:gap-4 mt-5">
         <div className="relative w-full md:w-96">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -162,6 +180,20 @@ export default function StoriesPage() {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="block w-full sm:w-80 h-[40px] pl-10 pr-4 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
           />
+        </div>
+        <div className="w-full sm:w-auto">
+          <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+            <SelectTrigger className="w-full sm:w-[200px]">
+              <SelectValue placeholder="Select language" />
+            </SelectTrigger>
+            <SelectContent>
+              {languages.map((language) => (
+                <SelectItem key={language._id} value={language.code}>
+                  {language.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -200,40 +232,21 @@ export default function StoriesPage() {
               {/* Product Information with All Languages */}
               <div className="p-6 flex-grow">
                 <div className="mb-4">
-                  <h4 className="text-lg font-bold text-gray-900 mb-3 border-b-2 border-theme-primary pb-2">Product Information</h4>
+                  <h4 className="text-lg font-bold text-gray-900 mb-3 border-b-2 border-theme-primary pb-2">
+                    Product Information ({selectedLanguage.toUpperCase()})
+                  </h4>
                   
                   <div className="space-y-1">
-                    {/* Product Title - All Languages */}
+                    {/* Product Title - Selected Language */}
                     {story.productId && typeof story.productId === 'object' && (story.productId as any).title && (
                         <div className="space-y-1">
-                        {(story.productId as any).title.en && (
+                        {(story.productId as any).title[selectedLanguage] ? (
                           <div className="text-sm p-3">
-                            <span className="text-sm font-bold text-gray-900 mr-3">EN:</span>
-                            <span className="text-gray-900 font-medium" dangerouslySetInnerHTML={{ __html: (story.productId as any).title.en }} />
+                            <span className="text-gray-900 font-medium" dangerouslySetInnerHTML={{ __html: (story.productId as any).title[selectedLanguage] }} />
                           </div>
-                        )}
-                        {(story.productId as any).title.sw && (
-                          <div className="text-sm p-3">
-                            <span className="text-sm font-bold text-gray-900 mr-3">SW:</span>
-                            <span className="text-gray-900 font-medium" dangerouslySetInnerHTML={{ __html: (story.productId as any).title.sw }} />
-                          </div>
-                        )}
-                        {(story.productId as any).title.fr && (
-                          <div className="text-sm p-3">
-                            <span className="text-sm font-bold text-gray-900 mr-3">FR:</span>
-                            <span className="text-gray-900 font-medium" dangerouslySetInnerHTML={{ __html: (story.productId as any).title.fr }} />
-                          </div>
-                        )}
-                        {(story.productId as any).title.rn && (
-                          <div className="text-sm p-3">
-                            <span className="text-sm font-bold text-gray-900 mr-3">RN:</span>
-                            <span className="text-gray-900 font-medium" dangerouslySetInnerHTML={{ __html: (story.productId as any).title.rn }} />
-                          </div>
-                        )}
-                        {(story.productId as any).title.hi && (
-                          <div className="text-sm p-3">
-                            <span className="text-sm font-bold text-gray-900 mr-3">HI:</span>
-                            <span className="text-gray-900 font-medium" dangerouslySetInnerHTML={{ __html: (story.productId as any).title.hi }} />
+                        ) : (
+                          <div className="text-sm p-3 text-gray-500 italic">
+                            No product information available in {selectedLanguage.toUpperCase()}
                           </div>
                         )}
                       </div>
@@ -241,131 +254,59 @@ export default function StoriesPage() {
                   </div>
                 </div>
 
-                {/* Product Description - All Languages */}
+                {/* Product Description - Selected Language */}
                 <div className="mb-4">
-                  <h4 className="text-lg font-bold text-gray-900 mb-3 border-b-2 border-theme-primary pb-2">Product Description</h4>
+                  <h4 className="text-lg font-bold text-gray-900 mb-3 border-b-2 border-theme-primary pb-2">
+                    Product Description ({selectedLanguage.toUpperCase()})
+                  </h4>
                   <div className="space-y-2">
-                    {/* English */}
-                    {story.productId && typeof story.productId === 'object' && (story.productId as any).description && (story.productId as any).description.en && (
+                    {story.productId && typeof story.productId === 'object' && (story.productId as any).description && (story.productId as any).description[selectedLanguage] ? (
                       <div className="text-sm p-3">
-                        <span className="text-sm font-bold text-gray-900 mr-3">EN:</span>
-                        <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: (story.productId as any).description.en }} />
+                        <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: (story.productId as any).description[selectedLanguage] }} />
                       </div>
-                    )}
-                    {/* Swahili */}
-                    {story.productId && typeof story.productId === 'object' && (story.productId as any).description && (story.productId as any).description.sw && (
-                      <div className="text-sm p-3">
-                        <span className="text-sm font-bold text-gray-900 mr-3">SW:</span>
-                        <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: (story.productId as any).description.sw }} />
-                      </div>
-                    )}
-                    {/* French */}
-                    {story.productId && typeof story.productId === 'object' && (story.productId as any).description && (story.productId as any).description.fr && (
-                      <div className="text-sm p-3">
-                        <span className="text-sm font-bold text-gray-900 mr-3">FR:</span>
-                        <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: (story.productId as any).description.fr }} />
-                      </div>
-                    )}
-                    {/* Kinyarwanda */}
-                    {story.productId && typeof story.productId === 'object' && (story.productId as any).description && (story.productId as any).description.rn && (
-                      <div className="text-sm p-3">
-                        <span className="text-sm font-bold text-gray-900 mr-3">RN:</span>
-                        <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: (story.productId as any).description.rn }} />
-                      </div>
-                    )}
-                    {/* Hindi */}
-                    {story.productId && typeof story.productId === 'object' && (story.productId as any).description && (story.productId as any).description.hi && (
-                      <div className="text-sm p-3">
-                        <span className="text-sm font-bold text-gray-900 mr-3">HI:</span>
-                        <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: (story.productId as any).description.hi }} />
+                    ) : (
+                      <div className="text-sm p-3 text-gray-500 italic">
+                        No product description available in {selectedLanguage.toUpperCase()}
                       </div>
                     )}
                   </div>
                 </div>
 
-                {/* Story Title - All Languages */}
+                {/* Story Title - Selected Language */}
                 <div className="mb-4">
-                  <h4 className="text-lg font-bold text-gray-900 mb-3 border-b-2 border-theme-primary pb-2">Story Title</h4>
+                  <h4 className="text-lg font-bold text-gray-900 mb-3 border-b-2 border-theme-primary pb-2">
+                    Story Title ({selectedLanguage.toUpperCase()})
+                  </h4>
                   <div className="space-y-2">
-                    {/* English */}
-                    {story.title.en && (
+                    {story.title[selectedLanguage] ? (
                       <div className="text-sm p-3">
-                        <span className="text-sm font-bold text-gray-900 mr-3">EN:</span>
-                        <div className="text-gray-900 font-medium line-clamp-2" dangerouslySetInnerHTML={{ __html: story.title.en }} />
+                        <div className="text-gray-900 font-medium line-clamp-2" dangerouslySetInnerHTML={{ __html: story.title[selectedLanguage] }} />
                       </div>
-                    )}
-                    {/* Swahili */}
-                    {story.title.sw && (
-                      <div className="text-sm p-3">
-                        <span className="text-sm font-bold text-gray-900 mr-3">SW:</span>
-                        <div className="text-gray-900 font-medium line-clamp-2" dangerouslySetInnerHTML={{ __html: story.title.sw }} />
-                      </div>
-                    )}
-                    {/* French */}
-                    {story.title.fr && (
-                      <div className="text-sm p-3">
-                        <span className="text-sm font-bold text-gray-900 mr-3">FR:</span>
-                        <div className="text-gray-900 font-medium line-clamp-2" dangerouslySetInnerHTML={{ __html: story.title.fr }} />
-                      </div>
-                    )}
-                    {/* Kinyarwanda */}
-                    {story.title.rn && (
-                      <div className="text-sm p-3">
-                        <span className="text-sm font-bold text-gray-900 mr-3">RN:</span>
-                        <div className="text-gray-900 font-medium line-clamp-2" dangerouslySetInnerHTML={{ __html: story.title.rn }} />
-                      </div>
-                    )}
-                    {/* Hindi */}
-                    {story.title.hi && (
-                      <div className="text-sm p-3">
-                        <span className="text-sm font-bold text-gray-900 mr-3">HI:</span>
-                        <div className="text-gray-900 font-medium line-clamp-2" dangerouslySetInnerHTML={{ __html: story.title.hi }} />
+                    ) : (
+                      <div className="text-sm p-3 text-gray-500 italic">
+                        No title available in {selectedLanguage.toUpperCase()}
                       </div>
                     )}
                   </div>
                 </div>
 
-                {/* Story Description - All Languages */}
+                {/* Story Description - Selected Language */}
                 <div className="mb-4">
-                  <h4 className="text-lg font-bold text-gray-900 mb-3 border-b-2 border-theme-primary pb-2">Story Description</h4>
+                  <h4 className="text-lg font-bold text-gray-900 mb-3 border-b-2 border-theme-primary pb-2">
+                    Story Description ({selectedLanguage.toUpperCase()})
+                  </h4>
                   <div className="space-y-2">
-                    {/* English */}
-                    {story.description.en && (
+                    {story.description[selectedLanguage] ? (
                       <div className="text-sm p-3">
-                        <span className="text-sm font-bold text-gray-900 mr-3">EN:</span>
-                        <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: story.description.en }} />
+                        <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: story.description[selectedLanguage] }} />
+                      </div>
+                    ) : (
+                      <div className="text-sm p-3 text-gray-500 italic">
+                        No description available in {selectedLanguage.toUpperCase()}
                       </div>
                     )}
-                    {/* Swahili */}
-                    {story.description.sw && (
-                      <div className="text-sm p-3">
-                        <span className="text-sm font-bold text-gray-900 mr-3">SW:</span>
-                        <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: story.description.sw }} />
-                              </div>
-                    )}
-                    {/* French */}
-                    {story.description.fr && (
-                      <div className="text-sm p-3">
-                        <span className="text-sm font-bold text-gray-900 mr-3">FR:</span>
-                        <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: story.description.fr }} />
-                        </div>
-                    )}
-                    {/* Kinyarwanda */}
-                    {story.description.rn && (
-                      <div className="text-sm p-3">
-                        <span className="text-sm font-bold text-gray-900 mr-3">RN:</span>
-                        <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: story.description.rn }} />
-                        </div>
-                    )}
-                    {/* Hindi */}
-                    {story.description.hi && (
-                      <div className="text-sm p-3">
-                        <span className="text-sm font-bold text-gray-900 mr-3">HI:</span>
-                        <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: story.description.hi }} />
-                              </div>
-                    )}
-                        </div>
-                      </div>
+                  </div>
+                </div>
 
                 {/* Story Details */}
                 <div className="text-xs text-gray-500 space-y-1">

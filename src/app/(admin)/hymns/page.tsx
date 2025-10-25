@@ -21,20 +21,27 @@ import { showToast } from '@/lib/toast';
 
 export default function HymnsPage() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedProduct, setSelectedProduct] = useState<string>('all');
+  const [selectedLanguage, setSelectedLanguage] = useState<string>('en');
   const [hymns, setHymns] = useState<HymnManagement[]>([]);
   const [products, setProducts] = useState<ProductManagement[]>([]);
+  const [languages, setLanguages] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deletingHymn, setDeletingHymn] = useState<HymnManagement | null>(null);
 
-  // Fetch hymns and products from API
+  // Fetch hymns, products, and languages from API
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
         
-        // Fetch products first to get song products
+        // Fetch languages first
+        const languagesResponse: any = await ClientInstance.APP.getLanguage();
+        if (languagesResponse?.success && languagesResponse?.data) {
+          setLanguages(languagesResponse.data);
+        }
+        
+        // Fetch products to get song products
         const productsResponse: any = await ClientInstance.APP.getProducts();
         if (productsResponse?.success && productsResponse?.data) {
           const allProducts = productsResponse.data;
@@ -68,7 +75,7 @@ export default function HymnsPage() {
     fetchData();
   }, []);
 
-  // Filter hymns based on search and product
+  // Filter hymns based on search and language
   const filteredHymns = hymns.filter(hymn => {
     const matchesSearch = 
       (hymn.text.en || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -76,9 +83,7 @@ export default function HymnsPage() {
       (hymn.text.fr || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (hymn.text.rn || '').toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesProduct = selectedProduct === 'all' || hymn.productId === selectedProduct;
-    
-    return matchesSearch && matchesProduct;
+    return matchesSearch;
   });
 
   const handleDeleteClick = (hymn: HymnManagement) => {
@@ -215,15 +220,14 @@ export default function HymnsPage() {
           />
         </div>
         <div className="w-full sm:w-auto">
-          <Select value={selectedProduct} onValueChange={setSelectedProduct}>
+          <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
             <SelectTrigger className="w-full sm:w-[200px]">
-              <SelectValue placeholder="Filter by product" />
+              <SelectValue placeholder="Select language" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Products</SelectItem>
-              {products.map((product) => (
-                <SelectItem key={product._id} value={product._id}>
-                  {product.title.en || 'Untitled'}
+              {languages.map((language) => (
+                <SelectItem key={language._id} value={language.code}>
+                  {language.name}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -236,8 +240,8 @@ export default function HymnsPage() {
         <div className="text-center py-12">
           <div className="text-gray-500 text-lg">No hymns found</div>
           <p className="text-gray-400 mt-2">
-            {searchTerm || selectedProduct !== 'all' 
-              ? 'Try adjusting your search or filter criteria'
+            {searchTerm 
+              ? 'Try adjusting your search criteria'
               : 'Get started by adding your first hymn'
             }
           </p>
@@ -270,37 +274,17 @@ export default function HymnsPage() {
                   
 
                   <div className="space-y-1">
-                    {/* Product Title - All Languages */}
+                    {/* Product Title - Selected Language */}
                     {hymn.productId && typeof hymn.productId === 'object' && (hymn.productId as any).title && (
                       <div className="space-y-1">
-                        {(hymn.productId as any).title.en && (
+                        {(hymn.productId as any).title[selectedLanguage] ? (
                           <div className="text-sm p-3">
-                            <span className="text-sm font-bold text-gray-900 mr-3">EN:</span>
-                            <span className="text-gray-900 font-medium" dangerouslySetInnerHTML={{ __html: (hymn.productId as any).title.en }} />
+                            <span className="text-sm font-bold text-gray-900 mr-3">{selectedLanguage.toUpperCase()}:</span>
+                            <span className="text-gray-900 font-medium" dangerouslySetInnerHTML={{ __html: (hymn.productId as any).title[selectedLanguage] }} />
                           </div>
-                        )}
-                        {(hymn.productId as any).title.sw && (
-                          <div className="text-sm p-3">
-                            <span className="text-sm font-bold text-gray-900 mr-3">SW:</span>
-                            <span className="text-gray-900 font-medium" dangerouslySetInnerHTML={{ __html: (hymn.productId as any).title.sw }} />
-                          </div>
-                        )}
-                        {(hymn.productId as any).title.fr && (
-                          <div className="text-sm p-3">
-                            <span className="text-sm font-bold text-gray-900 mr-3">FR:</span>
-                            <span className="text-gray-900 font-medium" dangerouslySetInnerHTML={{ __html: (hymn.productId as any).title.fr }} />
-                          </div>
-                        )}
-                        {(hymn.productId as any).title.rn && (
-                          <div className="text-sm p-3">
-                            <span className="text-sm font-bold text-gray-900 mr-3">RN:</span>
-                            <span className="text-gray-900 font-medium" dangerouslySetInnerHTML={{ __html: (hymn.productId as any).title.rn }} />
-                          </div>
-                        )}
-                        {(hymn.productId as any).title.hi && (
-                          <div className="text-sm p-3">
-                            <span className="text-sm font-bold text-gray-900 mr-3">HI:</span>
-                            <span className="text-gray-900 font-medium" dangerouslySetInnerHTML={{ __html: (hymn.productId as any).title.hi }} />
+                        ) : (
+                          <div className="text-sm p-3 text-gray-500 italic">
+                            No title available in {selectedLanguage.toUpperCase()}
                           </div>
                         )}
                       </div>
@@ -308,43 +292,19 @@ export default function HymnsPage() {
                   </div>
                 </div>
 
-                {/* Hymn Text - All Languages */}
+                {/* Hymn Text - Selected Language */}
                 <div className="mb-4">
-                  <h4 className="text-lg font-bold text-gray-900 mb-3 border-b-2 border-theme-primary pb-2">Hymn Text</h4>
+                  <h4 className="text-lg font-bold text-gray-900 mb-3 border-b-2 border-theme-primary pb-2">
+                    Hymn Text ({selectedLanguage.toUpperCase()})
+                  </h4>
                   <div className="space-y-2">
-                    {/* English */}
-                    {hymn.text.en && (
+                    {hymn.text[selectedLanguage] ? (
                       <div className="text-sm p-3">
-                        <span className="text-sm font-bold text-gray-900 mr-3">EN:</span>
-                        <div className="text-gray-900 font-medium line-clamp-4" dangerouslySetInnerHTML={{ __html: hymn.text.en }} />
+                        <div className="text-gray-900 font-medium line-clamp-4" dangerouslySetInnerHTML={{ __html: hymn.text[selectedLanguage] }} />
                       </div>
-                    )}
-                    {/* Swahili */}
-                    {hymn.text.sw && (
-                      <div className="text-sm p-3">
-                        <span className="text-sm font-bold text-gray-900 mr-3">SW:</span>
-                        <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: hymn.text.sw }} />
-                      </div>
-                    )}
-                    {/* French */}
-                    {hymn.text.fr && (
-                      <div className="text-sm p-3">
-                        <span className="text-sm font-bold text-gray-900 mr-3">FR:</span>
-                        <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: hymn.text.fr }} />
-                      </div>
-                    )}
-                    {/* Kinyarwanda */}
-                    {hymn.text.rn && (
-                      <div className="text-sm p-3">
-                        <span className="text-sm font-bold text-gray-900 mr-3">RN:</span>
-                        <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: hymn.text.rn }} />
-                      </div>
-                    )}
-                    {/* Hindi */}
-                    {hymn.text.hi && (
-                      <div className="text-sm p-3">
-                        <span className="text-sm font-bold text-gray-900 mr-3">HI:</span>
-                        <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: hymn.text.hi }} />
+                    ) : (
+                      <div className="text-sm p-3 text-gray-500 italic">
+                        No text available in {selectedLanguage.toUpperCase()}
                       </div>
                     )}
                   </div>
