@@ -26,7 +26,6 @@ import {
   Trash2,
   ArrowLeft,
   Save,
-  Eye,
   Book,
   FileText,
   BookOpen,
@@ -766,7 +765,7 @@ export default function BiblePage() {
         router.push(`/bible/chapters/edit/${id}`);
         break;
       case "verse":
-        router.push(`/bible/verses/edit/${id}`);
+        router.push(`/bible/verses/${id}`);
         break;
       default:
         console.error("Unknown content type:", contentType);
@@ -1275,7 +1274,38 @@ export default function BiblePage() {
             📘 Bible Content
           </h3>
 
-          {products.map((product) => {
+          {(() => {
+            const productsWithContent = products.filter((product) => {
+              // Filter stories for this product
+              const productStories = stories.filter(
+                (s) =>
+                  (typeof s.productId === "object"
+                    ? s.productId._id
+                    : s.productId) === product._id
+              );
+              
+              // Only show products that have stories, chapters, or verses
+              return productStories.length > 0;
+            });
+
+            // If no products have content, show message
+            if (productsWithContent.length === 0) {
+              return (
+                <div className="text-center py-12 text-gray-500">
+                  <div className="text-6xl mb-4">📚</div>
+                  <h3 className="text-xl font-semibold text-gray-700 mb-2">No Bible Content Yet</h3>
+                  <p className="text-gray-600 mb-4">
+                    No products have stories, chapters, or verses created yet.
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Click "Add Bible Content" to create your first story, chapter, and verse.
+                  </p>
+                </div>
+              );
+            }
+
+            // Show products with content
+            return productsWithContent.map((product) => {
             // Filter stories for this product
             const productStories = stories.filter(
               (s) =>
@@ -1481,21 +1511,6 @@ export default function BiblePage() {
                                               ))}
                                             </div>
 
-                                            <div className="flex gap-2">
-                                              <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() =>
-                                                  handleEditContent(
-                                                    "verse",
-                                                    verse._id
-                                                  )
-                                                }
-                                              >
-                                                <Edit className="h-3 w-3 mr-1" />{" "}
-                                                Edit
-                                              </Button>
-                                            </div>
                                           </div>
                                         ))
                                       ) : (
@@ -1531,7 +1546,8 @@ export default function BiblePage() {
                 </div>
               </div>
             );
-          })}
+            });
+          })()}
         </div>
       ) : null}
 

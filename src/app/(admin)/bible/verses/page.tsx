@@ -31,6 +31,7 @@ export default function VersesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deletingVerse, setDeletingVerse] = useState<Verse | null>(null);
+  const [loadingProgress, setLoadingProgress] = useState({ current: 0, total: 0, message: '' });
 
   // Fetch verses and languages
   useEffect(() => {
@@ -70,52 +71,117 @@ export default function VersesPage() {
 
   const fetchAllVerses = async () => {
     try {
+      console.log("🔄 Starting to fetch verses...");
+      setLoadingProgress({ current: 0, total: 0, message: 'Fetching products...' });
+      
       // First, get all products
       const productsResponse: any = await ClientInstance.APP.getProducts({ type: 'book' });
       if (!productsResponse?.success || !productsResponse?.data) {
+        console.log("❌ No products found");
+        setVerses([]);
         return;
       }
 
+      console.log(`📚 Found ${productsResponse.data.length} products`);
+      setLoadingProgress({ 
+        current: 0, 
+        total: productsResponse.data.length, 
+        message: `Processing ${productsResponse.data.length} products...` 
+      });
+      
       const allVerses: Verse[] = [];
+      const productPromises = [];
 
-      // For each product, get stories
-      for (const product of productsResponse.data) {
-        try {
-          const storiesResponse: any = await ClientInstance.APP.getStoriesByProduct(product._id);
-          if (storiesResponse?.success && storiesResponse?.data) {
-            
-            // For each story, get chapters
-            for (const story of storiesResponse.data) {
-              try {
-                const chaptersResponse: any = await ClientInstance.APP.getChaptersByStory(story._id);
-                if (chaptersResponse?.success && chaptersResponse?.data) {
-                  
-                  // For each chapter, get verses
-                  for (const chapter of chaptersResponse.data) {
-                    try {
-                      const versesResponse: any = await ClientInstance.APP.getVersesByChapter(chapter._id);
-                      if (versesResponse?.success && versesResponse?.data) {
-                        allVerses.push(...versesResponse.data);
-                      }
-                    } catch (error) {
-                      console.error(`Error fetching verses for chapter ${chapter._id}:`, error);
-                    }
-                  }
-                }
-              } catch (error) {
-                console.error(`Error fetching chapters for story ${story._id}:`, error);
-              }
-            }
-          }
-        } catch (error) {
-          console.error(`Error fetching stories for product ${product._id}:`, error);
-        }
+      // Create promises for all products in parallel
+      for (let i = 0; i < productsResponse.data.length; i++) {
+        const product = productsResponse.data[i];
+        const productPromise = fetchVersesForProduct(product._id, i + 1, productsResponse.data.length);
+        productPromises.push(productPromise);
       }
 
+      // Wait for all products to complete
+      const productResults = await Promise.allSettled(productPromises);
+      
+      // Collect all verses from all products
+      productResults.forEach((result, index) => {
+        if (result.status === 'fulfilled' && result.value) {
+          allVerses.push(...result.value);
+          console.log(`✅ Product ${index + 1}: Found ${result.value.length} verses`);
+        } else {
+          console.error(`❌ Product ${index + 1}: Failed to fetch verses`, (result as PromiseRejectedResult).reason);
+        }
+      });
+
+      console.log(`🎉 Total verses found: ${allVerses.length}`);
       setVerses(allVerses);
     } catch (error) {
-      console.error("Error fetching verses:", error);
+      console.error("❌ Error fetching verses:", error);
       showToast.error('Failed to load verses', 'Error loading verses data');
+    }
+  };
+
+  const fetchVersesForProduct = async (productId: string, currentIndex: number, totalProducts: number): Promise<Verse[]> => {
+    try {
+      const allVerses: Verse[] = [];
+      
+      // Update progress
+      setLoadingProgress({ 
+        current: currentIndex, 
+        total: totalProducts, 
+        message: `Processing product ${currentIndex} of ${totalProducts}...` 
+      });
+      
+      // Get stories for this product
+      const storiesResponse: any = await ClientInstance.APP.getStoriesByProduct(productId);
+      if (!storiesResponse?.success || !storiesResponse?.data) {
+        return allVerses;
+      }
+
+      // Create promises for all stories in parallel
+      const storyPromises = storiesResponse.data.map(async (story: any) => {
+        try {
+          const chaptersResponse: any = await ClientInstance.APP.getChaptersByStory(story._id);
+          if (!chaptersResponse?.success || !chaptersResponse?.data) {
+            return [];
+          }
+
+          // Create promises for all chapters in parallel
+          const chapterPromises = chaptersResponse.data.map(async (chapter: any) => {
+            try {
+              const versesResponse: any = await ClientInstance.APP.getVersesByChapter(chapter._id);
+              if (versesResponse?.success && versesResponse?.data) {
+                return versesResponse.data;
+              }
+              return [];
+            } catch (error) {
+              console.error(`Error fetching verses for chapter ${chapter._id}:`, error);
+              return [];
+            }
+          });
+
+          // Wait for all chapters to complete
+          const chapterResults = await Promise.allSettled(chapterPromises);
+          const verses = chapterResults
+            .filter(result => result.status === 'fulfilled')
+            .flatMap(result => (result as PromiseFulfilledResult<Verse[]>).value);
+          
+          return verses;
+        } catch (error) {
+          console.error(`Error fetching chapters for story ${story._id}:`, error);
+          return [];
+        }
+      });
+
+      // Wait for all stories to complete
+      const storyResults = await Promise.allSettled(storyPromises);
+      const verses = storyResults
+        .filter(result => result.status === 'fulfilled')
+        .flatMap(result => (result as PromiseFulfilledResult<Verse[]>).value);
+      
+      return verses;
+    } catch (error) {
+      console.error(`Error fetching verses for product ${productId}:`, error);
+      return [];
     }
   };
 
@@ -155,15 +221,28 @@ export default function VersesPage() {
 
 
   if (isLoading) {
+    const progressPercentage = loadingProgress.total > 0 ? (loadingProgress.current / loadingProgress.total) * 100 : 0;
+    
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-          <div className="space-y-3">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-16 bg-gray-200 rounded"></div>
-            ))}
+        <div className="flex flex-col items-center justify-center min-h-[400px] space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 border-4 border-theme-primary border-t-transparent rounded-full animate-spin"></div>
+            <span className="text-lg font-medium text-gray-700">Loading verses...</span>
+          </div>
+          <div className="text-center space-y-2">
+            <p className="text-gray-600">{loadingProgress.message || 'Fetching all verses from products, stories, and chapters'}</p>
+            {loadingProgress.total > 0 && (
+              <p className="text-sm text-gray-500">
+                Progress: {loadingProgress.current} / {loadingProgress.total} products
+              </p>
+            )}
+          </div>
+          <div className="w-full max-w-md bg-gray-200 rounded-full h-2">
+            <div 
+              className="bg-theme-primary h-2 rounded-full transition-all duration-300" 
+              style={{width: `${progressPercentage}%`}}
+            ></div>
           </div>
         </div>
       </div>
@@ -219,83 +298,85 @@ export default function VersesPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredVerses.map((verse) => (
-            <div key={verse._id} className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow flex flex-col min-h-[400px]">
-              {/* Card Header */}
-              <div className="p-6 border-b border-gray-100">
-                    <div className="flex items-center space-x-3">
-                  <div className="h-12 w-12 rounded-full bg-theme-secondary text-theme-primary flex items-center justify-center font-semibold">
-                    <Hash className="h-6 w-6" />
-                      </div>
-                      <div className="flex-1">
-                    <div className="font-semibold text-lg text-gray-900">
-                          Verse #{verse.number}
+            <Link key={verse._id} href={`/bible/verses/${verse._id}`} className="block">
+              <div className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col min-h-[400px]">
+                {/* Card Header */}
+                <div className="p-6 border-b border-gray-100">
+                      <div className="flex items-center space-x-3">
+                    <div className="h-12 w-12 rounded-full bg-theme-secondary text-theme-primary flex items-center justify-center font-semibold">
+                      <Hash className="h-6 w-6" />
                         </div>
-                    <div className="text-sm text-gray-500">
-                      {verse.chapterId && typeof verse.chapterId === 'object' && (verse.chapterId as any).title && (verse.chapterId as any).title.en ? (
-                        <span dangerouslySetInnerHTML={{ __html: (verse.chapterId as any).title.en }} />
-                      ) : (
-                        'Unknown Chapter'
-                      )}
+                        <div className="flex-1">
+                      <div className="font-semibold text-lg text-gray-900">
+                            Verse #{verse.number}
+                          </div>
+                      <div className="text-sm text-gray-500">
+                        {verse.chapterId && typeof verse.chapterId === 'object' && (verse.chapterId as any).title && (verse.chapterId as any).title.en ? (
+                          <span dangerouslySetInnerHTML={{ __html: (verse.chapterId as any).title.en }} />
+                        ) : (
+                          'Unknown Chapter'
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Chapter Information - All Languages */}
-              <div className="p-6 flex-grow">
-                <div className="mb-4">
-                  <h4 className="text-lg font-bold text-gray-900 mb-3 border-b-2 border-theme-primary pb-2">Chapter Information</h4>
-                  <div className="space-y-2">
-                    {/* Dynamic Language Display */}
-                    {verse.chapterId && typeof verse.chapterId === 'object' && (verse.chapterId as any).title && 
-                      Object.entries((verse.chapterId as any).title).map(([lang, text]) => (
+                {/* Chapter Information - All Languages */}
+                <div className="p-6 flex-grow">
+                  <div className="mb-4">
+                    <h4 className="text-lg font-bold text-gray-900 mb-3 border-b-2 border-theme-primary pb-2">Chapter Information</h4>
+                    <div className="space-y-2">
+                      {/* Dynamic Language Display */}
+                      {verse.chapterId && typeof verse.chapterId === 'object' && (verse.chapterId as any).title &&
+                        Object.entries((verse.chapterId as any).title).map(([lang, text]) => (
+                          text && typeof text === 'string' && text.trim() && (
+                            <div key={lang} className="text-sm p-3">
+                              <span className="text-sm font-bold text-gray-900 mr-3">{getLanguageName(lang)}:</span>
+                              <div className="text-gray-900 font-medium line-clamp-2" dangerouslySetInnerHTML={{ __html: text }} />
+                            </div>
+                          )
+                        ))
+                      }
+                    </div>
+                  </div>
+
+                  {/* Verse Text - All Languages */}
+                  <div className="mb-4">
+                    <h4 className="text-lg font-bold text-gray-900 mb-3 border-b-2 border-theme-primary pb-2">Verse Text</h4>
+                    <div className="space-y-2">
+                      {/* Dynamic Language Display */}
+                      {Object.entries(verse.text).map(([lang, text]) => (
                         text && typeof text === 'string' && text.trim() && (
                           <div key={lang} className="text-sm p-3">
                             <span className="text-sm font-bold text-gray-900 mr-3">{getLanguageName(lang)}:</span>
-                            <div className="text-gray-900 font-medium line-clamp-2" dangerouslySetInnerHTML={{ __html: text }} />
+                            <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: text }} />
                           </div>
                         )
-                      ))
-                    }
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Verse Details */}
+                  <div className="text-xs text-gray-500 space-y-1">
+                    <div>Number: {verse.number}</div>
+                    <div>Created: {verse.createdAt ? new Date(verse.createdAt).toLocaleDateString() : 'N/A'}</div>
+                    <div>Updated: {verse.updatedAt ? new Date(verse.updatedAt).toLocaleDateString() : 'N/A'}</div>
+                      </div>
+                      </div>
+
+                {/* Card Footer */}
+                <div className="p-6 border-t border-gray-100 bg-gray-50">
+                      <div className="flex justify-between items-center gap-2">
+                    <Link href={`/bible/verses/edit/${verse._id}`}>
+                          <Button variant="outline" size="sm" className="!min-w-[80px]">
+                            <Edit className="h-4 w-4 mr-1" />
+                            Edit
+                          </Button>
+                        </Link>
                   </div>
                 </div>
-
-                {/* Verse Text - All Languages */}
-                <div className="mb-4">
-                  <h4 className="text-lg font-bold text-gray-900 mb-3 border-b-2 border-theme-primary pb-2">Verse Text</h4>
-                  <div className="space-y-2">
-                    {/* Dynamic Language Display */}
-                    {Object.entries(verse.text).map(([lang, text]) => (
-                      text && typeof text === 'string' && text.trim() && (
-                        <div key={lang} className="text-sm p-3">
-                          <span className="text-sm font-bold text-gray-900 mr-3">{getLanguageName(lang)}:</span>
-                          <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: text }} />
-                        </div>
-                      )
-                    ))}
-                  </div>
-                </div>
-
-                {/* Verse Details */}
-                <div className="text-xs text-gray-500 space-y-1">
-                  <div>Number: {verse.number}</div>
-                  <div>Created: {verse.createdAt ? new Date(verse.createdAt).toLocaleDateString() : 'N/A'}</div>
-                  <div>Updated: {verse.updatedAt ? new Date(verse.updatedAt).toLocaleDateString() : 'N/A'}</div>
-                    </div>
-                    </div>
-
-              {/* Card Footer */}
-              <div className="p-6 border-t border-gray-100 bg-gray-50">
-                    <div className="flex justify-end gap-2">
-                  <Link href={`/bible/verses/edit/${verse._id}`}>
-                        <Button variant="outline" size="sm" className="!min-w-[80px]">
-                          <Edit className="h-4 w-4 mr-1" />
-                          Edit
-                        </Button>
-                      </Link>
-                    </div>
               </div>
-            </div>
+            </Link>
               ))}
         </div>
       )}

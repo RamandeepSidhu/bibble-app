@@ -231,8 +231,15 @@ export default function EditChapterPage() {
       const response: any = await ClientInstance.APP.updateChapter(chapterId, payload);
       if (response?.success) {
         showToast.success("Chapter Updated", "Chapter updated successfully!");
-        setSuccessMessage("Chapter updated successfully! Redirecting...");
-        setTimeout(() => router.push('/bible'), 2000);
+        setSuccessMessage("Chapter updated successfully! Moving to verses...");
+        // Navigate to verses step instead of back to list
+        setTimeout(() => {
+          // Go to the story edit page with verses step
+          const storyId = typeof formData.chapter.storyId === 'object' 
+            ? (formData.chapter.storyId as any)._id 
+            : formData.chapter.storyId;
+          router.push(`/bible/stories/edit/${storyId}?step=verses`);
+        }, 1500);
       } else {
         showToast.error("Error", response?.message || "Failed to update chapter");
       }

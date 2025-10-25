@@ -12,9 +12,9 @@ import { showToast } from '@/lib/toast';
 import { MultilingualText, Language } from '@/lib/types/bibble';
 
 const steps = [
-  { id: "story", title: "Edit Story", icon: FileText },
-  { id: "chapter", title: "Edit Chapter", icon: BookOpen },
-  { id: "verse", title: "Create Verse", icon: File }
+  { id: "story", title: "Story", icon: FileText },
+  { id: "chapter", title: "Chapter", icon: BookOpen },
+  { id: "verse", title: "Verse", icon: File }
 ];
 
 interface VerseFormData {

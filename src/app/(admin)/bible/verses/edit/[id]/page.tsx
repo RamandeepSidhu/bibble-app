@@ -12,9 +12,9 @@ import { showToast } from '@/lib/toast';
 import { MultilingualText, Chapter, Language } from '@/lib/types/bibble';
 
 const steps = [
-  { id: "story", title: "Edit Story", icon: FileText },
-  { id: "chapter", title: "Edit Chapter", icon: Book },
-  { id: "verse", title: "Edit Verse", icon: Hash }
+  { id: "story", title: "Story", icon: FileText },
+  { id: "chapter", title: "Chapter", icon: Book },
+  { id: "verse", title: "Verse", icon: Hash }
 ];
 
 interface VerseFormData {
@@ -273,14 +273,6 @@ export default function EditVersePage() {
           ) : (
             <div className="p-10 space-y-8">
 
-              {/* Verse Form Header */}
-              <div className="flex items-center gap-3 mb-6">
-                <Hash className="h-8 w-8 text-theme-primary" />
-                <div>
-                  <h2 className="text-2xl font-semibold text-gray-900">Edit Verse</h2>
-                  <p className="text-gray-600">Update verse information</p>
-                </div>
-              </div>
 
               {/* Chapter Selection */}
               <div className="space-y-3">
@@ -298,7 +290,9 @@ export default function EditVersePage() {
                         const selectedChapter = chapters.find(c => c._id === formData.verse.chapterId);
                         if (selectedChapter) {
                           const firstTitle = Object.values(selectedChapter.title || {})[0] || '';
-                          return stripHtmlTags(firstTitle);
+                          return (
+                            <span dangerouslySetInnerHTML={{ __html: firstTitle }} />
+                          );
                         }
                         return '';
                       })()}
@@ -315,7 +309,7 @@ export default function EditVersePage() {
                           {Object.entries(chapter.title || {}).map(([lang, text]) => (
                             <div key={lang} className="text-xs text-gray-600 flex gap-1 ml-4">
                               <span className="text-gray-500 font-medium">{getLanguageName(lang)}:</span>
-                              <span title={text}>{stripHtmlTags(text)}</span>
+                              <span title={text} dangerouslySetInnerHTML={{ __html: text }} />
                             </div>
                           ))}
                         </div>
@@ -333,11 +327,26 @@ export default function EditVersePage() {
                   onChange={(val) => setFormData(prev => ({ ...prev, verse: { ...prev.verse, text: val } }))}
                   placeholder="Enter verse text in multiple languages"
                 />
+                {successMessage && <div className="text-green-600 text-sm">• {successMessage}</div>}
               </div>
 
               {/* Validation/Error Messages */}
               {validationError && <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">⚠️ {validationError}</div>}
-              {successMessage && <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-green-600 text-sm">✅ {successMessage}</div>}
+
+              {/* Add More Verse Section */}
+              <div className="flex justify-between items-center pt-4 border-t border-gray-200">
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900">Add More Content</h3>
+                  <p className="text-sm text-gray-600">Create additional verses for this chapter</p>
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={() => router.push(`/bible/verses/add?chapterId=${formData.verse.chapterId}`)}
+                  className="border-theme-primary text-theme-primary hover:bg-theme-primary hover:text-white"
+                >
+                  Add More Verse
+                </Button>
+              </div>
 
               {/* Navigation Buttons */}
               <div className="flex justify-between items-center py-6 border-t border-gray-200">

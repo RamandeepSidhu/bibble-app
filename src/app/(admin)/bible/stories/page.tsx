@@ -182,14 +182,14 @@ export default function StoriesPage() {
             <div key={story._id} className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow flex flex-col min-h-[400px]">
               {/* Card Header */}
               <div className="p-6 border-b border-gray-100">
-                <div className="flex items-center space-x-3">
+                    <div className="flex items-center space-x-3">
                   <div className="h-12 w-12 rounded-full bg-theme-secondary text-theme-primary flex items-center justify-center font-semibold">
                     <FileText className="h-6 w-6" />
-                  </div>
-                  <div className="flex-1">
+                      </div>
+                      <div className="flex-1">
                     <div className="font-semibold text-lg text-gray-900">
-                      Story #{story.order}
-                    </div>
+                          Story #{story.order}
+                        </div>
                     <div className="text-sm text-gray-500">
                       {story.productId.title.en}
                     </div>
@@ -205,7 +205,7 @@ export default function StoriesPage() {
                   <div className="space-y-1">
                     {/* Product Title - All Languages */}
                     {story.productId && typeof story.productId === 'object' && (story.productId as any).title && (
-                      <div className="space-y-1">
+                        <div className="space-y-1">
                         {(story.productId as any).title.en && (
                           <div className="text-sm p-3">
                             <span className="text-sm font-bold text-gray-900 mr-3">EN:</span>
@@ -341,31 +341,31 @@ export default function StoriesPage() {
                       <div className="text-sm p-3">
                         <span className="text-sm font-bold text-gray-900 mr-3">SW:</span>
                         <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: story.description.sw }} />
-                      </div>
+                              </div>
                     )}
                     {/* French */}
                     {story.description.fr && (
                       <div className="text-sm p-3">
                         <span className="text-sm font-bold text-gray-900 mr-3">FR:</span>
                         <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: story.description.fr }} />
-                      </div>
+                        </div>
                     )}
                     {/* Kinyarwanda */}
                     {story.description.rn && (
                       <div className="text-sm p-3">
                         <span className="text-sm font-bold text-gray-900 mr-3">RN:</span>
                         <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: story.description.rn }} />
-                      </div>
+                        </div>
                     )}
                     {/* Hindi */}
                     {story.description.hi && (
                       <div className="text-sm p-3">
                         <span className="text-sm font-bold text-gray-900 mr-3">HI:</span>
                         <div className="text-gray-900 font-medium line-clamp-3" dangerouslySetInnerHTML={{ __html: story.description.hi }} />
-                      </div>
+                              </div>
                     )}
-                  </div>
-                </div>
+                        </div>
+                      </div>
 
                 {/* Story Details */}
                 <div className="text-xs text-gray-500 space-y-1">
@@ -373,21 +373,21 @@ export default function StoriesPage() {
                   <div>Created: {story.createdAt ? new Date(story.createdAt).toLocaleDateString() : 'N/A'}</div>
                   <div>Updated: {story.updatedAt ? new Date(story.updatedAt).toLocaleDateString() : 'N/A'}</div>
                 </div>
-              </div>
+                    </div>
 
               {/* Card Footer */}
               <div className="p-6 border-t border-gray-100 bg-gray-50">
-                <div className="flex justify-end gap-2">
+                    <div className="flex justify-end gap-2">
                   <Link href={`/bible/stories/edit/${story._id}`}>
-                    <Button variant="outline" size="sm" className="!min-w-[80px]">
-                      <Edit className="h-4 w-4 mr-1" />
-                      Edit
-                    </Button>
-                  </Link>
+                        <Button variant="outline" size="sm" className="!min-w-[80px]">
+                          <Edit className="h-4 w-4 mr-1" />
+                          Edit
+                        </Button>
+                      </Link>
                 </div>
               </div>
-            </div>
-          ))}
+                    </div>
+              ))}
         </div>
       )}
 

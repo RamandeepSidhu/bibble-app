@@ -12,9 +12,9 @@ import { showToast } from '@/lib/toast';
 import { MultilingualText, Language } from '@/lib/types/bibble';
 
 const steps = [
-  { id: "story", title: "Edit Story", icon: FileText },
-  { id: "chapter", title: "Create Chapter", icon: BookOpen },
-  { id: "verses", title: "Edit Verses", icon: File }
+  { id: "story", title: "Story", icon: FileText },
+  { id: "chapter", title: "Chapter", icon: BookOpen },
+  { id: "verses", title: "Verses", icon: File }
 ];
 
 interface ChapterFormData {
