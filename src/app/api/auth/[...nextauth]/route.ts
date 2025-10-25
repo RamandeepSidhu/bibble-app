@@ -1,6 +1,5 @@
 import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialProvider from "next-auth/providers/credentials";
-import GoogleProvider from "next-auth/providers/google";
 import { cookies } from "next/headers";
 import { AUTH_TOKEN_KEY } from "@/api/token";
 import axios from "axios";
@@ -55,18 +54,6 @@ export const authOptions: NextAuthOptions = {
           console.error("Authentication error:", error);
           throw new Error(error.message || "Login failed");
         }
-      },
-    }),
-
-    GoogleProvider({
-      clientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_SECRET!,
-      authorization: {
-        params: {
-          prompt: "consent",
-          access_type: "offline",
-          response_type: "code",
-        },
       },
     }),
   ],
