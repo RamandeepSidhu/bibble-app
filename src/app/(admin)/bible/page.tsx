@@ -30,6 +30,8 @@ import {
   FileText,
   BookOpen,
   Hash,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import Link from "next/link";
 import CKEditorComponent from "@/components/CKEditorComponent";
@@ -102,6 +104,11 @@ export default function BiblePage() {
   const [languageNames, setLanguageNames] = useState<{ [key: string]: string }>({});
   const [selectedProduct, setSelectedProduct] =
     useState<ProductManagement | null>(null);
+  
+  // Accordion state management
+  const [expandedProducts, setExpandedProducts] = useState<Set<string>>(new Set());
+  const [expandedStories, setExpandedStories] = useState<Set<string>>(new Set());
+  const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set());
 
   // Track created content IDs for edit mode
   const [createdStoryId, setCreatedStoryId] = useState<string | null>(null);
@@ -316,6 +323,37 @@ export default function BiblePage() {
   // Helper function to strip HTML tags for clean display
   const stripHtmlTags = (html: string) => {
     return html.replace(/<[^>]*>/g, '');
+  };
+
+  // Accordion toggle functions
+  const toggleProduct = (productId: string) => {
+    const newExpanded = new Set(expandedProducts);
+    if (newExpanded.has(productId)) {
+      newExpanded.delete(productId);
+    } else {
+      newExpanded.add(productId);
+    }
+    setExpandedProducts(newExpanded);
+  };
+
+  const toggleStory = (storyId: string) => {
+    const newExpanded = new Set(expandedStories);
+    if (newExpanded.has(storyId)) {
+      newExpanded.delete(storyId);
+    } else {
+      newExpanded.add(storyId);
+    }
+    setExpandedStories(newExpanded);
+  };
+
+  const toggleChapter = (chapterId: string) => {
+    const newExpanded = new Set(expandedChapters);
+    if (newExpanded.has(chapterId)) {
+      newExpanded.delete(chapterId);
+    } else {
+      newExpanded.add(chapterId);
+    }
+    setExpandedChapters(newExpanded);
   };
 
   const fetchProducts = async () => {
@@ -1154,58 +1192,62 @@ export default function BiblePage() {
     );
   }
 
-  // Main list view
-  return (
-    <div className={`min-h-screen rounded-lg shadow-sky-100 space-y-6 container mx-auto px-4 py-8 ${products.length === 0 && !isLoading ? 'bg-transparent' : 'bg-white'}`}>
-      {/* Header */}
-      <div className="border-b border-gray-100">
-        <div className="mx-auto px-5 py-6 flex items-center gap-4">
-          <button
-            onClick={handleBackToBible}
-            className="text-gray-600 hover:text-gray-900 transition-colors"
+// Main list view
+return (
+  <div
+    className={`min-h-screen rounded-lg shadow-sky-100 space-y-6 container mx-auto px-4 py-8 ${
+      products.length === 0 && !isLoading ? "bg-transparent" : "bg-white"
+    }`}
+  >
+    {/* Header */}
+    <div className="border-b border-gray-100">
+      <div className="mx-auto px-5 py-6 flex items-center gap-4">
+        <button
+          onClick={handleBackToBible}
+          className="text-gray-600 hover:text-gray-900 transition-colors"
+        >
+          <ArrowLeft className="h-6 w-6" />
+        </button>
+        <div className="flex-1">
+          <h1 className="text-3xl font-bold text-gray-900">
+            Bible Content Management
+          </h1>
+          <p className="text-gray-500">Manage your Bible content hierarchy</p>
+        </div>
+        <div className="flex gap-3">
+          <Button
+            onClick={handleAddBible}
+            className="bg-theme-primary text-theme-secondary hover:bg-theme-primary-dark flex items-center gap-2"
           >
-            <ArrowLeft className="h-6 w-6" />
-          </button>
-          <div className="flex-1">
-            <h1 className="text-3xl font-bold text-gray-900">
-              Bible Content Management
-            </h1>
-            <p className="text-gray-500">Manage your Bible content hierarchy</p>
-          </div>
-          <div className="flex gap-3">
-            <Button
-              onClick={handleAddBible}
-              className="bg-theme-primary text-theme-secondary hover:bg-theme-primary-dark flex items-center gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              Add Bible Content
+            <Plus className="h-4 w-4" />
+            Add Bible Content
+          </Button>
+
+          <Link href="/bible/stories">
+            <Button variant="outline" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Manage Stories
             </Button>
-           
-            <Link href="/bible/stories">
-              <Button variant="outline" className="flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                Manage Stories
-              </Button>
-            </Link>
-            <Link href="/bible/chapters">
-              <Button variant="outline" className="flex items-center gap-2">
-                <Book className="h-4 w-4" />
-                Manage Chapters
-              </Button>
-            </Link>
-            <Link href="/bible/verses">
-              <Button variant="outline" className="flex items-center gap-2">
-                <Hash className="h-4 w-4" />
-                Manage Verses
-              </Button>
-            </Link>
-          </div>
+          </Link>
+          <Link href="/bible/chapters">
+            <Button variant="outline" className="flex items-center gap-2">
+              <Book className="h-4 w-4" />
+              Manage Chapters
+            </Button>
+          </Link>
+          <Link href="/bible/verses">
+            <Button variant="outline" className="flex items-center gap-2">
+              <Hash className="h-4 w-4" />
+              Manage Verses
+            </Button>
+          </Link>
         </div>
       </div>
+    </div>
 
-      {/* Content Overview - Only show if there are products */}
-      {products.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    {/* Content Overview - Only show if there are products */}
+    {products.length > 0 ? (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Products Overview */}
         <div className="bg-white border border-gray-200 rounded-lg p-6">
           <div className="flex items-center gap-3 mb-4">
@@ -1269,47 +1311,55 @@ export default function BiblePage() {
             </div>
           </div>
         </div>
+      </div>
+    ) : (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <Book className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <div className="text-gray-500 text-lg mb-2">Book not have</div>
+          <p className="text-gray-400">No Bible books available yet.</p>
         </div>
-      ) : (
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <Book className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <div className="text-gray-500 text-lg mb-2">Book not have</div>
-            <p className="text-gray-400">
-              No Bible books available yet.
-            </p>
-          </div>
-        </div>
-      )}
+      </div>
+    )}
 
-      {/* Recent Activity - Unified List/Table */}
-      {products.length > 0 ? (
-        <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-          <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-            📘 Bible Content
-          </h3>
+     {/* Accordion Bible Content */}
+     {products.length > 0 ? (
+       <div className="w-full">
+         {/* Bible Header */}
+         <div className="text-start mb-8">
+           <div className="">
+             <div className="flex items-start justify-start gap-4 mb-4">
+               <div className="text-xl">📖</div>
+               <div>
+                 <h1 className="text-4xl font-bold tracking-wide text-theme-primary">Bible</h1>
+                  <p className="text-gray-700 text-sm font-medium">Read products, stories, chapters and verses</p>
+               </div>
+             </div>
+           </div>
+         </div>
+
+         {/* Accordion Container */}
+         <div className="space-y-4 w-full">
 
           {(() => {
             const productsWithContent = products.filter((product) => {
-              // Filter stories for this product
               const productStories = stories.filter(
                 (s) =>
                   (typeof s.productId === "object"
                     ? s.productId._id
                     : s.productId) === product._id
               );
-              
-              // Only show products that have stories, chapters, or verses
               return productStories.length > 0;
             });
 
-            // If no products have content, show message
             if (productsWithContent.length === 0) {
               return (
                 <div className="flex items-center justify-center min-h-[400px]">
                   <div className="text-center">
                     <Book className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <div className="text-gray-500 text-lg mb-2">Bible book not found</div>
+                    <div className="text-gray-500 text-lg mb-2">
+                      Bible book not found
+                    </div>
                     <p className="text-gray-400">
                       No products have stories, chapters, or verses created yet.
                     </p>
@@ -1318,294 +1368,358 @@ export default function BiblePage() {
               );
             }
 
-            // Show products with content
             return productsWithContent.map((product) => {
-            // Filter stories for this product
-            const productStories = stories.filter(
-              (s) =>
-                (typeof s.productId === "object"
-                  ? s.productId._id
-                  : s.productId) === product._id
-            );
+              const productStories = stories.filter(
+                (s) =>
+                  (typeof s.productId === "object"
+                    ? s.productId._id
+                    : s.productId) === product._id
+              );
+              const isProductExpanded = expandedProducts.has(product._id);
 
-            return (
-              <div
-                key={product._id}
-                className="bg-gradient-to-br from-gray-50 to-white border border-gray-200 rounded-xl p-5 shadow-sm mb-6"
-              >
-                <div className="flex justify-between items-start mb-3">
-                  <div>
-                    <h4 className="text-xl font-semibold text-theme-primary mb-2">
-                      Product Title
-                    </h4>
-                    {/* Product Title - All Languages */}
-                    {Object.entries(product.title || {}).map(([lang, text]) => (
-                      <div key={lang} className="text-sm text-gray-700 flex gap-1 mb-1">
-                        <span className="text-gray-500 font-medium">
-                          {getLanguageName(lang)}:
-                        </span>
-                        <span 
-                          title={text} // Show full HTML content on hover
-                          dangerouslySetInnerHTML={{ __html: text }}
-                        />
+              return (
+                <div
+                  key={product._id}
+                  className="bg-white border border-gray-200 rounded-lg shadow-md overflow-hidden"
+                >
+                  {/* Product Accordion Header */}
+                  <div 
+                    className="bg-gradient-to-r from-gray-50 to-gray-100 text-theme-primary p-4 cursor-pointer hover:from-gray-100 hover:to-gray-200 transition-colors w-full border-l-4 border-theme-primary"
+                    onClick={() => toggleProduct(product._id)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-theme-primary/10 p-2 rounded-lg">
+                          <Book className="h-5 w-5 text-theme-primary" />
+                        </div>
+                        <div>
+                          <h2 className="text-xl font-bold text-theme-primary">
+                            {product.title?.en ? (
+                              <span
+                                dangerouslySetInnerHTML={{
+                                  __html: product.title.en,
+                                }}
+                              />
+                            ) : (
+                              "Bible Book"
+                            )}
+                          </h2>
+                          <p className="text-gray-600 text-sm">
+                            {productStories.length} Stories • Click to expand
+                          </p>
+                        </div>
                       </div>
-                    ))}
-                    
-                    <h5 className="text-lg font-semibold text-gray-800 mt-3 mb-2">
-                      Product Description
-                    </h5>
-                    {/* Product Description - All Languages */}
-                    {Object.entries(product.description || {}).map(([lang, text]) => (
-                      <div key={lang} className="text-sm text-gray-600 flex gap-1 mb-1">
-                        <span className="text-gray-500 font-medium">
-                          {getLanguageName(lang)}:
+                      <div className="flex items-center gap-2">
+                        <span className="bg-theme-primary/10 text-theme-primary px-3 py-1 rounded-full text-sm">
+                          {productStories.length} Stories
                         </span>
-                        <span 
-                          title={text} // Show full HTML content on hover
-                          dangerouslySetInnerHTML={{ __html: text }}
-                        />
+                        {isProductExpanded ? (
+                          <ChevronDown className="h-5 w-5" />
+                        ) : (
+                          <ChevronRight className="h-5 w-5" />
+                        )}
                       </div>
-                    ))}
+                    </div>
                   </div>
-                </div>
 
-                {/* Stories */}
-                <div className="space-y-4 mt-5">
-                  {productStories.length > 0 ? (
-                    productStories.map((story) => {
-                      // Filter chapters for this story
-                      const storyChapters = chapters.filter(
-                        (c) =>
-                          (typeof c.storyId === "object"
-                            ? c.storyId._id
-                            : c.storyId) === story._id
-                      );
+                  {/* Product Content - Collapsible */}
+                  {isProductExpanded && (
+                    <div className="p-6 bg-gray-50">
+                      {product.description?.en && (
+                        <div className="mb-6 p-4 bg-white rounded-lg border border-gray-200">
+                          <h3 className="text-lg font-semibold text-gray-800 mb-2">Description</h3>
+                          <p className="text-gray-700 italic">
+                            <span
+                              dangerouslySetInnerHTML={{
+                                __html: product.description.en,
+                              }}
+                            />
+                          </p>
+                        </div>
+                      )}
 
-                      return (
-                        <details
-                          key={story._id}
-                          className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm open:shadow-md transition-all"
-                        >
-                          <summary className="cursor-pointer text-theme-primary font-semibold flex justify-between items-center">
-                            <span>📖 Story #{story.order}</span>
-                            <div className="flex gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() =>
-                                  handleEditContent("story", story._id)
-                                }
+                      {/* Stories Accordion */}
+                      <div className="space-y-3">
+                        {productStories.length > 0 ? (
+                          productStories.map((story) => {
+                            const storyChapters = chapters.filter(
+                              (c) =>
+                                (typeof c.storyId === "object"
+                                  ? c.storyId._id
+                                  : c.storyId) === story._id
+                            );
+                            const isStoryExpanded = expandedStories.has(story._id);
+
+                            return (
+                              <div
+                                key={story._id}
+                                className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden"
                               >
-                                <Edit className="h-4 w-4 mr-1" /> Edit
-                              </Button>
-                            </div>
-                          </summary>
-
-                          <div className="mt-3 ml-2 border-l-2 border-blue-100 pl-4 space-y-3">
-                            {/* Story Title */}
-                            {Object.entries(story.title || {}).map(
-                              ([lang, text]) => (
-                                <div
-                                  key={lang}
-                                  className="text-sm text-gray-700 flex gap-1"
+                                {/* Story Accordion Header */}
+                                <div 
+                                  className="bg-gradient-to-r from-gray-50 to-gray-100 text-theme-primary p-4 cursor-pointer hover:from-gray-100 hover:to-gray-200 transition-colors w-full border-l-4 border-theme-primary"
+                                  onClick={() => toggleStory(story._id)}
                                 >
-                                  <span className="text-gray-500 font-medium">
-                                    {getLanguageName(lang)}:
-                                  </span>
-                                  <span
-                                    title={text} // Show full HTML content on hover
-                                  >
-                                    {stripHtmlTags(text)}
-                                  </span>
-                                </div>
-                              )
-                            )}
-
-                            {/* Story Description */}
-                            {Object.entries(story.description || {}).map(
-                              ([lang, text]) => (
-                                <div
-                                  key={lang}
-                                  className="text-xs text-gray-600 flex gap-1 ml-2"
-                                >
-                                  <span className="text-gray-500 font-medium">
-                                    {getLanguageName(lang)}:
-                                  </span>
-                                  <span
-                                    title={text} // Show full HTML content on hover
-                                  >
-                                    {stripHtmlTags(text)}
-                                  </span>
-                                </div>
-                              )
-                            )}
-
-                            {/* Chapters */}
-                            {storyChapters.length > 0 ? (
-                              storyChapters.map((chapter) => {
-                                const chapterVerses = verses.filter(
-                                  (v) =>
-                                    (typeof v.chapterId === "object"
-                                      ? v.chapterId._id
-                                      : v.chapterId) === chapter._id
-                                );
-
-                                return (
-                                  <details
-                                    key={chapter._id}
-                                    className="border border-gray-100 bg-gray-50 rounded-md p-3"
-                                  >
-                                    <summary className="cursor-pointer font-medium text-gray-800 flex justify-between">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                      <div className="bg-theme-primary/10 p-2 rounded-lg">
+                                        <FileText className="h-5 w-5 text-theme-primary" />
+                                      </div>
                                       <div>
-                                        <div className="font-semibold">
-                                          📑 Chapter #{chapter.order}
-                                        </div>
-                                        {Object.entries(
-                                          chapter.title || {}
-                                        ).map(([lang, text]) => (
-                                          <div
-                                            key={lang}
-                                            className="text-xs text-gray-600 flex gap-1 mt-1"
-                                          >
-                                            <span className="text-gray-500 font-medium">
-                                              {getLanguageName(lang)}:
-                                            </span>
+                                        <h3 className="text-lg font-bold text-theme-primary">
+                                          {story.title?.en ? (
                                             <span
-                                              title={text} // Show full HTML content on hover
-                                            >
-                                              {stripHtmlTags(text)}
-                                            </span>
-                                          </div>
-                                        ))}
+                                              dangerouslySetInnerHTML={{
+                                                __html: story.title.en,
+                                              }}
+                                            />
+                                          ) : (
+                                            `Story ${story.order}`
+                                          )}
+                                        </h3>
+                                        <p className="text-gray-600 text-sm">
+                                          {storyChapters.length} Chapters • Click to expand
+                                        </p>
                                       </div>
-                                      <div className="flex gap-2">
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          onClick={() =>
-                                            handleEditContent(
-                                              "chapter",
-                                              chapter._id
-                                            )
-                                          }
-                                        >
-                                          <Edit className="h-4 w-4 mr-1" /> Edit
-                                        </Button>
-                                      </div>
-                                    </summary>
-
-                                    {/* Verses */}
-                                    <div className="mt-2 ml-2 border-l pl-4 space-y-2">
-                                      {chapterVerses.length > 0 ? (
-                                        chapterVerses.map((verse) => (
-                                          <div
-                                            key={verse._id}
-                                            className="bg-white p-2 rounded border border-gray-100 flex justify-between"
-                                          >
-                                            <div>
-                                              <div className="text-xs font-semibold text-theme-primary">
-                                                🔢 Verse #{verse.number}
-                                              </div>
-                                              {Object.entries(
-                                                verse.text || {}
-                                              ).map(([lang, text]) => (
-                                                <div
-                                                  key={lang}
-                                                  className="text-xs text-gray-700 flex gap-1 ml-2"
-                                                >
-                                                  <span className="text-gray-500 font-medium">
-                                                    {getLanguageName(lang)}:
-                                                  </span>
-                                                  <span
-                                                    title={text} // Show full HTML content on hover
-                                                  >
-                                                    {stripHtmlTags(text)}
-                                                  </span>
-                                                </div>
-                                              ))}
-                                            </div>
-
-                                          </div>
-                                        ))
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <span className="bg-theme-primary/10 text-theme-primary px-3 py-1 rounded-full text-sm">
+                                        {storyChapters.length} Chapters
+                                      </span>
+                                      {isStoryExpanded ? (
+                                        <ChevronDown className="h-5 w-5" />
                                       ) : (
-                                        <div className="text-center py-2 text-gray-500 text-xs">
-                                          <p>
-                                            No verses created yet for this
-                                            chapter.
-                                          </p>
+                                        <ChevronRight className="h-5 w-5" />
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Story Content - Collapsible */}
+                                {isStoryExpanded && (
+                                  <div className="p-4 bg-gray-50">
+                                    {/* Story Details */}
+                                    <div className="mb-4 p-4 bg-white rounded-lg border border-gray-200">
+                                      <h4 className="text-md font-semibold text-gray-800 mb-2">Story Details</h4>
+                                      <div className="space-y-2">
+                                        {Object.entries(story.title || {}).map(
+                                          ([lang, text]) => (
+                                            <div
+                                              key={lang}
+                                              className="text-sm text-gray-700 flex gap-1"
+                                            >
+                                              <span className="text-gray-500 font-medium">
+                                                {getLanguageName(lang)}:
+                                              </span>
+                                              <span title={text}>
+                                                {stripHtmlTags(text)}
+                                              </span>
+                                            </div>
+                                          )
+                                        )}
+                                        {Object.entries(story.description || {}).map(
+                                          ([lang, text]) => (
+                                            <div
+                                              key={lang}
+                                              className="text-xs text-gray-600 flex gap-1 ml-2"
+                                            >
+                                              <span className="text-gray-500 font-medium">
+                                                {getLanguageName(lang)}:
+                                              </span>
+                                              <span title={text}>
+                                                {stripHtmlTags(text)}
+                                              </span>
+                                            </div>
+                                          )
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    {/* Chapters Accordion */}
+                                    <div className="space-y-2">
+                                      {storyChapters.length > 0 ? (
+                                        storyChapters.map((chapter) => {
+                                          const chapterVerses = verses.filter(
+                                            (v) =>
+                                              (typeof v.chapterId === "object"
+                                                ? v.chapterId._id
+                                                : v.chapterId) === chapter._id
+                                          );
+                                          const isChapterExpanded = expandedChapters.has(chapter._id);
+
+                                          return (
+                                            <div
+                                              key={chapter._id}
+                                              className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden"
+                                            >
+                                              {/* Chapter Accordion Header */}
+                                              <div 
+                                                className="bg-gradient-to-r from-gray-50 to-gray-100 text-theme-primary p-3 cursor-pointer hover:from-gray-100 hover:to-gray-200 transition-colors w-full border-l-4 border-theme-primary"
+                                                onClick={() => toggleChapter(chapter._id)}
+                                              >
+                                                <div className="flex items-center justify-between">
+                                                  <div className="flex items-center gap-3">
+                                                    <div className="bg-theme-primary/10 p-1.5 rounded-lg">
+                                                      <BookOpen className="h-4 w-4 text-theme-primary" />
+                                                    </div>
+                                                    <div>
+                                                      <h4 className="text-md font-bold text-theme-primary">
+                                                        Chapter {chapter.order}
+                                                        {chapter.title?.en && (
+                                                          <span className="text-sm font-normal ml-2">
+                                                            - <span dangerouslySetInnerHTML={{ __html: chapter.title.en }} />
+                                                          </span>
+                                                        )}
+                                                      </h4>
+                                                      <p className="text-gray-600 text-xs">
+                                                        {chapterVerses.length} Verses • Click to expand
+                                                      </p>
+                                                    </div>
+                                                  </div>
+                                                  <div className="flex items-center gap-2">
+                                                    <span className="bg-theme-primary/10 text-theme-primary px-2 py-1 rounded-full text-xs">
+                                                      {chapterVerses.length} Verses
+                                                    </span>
+                                                    {isChapterExpanded ? (
+                                                      <ChevronDown className="h-4 w-4" />
+                                                    ) : (
+                                                      <ChevronRight className="h-4 w-4" />
+                                                    )}
+                                                  </div>
+                                                </div>
+                                              </div>
+
+                                              {/* Chapter Content - Collapsible */}
+                                              {isChapterExpanded && (
+                                                <div className="p-4 bg-gray-50">
+                                                  {/* Verses Display */}
+                                                  <div className="space-y-3">
+                                                    {chapterVerses.length > 0 ? (
+                                                      chapterVerses.map((verse) => (
+                                                        <div
+                                                          key={verse._id}
+                                                          className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm"
+                                                        >
+                                                          <div className="flex justify-between items-start mb-3">
+                                                            <div className="flex items-center gap-2">
+                                                              <span className="bg-theme-primary text-theme-secondary text-sm font-bold px-2 py-1 rounded-full">
+                                                                {verse.number}
+                                                              </span>
+                                                              <span className="text-sm font-semibold text-theme-primary">
+                                                                Verse {verse.number}
+                                                              </span>
+                                                            </div>
+                                                            <Button
+                                                              variant="outline"
+                                                              size="sm"
+                                                              onClick={() =>
+                                                                handleEditContent("verse", verse._id)
+                                                              }
+                                                              className="text-theme-primary border-theme-primary hover:bg-theme-primary/10"
+                                                            >
+                                                              <Edit className="h-4 w-4 mr-1" /> Edit
+                                                            </Button>
+                                                          </div>
+                                                          
+                                                          {/* Verse Text */}
+                                                          <div className="text-gray-800 leading-relaxed">
+                                                            {verse.text?.en ? (
+                                                              <span
+                                                                dangerouslySetInnerHTML={{
+                                                                  __html: verse.text.en,
+                                                                }}
+                                                              />
+                                                            ) : (
+                                                              <span className="italic text-gray-500">
+                                                                No verse text available
+                                                              </span>
+                                                            )}
+                                                          </div>
+                                                        </div>
+                                                      ))
+                                                    ) : (
+                                                      <div className="text-center py-4 text-gray-500 italic">
+                                                        No verses found for this chapter
+                                                      </div>
+                                                    )}
+                                                  </div>
+                                                </div>
+                                              )}
+                                            </div>
+                                          );
+                                        })
+                                      ) : (
+                                        <div className="text-center py-4 text-gray-500 text-sm">
+                                          <p>No chapters created yet for this story.</p>
                                         </div>
                                       )}
                                     </div>
-                                  </details>
-                                );
-                              })
-                            ) : (
-                              <div className="text-center py-4 text-gray-500 text-sm">
-                                <p>No chapters created yet for this story.</p>
+                                  </div>
+                                )}
                               </div>
-                            )}
+                            );
+                          })
+                        ) : (
+                          <div className="text-center py-8 text-gray-500">
+                            <p>No stories created yet for this product.</p>
+                            <p className="text-sm">
+                              Click "Add Bible Content" to create stories, chapters, and verses.
+                            </p>
                           </div>
-                        </details>
-                      );
-                    })
-                  ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      <p>No stories created yet for this product.</p>
-                      <p className="text-sm">
-                        Click "Add Bible Content" to create stories, chapters,
-                        and verses.
-                      </p>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
-              </div>
-            );
+              );
             });
           })()}
         </div>
-      ) : null}
+      </div>
+    ) : null}
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Remove Product</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to remove this product from the list? This
-              action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setIsDeleteDialogOpen(false);
-                setProductToDelete(null);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => {
-                if (productToDelete) {
-                  setProducts((prev) =>
-                    prev.filter((p) => p._id !== productToDelete._id)
-                  );
-                  showToast.success(
-                    "Product Removed",
-                    "Product has been removed from the list"
-                  );
-                }
-                setIsDeleteDialogOpen(false);
-                setProductToDelete(null);
-              }}
-            >
-              Remove
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
+
+    {/* Delete Confirmation Dialog */}
+    <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Remove Product</DialogTitle>
+          <DialogDescription>
+            Are you sure you want to remove this product from the list? This
+            action cannot be undone.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setIsDeleteDialogOpen(false);
+              setProductToDelete(null);
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={() => {
+              if (productToDelete) {
+                setProducts((prev) =>
+                  prev.filter((p) => p._id !== productToDelete._id)
+                );
+                showToast.success(
+                  "Product Removed",
+                  "Product has been removed from the list"
+                );
+              }
+              setIsDeleteDialogOpen(false);
+              setProductToDelete(null);
+            }}
+          >
+            Remove
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  </div>
+);
 }
