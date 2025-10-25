@@ -287,11 +287,13 @@ export default function BiblePage() {
           });
         }
 
-        setLanguages(languagesData);
+        // Filter out Hindi language from available languages
+        const filteredLangs = languagesData.filter((lang: any) => lang.code !== 'hi');
+        setLanguages(filteredLangs);
         
-        // Create language names mapping for display
+        // Create language names mapping for display (excluding Hindi)
         const namesMapping: { [key: string]: string } = {};
-        languagesData.forEach((lang: any) => {
+        filteredLangs.forEach((lang: any) => {
           if (lang.code && lang.name) {
             namesMapping[lang.code] = lang.name;
           }

@@ -62,10 +62,12 @@ export default function AddVersePage() {
     try {
       const response: any = await ClientInstance.APP.getLanguage();
       if (response?.success && response.data) {
-        setLanguages(response.data);
-        // Create language names mapping
+        // Filter out Hindi language from available languages
+        const filteredLangs = response.data.filter((lang: Language) => lang.code !== 'hi');
+        setLanguages(filteredLangs);
+        // Create language names mapping (excluding Hindi)
         const names: { [key: string]: string } = {};
-        response.data.forEach((lang: Language) => {
+        filteredLangs.forEach((lang: Language) => {
           names[lang.code] = lang.name;
         });
         setLanguageNames(names);
@@ -237,8 +239,9 @@ export default function AddVersePage() {
               {/* Navigation Buttons */}
               <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-100">
                 <div className="flex gap-2">
-                  <Button variant="outline" onClick={handleBackToBible} className="px-6 py-3 border-gray-300 text-gray-700 hover:bg-gray-100">
-                    Cancel
+                  <Button variant="outline" onClick={() => router.back()} className="px-6 py-3 border-gray-300 text-gray-700 hover:bg-gray-100">
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Back
                   </Button>
                 </div>
                 <div className="flex gap-2">

@@ -101,10 +101,12 @@ export default function EditVersePage() {
           });
         }
 
-        setLanguages(languagesData);
+        // Filter out Hindi language from available languages
+        const filteredLangs = languagesData.filter((lang: any) => lang.code !== 'hi');
+        setLanguages(filteredLangs);
 
         const namesMapping: { [key: string]: string } = {};
-        languagesData.forEach((lang: any) => {
+        filteredLangs.forEach((lang: any) => {
           if (lang.code && lang.name) namesMapping[lang.code] = lang.name;
         });
         setLanguageNames(namesMapping);
@@ -339,7 +341,10 @@ export default function EditVersePage() {
 
               {/* Navigation Buttons */}
               <div className="flex justify-between items-center py-6 border-t border-gray-200">
-                <Button variant="outline" onClick={handleBackToBible} className="py-3 border-gray-300 text-gray-700 hover:bg-gray-100">Cancel</Button>
+                <Button variant="outline" onClick={() => router.back()} className="py-3 border-gray-300 text-gray-700 hover:bg-gray-100">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back
+                </Button>
                 <Button onClick={handleUpdateVerse} disabled={isLoading} className="px-5 py-3 bg-theme-primary text-white font-semibold rounded-lg shadow-md disabled:opacity-50">
                   {isLoading ? <div className="flex items-center gap-2"><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>Processing...</div>
                   : <div className="flex items-center gap-2"><Save className="h-5 w-5" />Update Verse</div>}

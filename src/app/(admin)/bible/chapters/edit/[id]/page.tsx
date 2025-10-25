@@ -85,11 +85,13 @@ export default function EditChapterPage() {
             return { ...lang, code: match?.code || lang.code, flag: lang.flag || '🌐' };
           });
         }
-        setLanguages(langs);
+        // Filter out Hindi language from available languages
+        const filteredLangs = langs.filter((lang: any) => lang.code !== 'hi');
+        setLanguages(filteredLangs);
         
-        // Create language names mapping for display
+        // Create language names mapping for display (excluding Hindi)
         const namesMapping: { [key: string]: string } = {};
-        langs.forEach((lang: any) => {
+        filteredLangs.forEach((lang: any) => {
           if (lang.code && lang.name) {
             namesMapping[lang.code] = lang.name;
           }
@@ -339,8 +341,9 @@ export default function EditChapterPage() {
 
           {/* Actions */}
           <div className="flex justify-between items-center py-6 border-t border-gray-200">
-            <Button variant="outline" onClick={handleBack} className="px-6 py-3 border-gray-300 text-gray-700 hover:bg-gray-100">
-              Cancel
+            <Button variant="outline" onClick={() => router.back()} className="px-6 py-3 border-gray-300 text-gray-700 hover:bg-gray-100">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back
             </Button>
             <Button
               onClick={handleUpdateChapter}

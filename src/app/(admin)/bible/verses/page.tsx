@@ -44,9 +44,11 @@ export default function VersesPage() {
       // Fetch languages first
       const languagesResponse: any = await ClientInstance.APP.getLanguage();
       if (languagesResponse?.success && languagesResponse?.data) {
-        // Create language names mapping
+        // Filter out Hindi language from available languages
+        const filteredLangs = languagesResponse.data.filter((lang: any) => lang.code !== 'hi');
+        // Create language names mapping (excluding Hindi)
         const names: {[key: string]: string} = {};
-        languagesResponse.data.forEach((lang: any) => {
+        filteredLangs.forEach((lang: any) => {
           names[lang.code] = lang.name;
         });
         setLanguageNames(names);

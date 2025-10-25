@@ -208,6 +208,14 @@ getVersesByChapter: (chapterId: string) => HttpClient.get(GET_VERSES_BY_CHAPTER.
 ### 🔄 In Progress
 - CRUD Operations Testing and Verification
 
+### ✅ Recently Completed
+- **Language Management Enhancement** - Removed Hindi (hi) language from all Bible content forms
+- **Dynamic Language Loading** - All language lists now fetched from API, no static language arrays
+- **Validation Fix** - Fixed multilingual validation to work with API-sourced languages only
+- **Form Visibility Fix** - Resolved issue where story edit form was not displaying content
+- **Cancel Button Management** - Removed unnecessary Cancel buttons from Bible content forms
+- **Story Order UI Cleanup** - Hidden Story Order section from story edit page
+
 ### 📋 Pending
 - Enhanced preview functionality
 - Content editing capabilities
