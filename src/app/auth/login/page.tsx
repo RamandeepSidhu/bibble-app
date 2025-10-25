@@ -75,18 +75,18 @@ const Login = () => {
     }
   };
   return (
-    <Card className="grid min-h-svh lg:grid-cols-1">
-      <div className="flex flex-col gap-4 md:p-10">
-        <div className="flex justify-center gap-2 md:justify-start">
-          <Link href="/" className="flex items-center gap-2 font-medium">
-            <div className="flex size-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
-              <span className="text-sm font-bold">B</span>
-            </div>
-            Bibble App
-          </Link>
-        </div>
+    <Card className="grid min-h-svh lg:grid-cols-1 !py-0">
+      <div className="flex flex-col gap-4 md:p-5">
         <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-sm border p-[25px] rounded-lg">
+            <div className="flex justify-center gap-2 md:justify-center mb-5">
+              <Link href="/" className="flex items-center gap-2 font-medium">
+                <div className="flex size-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
+                  <span className="text-sm font-bold">B</span>
+                </div>
+                Bibble App
+              </Link>
+            </div>
             <form
               className="flex flex-col gap-6"
               onSubmit={formik.handleSubmit}

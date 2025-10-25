@@ -83,6 +83,7 @@ export default function BiblePage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [validationError, setValidationError] = useState<string>("");
   const [successMessage, setSuccessMessage] = useState<string>("");
   const [showAddForm, setShowAddForm] = useState(false);
@@ -248,6 +249,7 @@ export default function BiblePage() {
       console.error("Error fetching Bible content:", error);
     } finally {
       setIsLoading(false);
+      setIsInitialLoading(false);
     }
   };
 
