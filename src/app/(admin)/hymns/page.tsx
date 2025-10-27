@@ -253,7 +253,9 @@ export default function HymnsPage() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-2xl font-bold">{group.hymns.length}</div>
+                    <div className="text-2xl font-bold text-theme-primary">
+                      {group.hymns.map((hymn: any) => hymn.number).join(', ')}
+                    </div>
                     <div className="text-theme-primary text-sm">Hymns</div>
                   </div>
                 </div>

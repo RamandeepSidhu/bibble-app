@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Stepper } from '@/components/ui/stepper';
 import { 
@@ -280,54 +281,26 @@ export default function EditChapterPage() {
         <Stepper steps={steps} currentStep={getCurrentStep()} />
         <div className="mt-10 bg-white border border-gray-100 shadow-md rounded-2xl overflow-hidden p-10 space-y-8">
 
-          {/* Story Selection */}
+          {/* Story Selection - Read Only */}
           <div className="space-y-3">
             <label className="text-sm font-medium text-gray-700">
-              Select Story <span className="text-red-500">*</span>
+              Story <span className="text-gray-500 text-xs">(Read Only)</span>
             </label>
-            <Select
-              value={formData.chapter.storyId}
-              onValueChange={(value) => setFormData(prev => prev && ({ ...prev, chapter: { ...prev.chapter, storyId: value } }))}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Choose a story">
-                  {formData.chapter.storyId && (() => {
-                    const selectedStory = stories.find(s => s._id === formData.chapter.storyId);
-                    if (selectedStory) {
-                      const firstTitle = Object.values(selectedStory.title || {})[0] || '';
-                      return stripHtmlTags(firstTitle);
-                    }
-                    return '';
-                  })()}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {stories.map(story => (
-                  <SelectItem key={story._id} value={story._id || ''}>
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center gap-2">
-                        <FileText className="h-4 w-4" />
-                        <span className="font-medium">Story:</span>
-                      </div>
-                      {/* Story Title - All Languages */}
-                      {Object.entries(story.title || {}).map(([lang, text]) => (
-                        <div key={lang} className="text-xs text-gray-600 flex gap-1 ml-4">
-                          <span className="text-gray-500 font-medium">
-                            {getLanguageName(lang)}:
-                          </span>
-                          <span 
-                            className="truncate"
-                            title={text} // Show full HTML content on hover
-                          >
-                            {stripHtmlTags(text)}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Input
+              value={
+                formData.chapter.storyId && (() => {
+                  const selectedStory = stories.find(s => s._id === formData.chapter.storyId);
+                  if (selectedStory) {
+                    const firstTitle = Object.values(selectedStory.title || {})[0] || '';
+                    return stripHtmlTags(firstTitle);
+                  }
+                  return '';
+                })()
+              }
+              readOnly
+              className="w-full bg-gray-50 text-gray-700 cursor-default"
+              placeholder="No story selected"
+            />
           </div>
 
           {/* Chapter Title */}

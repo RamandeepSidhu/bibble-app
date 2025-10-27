@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Stepper } from '@/components/ui/stepper';
 import { ArrowLeft, Save, Hash, BookOpen, FileText, Book } from 'lucide-react';
@@ -274,49 +275,27 @@ export default function EditVersePage() {
             <div className="p-10 space-y-8">
 
 
-              {/* Chapter Selection */}
+              {/* Chapter Selection - Read Only */}
               <div className="space-y-3">
-                <label className="text-sm font-medium text-gray-700">Select Chapter <span className="text-red-500">*</span></label>
-                <Select
-                  value={formData.verse.chapterId}
-                  onValueChange={(value) => {
-                    setFormData(prev => ({ ...prev, verse: { ...prev.verse, chapterId: value } }));
-                    setValidationError("");
-                  }}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Choose a chapter">
-                      {formData.verse.chapterId && (() => {
-                        const selectedChapter = chapters.find(c => c._id === formData.verse.chapterId);
-                        if (selectedChapter) {
-                          const firstTitle = Object.values(selectedChapter.title || {})[0] || '';
-                          return (
-                            <span dangerouslySetInnerHTML={{ __html: firstTitle }} />
-                          );
-                        }
-                        return '';
-                      })()}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {chapters.map((chapter) => (
-                      <SelectItem key={chapter._id} value={chapter._id}>
-                        <div className="flex flex-col gap-1">
-                          <div className="flex items-center gap-2">
-                            <BookOpen className="h-4 w-4" />
-                            <span className="font-medium">Chapter:</span>
-                          </div>
-                          {Object.entries(chapter.title || {}).map(([lang, text]) => (
-                            <div key={lang} className="text-xs text-gray-600 flex gap-1 ml-4">
-                              <span className="text-gray-500 font-medium">{getLanguageName(lang)}:</span>
-                              <span title={text} dangerouslySetInnerHTML={{ __html: text }} />
-                            </div>
-                          ))}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <label className="text-sm font-medium text-gray-700">
+                  Chapter <span className="text-gray-500 text-xs">(Read Only)</span>
+                </label>
+                <Input
+                  value={
+                    formData.verse.chapterId && (() => {
+                      const selectedChapter = chapters.find(c => c._id === formData.verse.chapterId);
+                      if (selectedChapter) {
+                        const firstTitle = Object.values(selectedChapter.title || {})[0] || '';
+                        // Strip HTML tags for display
+                        return firstTitle.replace(/<[^>]*>/g, '');
+                      }
+                      return '';
+                    })()
+                  }
+                  readOnly
+                  className="w-full bg-gray-50 text-gray-700 cursor-default"
+                  placeholder="No chapter selected"
+                />
               </div>
 
               {/* Verse Text */}

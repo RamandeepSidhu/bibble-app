@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -582,72 +583,33 @@ export default function EditStoryPage() {
               {/* Step 0: Story */}
               {currentStep === 0 && (
                 <form onSubmit={(e) => e.preventDefault()}>
-                  {/* Product Selection */}
+                  {/* Product Selection - Read Only */}
                   <div className="space-y-3">
                     <label className="text-sm font-medium text-gray-700">
-                      Select Product (Book){" "}
-                      <span className="text-red-500">*</span>
+                      Product (Book){" "}
+                      <span className="text-gray-500 text-xs">(Read Only)</span>
                     </label>
-                    <Select
-                      value={formData.story.productId}
-                      onValueChange={(value) => {
-                        setFormData((prev) => ({
-                          ...prev,
-                          story: { ...prev.story, productId: value },
-                        }));
-                        setValidationError("");
-                      }}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Choose a product">
-                          {formData.story.productId &&
-                            (() => {
-                              const selectedProduct = products.find(
-                                (p) => p._id === formData.story.productId
-                              );
-                              if (selectedProduct) {
-                                const firstTitle =
-                                  Object.values(
-                                    selectedProduct.title || {}
-                                  )[0] || "";
-                                return stripHtmlTags(firstTitle);
-                              }
-                              return "";
-                            })()}
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        {products.map((p) => (
-                          <SelectItem key={p._id} value={p._id}>
-                            <div className="flex flex-col gap-1">
-                              <div className="flex items-center gap-2">
-                                <span>📖</span>
-                                <span className="font-medium">Product:</span>
-                              </div>
-                              {/* Product Title - All Languages */}
-                              {Object.entries(p.title || {}).map(
-                                ([lang, text]) => (
-                                  <div
-                                    key={lang}
-                                    className="text-xs text-gray-600 flex gap-1 ml-4"
-                                  >
-                                    <span className="text-gray-500 font-medium">
-                                      {getLanguageName(lang)}:
-                                    </span>
-                                    <span
-                                      className="truncate"
-                                      title={text} // Show full HTML content on hover
-                                    >
-                                      {stripHtmlTags(text)}
-                                    </span>
-                                  </div>
-                                )
-                              )}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Input
+                      value={
+                        formData.story.productId &&
+                        (() => {
+                          const selectedProduct = products.find(
+                            (p) => p._id === formData.story.productId
+                          );
+                          if (selectedProduct) {
+                            const firstTitle =
+                              Object.values(
+                                selectedProduct.title || {}
+                              )[0] || "";
+                            return stripHtmlTags(firstTitle);
+                          }
+                          return "";
+                        })()
+                      }
+                      readOnly
+                      className="w-full bg-gray-50 text-gray-700 cursor-default"
+                      placeholder="No product selected"
+                    />
                   </div>
 
                   {/* Story Title */}
