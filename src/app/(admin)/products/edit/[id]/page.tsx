@@ -25,7 +25,34 @@ const isRichTextEmpty = (htmlContent: string): boolean => {
 };
 
 const isMultilingualFieldComplete = (field: MultilingualText): boolean => {
-    return Object.values(field).some(val => !isRichTextEmpty(val));
+    // Check if all required languages (excluding Hindi) have content
+    const requiredLanguages = ['en', 'sw', 'fr', 'rn'];
+    return requiredLanguages.every(lang => 
+        field[lang] && !isRichTextEmpty(field[lang])
+    );
+};
+
+// Function to get specific empty field names
+const getEmptyFieldNames = (field: MultilingualText, fieldName: string): string[] => {
+    const requiredLanguages = ['en', 'sw', 'fr', 'rn'];
+    const languageNames = { en: 'English', sw: 'Swahili', fr: 'French', rn: 'Kinyarwanda' };
+    
+    return requiredLanguages
+        .filter(lang => !field[lang] || isRichTextEmpty(field[lang]))
+        .map(lang => `${fieldName} (${languageNames[lang as keyof typeof languageNames]})`);
+};
+
+// Function to clean multilingual data by removing invalid language codes
+const cleanMultilingualData = (data: MultilingualText): MultilingualText => {
+    const cleaned: MultilingualText = {};
+    const validLanguageCodes = ['en', 'sw', 'fr', 'rn']; // Only allow these 4 languages
+    
+    Object.keys(data).forEach(key => {
+        if (validLanguageCodes.includes(key) && data[key] && !isRichTextEmpty(data[key])) {
+            cleaned[key] = data[key];
+        }
+    });
+    return cleaned;
 };
 
 export default function EditProductPage() {
@@ -80,7 +107,7 @@ export default function EditProductPage() {
                         });
                     }
                     
-                    setLanguages(languagesData);
+                    setLanguages(languagesData.filter((lang: any) => lang.isActive !== false && lang.code !== 'hi'));
                 }
 
                 // Handle product data
@@ -115,26 +142,42 @@ export default function EditProductPage() {
     const handleSave = async () => {
         setValidationError("");
 
-        if (
-            !bookData.type ||
-            !isMultilingualFieldComplete(bookData.title) ||
-            !isMultilingualFieldComplete(bookData.description) ||
-            !bookData.contentType ||
-            (bookData.contentType === 'free' && bookData.freePages <= 0)
-        ) {
-            setValidationError(
-                "Please fill in all required fields: Product Type, Content Type, Title & Description in all languages, and Free Pages if content type is free."
-            );
-      return;
-    }
+        // Collect all empty fields
+        const emptyFields: string[] = [];
+        
+        if (!bookData.type) {
+            emptyFields.push("Product Type");
+        }
+        
+        if (!bookData.contentType) {
+            emptyFields.push("Content Type");
+        }
+        
+        if (bookData.contentType === 'free' && bookData.freePages <= 0) {
+            emptyFields.push("Free Pages");
+        }
+        
+        // Check multilingual fields
+        if (!isMultilingualFieldComplete(bookData.title)) {
+            emptyFields.push(...getEmptyFieldNames(bookData.title, "Title"));
+        }
+        
+        if (!isMultilingualFieldComplete(bookData.description)) {
+            emptyFields.push(...getEmptyFieldNames(bookData.description, "Description"));
+        }
+
+        if (emptyFields.length > 0) {
+            setValidationError(`Please fill in: ${emptyFields.join(", ")}`);
+            return;
+        }
 
     setIsLoading(true);
 
     try {
             const payload: UpdateProductPayload = {
                 type: bookData.type,
-                title: bookData.title,
-                description: bookData.description,
+                title: cleanMultilingualData(bookData.title),
+                description: cleanMultilingualData(bookData.description),
                 contentType: bookData.contentType,
                 freePages: bookData.freePages,
             };
@@ -148,12 +191,18 @@ export default function EditProductPage() {
         window.location.href = "/products";
                 }, 2000);
       } else {
-                setValidationError(response.message || "Failed to update product. Please try again.");
-                showToast.error("Error", response.message || "Failed to update product");
+                // Show specific API error message
+                const errorMessage = response.message || "Failed to update product. Please try again.";
+                setValidationError(errorMessage);
+                showToast.error("Error", errorMessage);
       }
-    } catch (error) {
-            setValidationError("Network error. Please check your connection and try again.");
-            showToast.error("Error", "Network error. Please check your connection and try again.");
+    } catch (error: any) {
+            // Show specific error message from API response
+            const errorMessage = error?.response?.data?.message || 
+                               error?.message || 
+                               "Network error. Please check your connection and try again.";
+            setValidationError(errorMessage);
+            showToast.error("Error", errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -290,6 +339,7 @@ export default function EditProductPage() {
                                     setValidationError("");
                                 }}
                                 placeholder="Enter multilingual title"
+                                excludeHindi={true}
                       />
                     </div>
 
@@ -304,6 +354,7 @@ export default function EditProductPage() {
                                     setValidationError("");
                                 }}
                                 placeholder="Enter multilingual description"
+                                excludeHindi={true}
                       />
                     </div>
                   </div>
@@ -311,16 +362,16 @@ export default function EditProductPage() {
 
                 {/* Validation / Success Messages */}
                 {validationError && (
-                    <div className="mx-10 mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <div className="mx-2 mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
                         <div className="text-red-600 text-sm font-medium">⚠️ {validationError}</div>
-                </div>
-              )}
+                    </div>
+                )}
 
                 {successMessage && (
-                    <div className="mx-10 mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-                        <div className="text-green-600 text-sm font-medium">{successMessage}</div>
-                </div>
-              )}
+                    <div className="mx-2 mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                        <div className="text-green-600 text-sm font-medium">✅ {successMessage}</div>
+                    </div>
+                )}
 
                 {/* Save Button */}
                 <div className="flex justify-end items-center px-10 py-6 border-t border-gray-200">

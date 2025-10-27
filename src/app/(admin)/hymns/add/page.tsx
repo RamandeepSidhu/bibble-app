@@ -24,14 +24,30 @@ const isRichTextEmpty = (htmlContent: string): boolean => {
 };
 
 const isMultilingualFieldComplete = (field: MultilingualText): boolean => {
-    return Object.values(field).some(val => !isRichTextEmpty(val));
+    // Check if all required languages (excluding Hindi) have content
+    const requiredLanguages = ['en', 'sw', 'fr', 'rn'];
+    return requiredLanguages.every(lang => 
+        field[lang] && !isRichTextEmpty(field[lang])
+    );
 };
 
-// Function to clean multilingual data by removing Hindi fields
+// Function to get specific empty field names
+const getEmptyFieldNames = (field: MultilingualText, fieldName: string): string[] => {
+    const requiredLanguages = ['en', 'sw', 'fr', 'rn'];
+    const languageNames = { en: 'English', sw: 'Swahili', fr: 'French', rn: 'Kinyarwanda' };
+    
+    return requiredLanguages
+        .filter(lang => !field[lang] || isRichTextEmpty(field[lang]))
+        .map(lang => `${fieldName} (${languageNames[lang as keyof typeof languageNames]})`);
+};
+
+// Function to clean multilingual data by removing invalid language codes
 const cleanMultilingualData = (data: MultilingualText): MultilingualText => {
     const cleaned: MultilingualText = {};
+    const validLanguageCodes = ['en', 'sw', 'fr', 'rn']; // Only allow these 4 languages
+    
     Object.keys(data).forEach(key => {
-        if (key !== 'hi') {
+        if (validLanguageCodes.includes(key) && data[key] && !isRichTextEmpty(data[key])) {
             cleaned[key] = data[key];
         }
     });
@@ -165,14 +181,24 @@ export default function AddHymnPage() {
     const handleSave = async () => {
         setValidationError("");
 
-        if (
-            !hymnData.productId ||
-            !hymnData.number ||
-            !isMultilingualFieldComplete(hymnData.text)
-        ) {
-            setValidationError(
-                "Please fill in all required fields: Product, Hymn Number, and Text in all languages."
-            );
+        // Collect all empty fields
+        const emptyFields: string[] = [];
+        
+        if (!hymnData.productId) {
+            emptyFields.push("Product");
+        }
+        
+        if (!hymnData.number) {
+            emptyFields.push("Hymn Number");
+        }
+        
+        // Check multilingual fields
+        if (!isMultilingualFieldComplete(hymnData.text)) {
+            emptyFields.push(...getEmptyFieldNames(hymnData.text, "Text"));
+        }
+
+        if (emptyFields.length > 0) {
+            setValidationError(`Please fill in: ${emptyFields.join(", ")}`);
             return;
         }
 
@@ -208,9 +234,13 @@ export default function AddHymnPage() {
                 setValidationError(response.message || "Failed to create hymn. Please try again.");
                 showToast.error("Error", response.message || "Failed to create hymn");
             }
-        } catch (error) {
-            setValidationError("Network error. Please check your connection and try again.");
-            showToast.error("Error", "Network error. Please check your connection and try again.");
+        } catch (error: any) {
+            // Show specific error message from API response
+            const errorMessage = error?.response?.data?.message || 
+                               error?.message || 
+                               "Network error. Please check your connection and try again.";
+            setValidationError(errorMessage);
+            showToast.error("Error", errorMessage);
         } finally {
             setIsLoading(false);
         }

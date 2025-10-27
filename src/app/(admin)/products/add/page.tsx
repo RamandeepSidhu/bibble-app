@@ -23,14 +23,30 @@ const isRichTextEmpty = (htmlContent: string): boolean => {
 };
 
 const isMultilingualFieldComplete = (field: MultilingualText): boolean => {
-    return Object.values(field).some(val => !isRichTextEmpty(val));
+    // Check if all required languages (excluding Hindi) have content
+    const requiredLanguages = ['en', 'sw', 'fr', 'rn'];
+    return requiredLanguages.every(lang => 
+        field[lang] && !isRichTextEmpty(field[lang])
+    );
 };
 
-// Function to clean multilingual data by removing Hindi fields
+// Function to get specific empty field names
+const getEmptyFieldNames = (field: MultilingualText, fieldName: string): string[] => {
+    const requiredLanguages = ['en', 'sw', 'fr', 'rn'];
+    const languageNames = { en: 'English', sw: 'Swahili', fr: 'French', rn: 'Kinyarwanda' };
+    
+    return requiredLanguages
+        .filter(lang => !field[lang] || isRichTextEmpty(field[lang]))
+        .map(lang => `${fieldName} (${languageNames[lang as keyof typeof languageNames]})`);
+};
+
+// Function to clean multilingual data by removing invalid language codes
 const cleanMultilingualData = (data: MultilingualText): MultilingualText => {
     const cleaned: MultilingualText = {};
+    const validLanguageCodes = ['en', 'sw', 'fr', 'rn']; // Only allow these 4 languages
+    
     Object.keys(data).forEach(key => {
-        if (key !== 'hi') {
+        if (validLanguageCodes.includes(key) && data[key] && !isRichTextEmpty(data[key])) {
             cleaned[key] = data[key];
         }
     });
@@ -107,16 +123,32 @@ export default function AddBookPage() {
     const handleSave = async () => {
         setValidationError("");
 
-        if (
-            !bookData.type ||
-            !isMultilingualFieldComplete(bookData.title) ||
-            !isMultilingualFieldComplete(bookData.description) ||
-            !bookData.contentType ||
-            (bookData.contentType === 'free' && bookData.freePages <= 0)
-        ) {
-            setValidationError(
-                "Please fill in all required fields: Product Type, Content Type, Title & Description in all languages, and Free Pages if content type is free."
-            );
+        // Collect all empty fields
+        const emptyFields: string[] = [];
+        
+        if (!bookData.type) {
+            emptyFields.push("Product Type");
+        }
+        
+        if (!bookData.contentType) {
+            emptyFields.push("Content Type");
+        }
+        
+        if (bookData.contentType === 'free' && bookData.freePages <= 0) {
+            emptyFields.push("Free Pages");
+        }
+        
+        // Check multilingual fields
+        if (!isMultilingualFieldComplete(bookData.title)) {
+            emptyFields.push(...getEmptyFieldNames(bookData.title, "Title"));
+        }
+        
+        if (!isMultilingualFieldComplete(bookData.description)) {
+            emptyFields.push(...getEmptyFieldNames(bookData.description, "Description"));
+        }
+
+        if (emptyFields.length > 0) {
+            setValidationError(`Please fill in: ${emptyFields.join(", ")}`);
             return;
         }
 
@@ -153,8 +185,12 @@ export default function AddBookPage() {
             } else {
                 setValidationError(response.message || "Failed to create product. Please try again.");
             }
-        } catch (error) {
-            setValidationError("Network error. Please check your connection and try again.");
+        } catch (error: any) {
+            // Show specific error message from API response
+            const errorMessage = error?.response?.data?.message || 
+                               error?.message || 
+                               "Network error. Please check your connection and try again.";
+            setValidationError(errorMessage);
         } finally {
             setIsLoading(false);
         }
