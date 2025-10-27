@@ -255,82 +255,60 @@ export default function ProductsPage() {
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[...Array(6)].map((_, index) => (
-            <div key={index} className="bg-white border border-gray-200 rounded-lg shadow-sm flex flex-col min-h-[400px]">
-              {/* Card Header Shimmer */}
-              <div className="p-6 border-b border-gray-100">
-                <div className="flex items-center space-x-3">
-                  <div className="h-12 w-12 rounded-full bg-gray-200 animate-pulse"></div>
-                  <div className="flex-1">
-                    <div className="h-6 bg-gray-200 rounded animate-pulse mb-2"></div>
-                    <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4"></div>
+        <div className="space-y-6">
+          {[...Array(4)].map((_, index) => (
+            <div key={index} className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+              {/* Header Shimmer */}
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gray-200 rounded-lg animate-pulse"></div>
+                  <div>
+                    <div className="h-5 bg-gray-200 rounded animate-pulse w-16 mb-1"></div>
+                    <div className="h-4 bg-gray-200 rounded animate-pulse w-12"></div>
                   </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="h-6 bg-gray-200 rounded-full animate-pulse w-16"></div>
+                  <div className="h-8 bg-gray-200 rounded animate-pulse w-16"></div>
                 </div>
               </div>
 
               {/* Content Shimmer */}
-              <div className="p-6 flex-grow">
-                {/* Product Information Shimmer */}
-                <div className="mb-4">
-                  <div className="h-6 bg-gray-200 rounded animate-pulse mb-3 w-48"></div>
-                  <div className="space-y-2">
-                    {[...Array(3)].map((_, i) => (
-                      <div key={i} className="p-3">
-                        <div className="h-4 bg-gray-200 rounded animate-pulse w-16 mb-2"></div>
-                        <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4"></div>
-                      </div>
-                    ))}
-                  </div>
+              <div className="mt-5 space-y-4">
+                {/* Title Shimmer */}
+                <div>
+                  <div className="h-4 bg-gray-200 rounded animate-pulse w-20 mb-2"></div>
+                  <div className="h-5 bg-gray-200 rounded animate-pulse w-3/4"></div>
                 </div>
 
                 {/* Description Shimmer */}
-                <div className="mb-4">
-                  <div className="h-6 bg-gray-200 rounded animate-pulse mb-3 w-32"></div>
+                <div>
+                  <div className="h-4 bg-gray-200 rounded animate-pulse w-24 mb-2"></div>
                   <div className="space-y-2">
-                    {[...Array(4)].map((_, i) => (
-                      <div key={i} className="p-3">
-                        <div className="h-4 bg-gray-200 rounded animate-pulse w-12 mb-2"></div>
-                        <div className="space-y-1">
-                          <div className="h-4 bg-gray-200 rounded animate-pulse w-full"></div>
-                          <div className="h-4 bg-gray-200 rounded animate-pulse w-5/6"></div>
-                          <div className="h-4 bg-gray-200 rounded animate-pulse w-4/6"></div>
-                        </div>
-                      </div>
-                    ))}
+                    <div className="h-4 bg-gray-200 rounded animate-pulse w-full"></div>
+                    <div className="h-4 bg-gray-200 rounded animate-pulse w-5/6"></div>
+                    <div className="h-4 bg-gray-200 rounded animate-pulse w-4/6"></div>
                   </div>
                 </div>
 
-                {/* Product Stats Shimmer */}
-                <div className="mb-4">
-                  <div className="h-6 bg-gray-200 rounded animate-pulse mb-3 w-32"></div>
-                  <div className="grid grid-cols-2 gap-4">
-                    {[...Array(4)].map((_, i) => (
-                      <div key={i} className="p-3 bg-gray-50 rounded border border-gray-200">
-                        <div className="flex items-center justify-between">
-                          <div className="h-4 bg-gray-200 rounded animate-pulse w-20"></div>
-                          <div className="h-4 bg-gray-200 rounded animate-pulse w-8"></div>
-                        </div>
-                      </div>
-                    ))}
+                {/* Stats Shimmer */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-gray-100">
+                  <div className="flex justify-between">
+                    <div className="h-4 bg-gray-200 rounded animate-pulse w-20"></div>
+                    <div className="h-4 bg-gray-200 rounded animate-pulse w-6"></div>
                   </div>
-                </div>
-
-                {/* Status and Date Shimmer */}
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="h-6 w-12 bg-gray-200 rounded animate-pulse"></div>
+                  <div className="flex justify-between">
                     <div className="h-4 bg-gray-200 rounded animate-pulse w-16"></div>
+                    <div className="h-4 bg-gray-200 rounded animate-pulse w-4"></div>
                   </div>
-                  <div className="h-3 bg-gray-200 rounded animate-pulse w-32"></div>
-                </div>
-              </div>
-
-              {/* Card Footer Shimmer */}
-              <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 rounded-b-lg flex-shrink-0">
-                <div className="flex justify-end gap-2">
-                  <div className="h-8 bg-gray-200 rounded animate-pulse w-16"></div>
-                  <div className="h-8 bg-gray-200 rounded animate-pulse w-20"></div>
+                  <div className="flex justify-between">
+                    <div className="h-4 bg-gray-200 rounded animate-pulse w-16"></div>
+                    <div className="h-4 bg-gray-200 rounded animate-pulse w-4"></div>
+                  </div>
+                  <div className="flex justify-between">
+                    <div className="h-4 bg-gray-200 rounded animate-pulse w-12"></div>
+                    <div className="h-4 bg-gray-200 rounded animate-pulse w-20"></div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -528,142 +506,96 @@ export default function ProductsPage() {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProducts.map((product) => (
-            <div key={product._id} className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow flex flex-col min-h-[400px]">
-              {/* Card Header */}
-              <div className="p-6 border-b border-gray-100">
-                    <div className="flex items-center space-x-3">
-                  <div className="h-12 w-12 rounded-full bg-theme-secondary text-theme-primary flex items-center justify-center font-semibold">
-                    <Package className="h-6 w-6" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-semibold text-lg text-gray-900">
-                      {getTypeIcon(product.type)} {product.type?.charAt(0).toUpperCase() + product.type?.slice(1) || 'Product'}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      {product.contentType}
-                    </div>
-                  </div>
-                </div>
-              </div>
+         <div className="space-y-6">
+           {filteredProducts.map((product) => (
+             <div key={product._id} className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all p-6">
+               {/* Header */}
+               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 pb-3">
+                 <div className="flex items-center gap-3">
+                   <div className="w-10 h-10 flex items-center justify-center bg-orange-100 text-blue-600 rounded-lg">
+                     {getTypeIcon(product.type)}
+                   </div>
+                   <div>
+                     <h3 className="text-lg font-semibold text-gray-800 capitalize">
+                       {product.type || 'Product'}
+                     </h3>
+                     <p className="text-sm text-gray-500">{product.contentType || 'N/A'}</p>
+                   </div>
+                 </div>
+                 <div className="flex items-center gap-2">
+                   <span className={`text-xs font-medium px-3 py-1 rounded-full capitalize ${
+                     product.status === 'active'
+                       ? 'bg-green-100 text-green-700'
+                       : 'bg-red-100 text-red-700'
+                   }`}>
+                     {product.status || 'inactive'}
+                   </span>
+                   <Link href={`/products/edit/${product._id}`}>
+                     <Button variant="outline" size="sm" className="border-gray-300">
+                       <Edit className="h-4 w-4 mr-1" /> Edit
+                     </Button>
+                   </Link>
+                 </div>
+               </div>
 
-              {/* Product Information with All Languages */}
-              <div className="p-6 flex-grow">
-                <div className="mb-4">
-                  <h4 className="text-lg font-bold text-gray-900 mb-3 border-b-2 border-theme-primary pb-2">
-                    Product Title ({selectedLanguage.toUpperCase()})
-                  </h4>
-                  
-                  <div className="space-y-1">
-                    {/* Product Title - Selected Language */}
-                    <div className="space-y-1">
-                      {product.title[selectedLanguage] ? (
-                        <div className="text-sm p-3">
-                          <span className="text-sm font-bold text-gray-900 mr-3">{selectedLanguage.toUpperCase()}:</span>
-                          <span className="text-gray-900 font-medium" dangerouslySetInnerHTML={{ __html: product.title[selectedLanguage] }} />
-                        </div>
-                      ) : (
-                        <div className="text-sm p-3 text-gray-500 italic">
-                          No title available in {selectedLanguage.toUpperCase()}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
+               {/* Content */}
+               <div className="mt-5 space-y-4">
+                 {/* Title */}
+                 <div>
+                   <h4 className="text-sm font-semibold text-gray-600">
+                     Title ({selectedLanguage.toUpperCase()})
+                   </h4>
+                   <p
+                     className="mt-1 text-gray-900 text-base leading-relaxed"
+                     dangerouslySetInnerHTML={{
+                       __html:
+                         product.title[selectedLanguage] ||
+                         `<span class='italic text-gray-500'>No title available</span>`,
+                     }}
+                   />
+                 </div>
 
-                {/* Product Description - Selected Language */}
-                <div className="mb-4">
-                  <h4 className="text-lg font-bold text-gray-900 mb-3 border-b-2 border-theme-primary pb-2">
-                    Description ({selectedLanguage.toUpperCase()})
-                  </h4>
-                  <div className="space-y-2">
-                    {product.description[selectedLanguage] ? (
-                      <div className="text-sm p-3">
-                        <span className="text-sm font-bold text-gray-900 mr-3">{selectedLanguage.toUpperCase()}:</span>
-                        <div className="text-gray-900 font-medium line-clamp-4" dangerouslySetInnerHTML={{ __html: product.description[selectedLanguage] }} />
-                      </div>
-                    ) : (
-                      <div className="text-sm p-3 text-gray-500 italic">
-                        No description available in {selectedLanguage.toUpperCase()}
-                      </div>
-                    )}
-                  </div>
-                </div>
+                 {/* Description */}
+                 <div>
+                   <h4 className="text-sm font-semibold text-gray-600">
+                     Description ({selectedLanguage.toUpperCase()})
+                   </h4>
+                   <div
+                     className="mt-2 text-gray-800 text-sm leading-relaxed whitespace-pre-line"
+                     dangerouslySetInnerHTML={{
+                       __html:
+                         product.description[selectedLanguage] ||
+                         `<span class='italic text-gray-500'>No description available</span>`,
+                     }}
+                   />
+                 </div>
 
-                {/* Product Stats */}
-                <div className="mb-4">
-                  <h4 className="text-lg font-bold text-gray-900 mb-3 border-b-2 border-theme-primary pb-2">Product Stats</h4>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div className="p-3 bg-gray-50 rounded border border-gray-200">
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold text-gray-700">Free Pages:</span>
-                        <span className="text-gray-900 font-medium">{product.freePages || 0}</span>
-                      </div>
+                  {/* Enhanced Stats */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-gray-100">
+                    <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+                      <div className="text-2xl font-bold text-blue-600 mb-1">{product.freePages || 0}</div>
+                      <div className="text-xs text-blue-600 font-semibold">Free Pages</div>
                     </div>
-                    <div className="p-3 bg-gray-50 rounded border border-gray-200">
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold text-gray-700">Views:</span>
-                        <span className="text-gray-900 font-medium">{product.views || 0}</span>
-                      </div>
+                    <div className="text-center p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border border-green-200">
+                      <div className="text-2xl font-bold text-green-600 mb-1">{product.views || 0}</div>
+                      <div className="text-xs text-green-600 font-semibold">Views</div>
                     </div>
-                    <div className="p-3 bg-gray-50 rounded border border-gray-200">
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold text-gray-700">Shares:</span>
-                        <span className="text-gray-900 font-medium">{product.shares || 0}</span>
-                      </div>
+                    <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg border border-purple-200">
+                      <div className="text-2xl font-bold text-purple-600 mb-1">{product.shares || 0}</div>
+                      <div className="text-xs text-purple-600 font-semibold">Shares</div>
                     </div>
-                    <div className="p-3 bg-gray-50 rounded border border-gray-200">
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold text-gray-700">Content Type:</span>
-                        <span className="text-gray-900 font-medium capitalize">{product.contentType || 'N/A'}</span>
+                    <div className="text-center p-4 bg-gradient-to-br from-orange-50 to-red-50 rounded-lg border border-orange-200">
+                      <div className="text-lg font-bold text-orange-600 mb-1">
+                        {product.createdAt
+                          ? new Date(product.createdAt).toLocaleDateString()
+                          : '-'}
                       </div>
+                      <div className="text-xs text-orange-600 font-semibold">Created Date</div>
                     </div>
                   </div>
-                </div>
-
-                {/* Status and Created Date */}
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <ToggleSwitch
-                      checked={product.status === 'active'}
-                      onChange={() => handleStatusToggle(product)}
-                      size="md"
-                    />
-                    <span className={`text-sm font-medium ${
-                      product.status === 'active' ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {product.status || 'inactive'}
-                    </span>
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    Created: {product.createdAt ? new Date(product.createdAt).toLocaleDateString() : '-'}
-                  </div>
-                </div>
-              </div>
-
-              {/* Card Footer - Actions */}
-              <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 rounded-b-lg flex-shrink-0">
-                    <div className="flex justify-end gap-2">
-                  <Link href={`/products/edit/${product._id}`}>
-                        <Button variant="outline" size="sm" className="!min-w-[80px]">
-                          <Edit className="h-4 w-4 mr-1" />
-                          Edit
-                        </Button>
-                      </Link>
-                      {/* <Button 
-                        variant="outline" 
-                        size="sm" 
-                    className="!min-w-[80px] text-red-600 hover:text-red-700 hover:bg-red-50"
-                    onClick={() => handleDeleteClick(product)}
-                      >
-                        <Trash2 className="h-4 w-4 mr-1" />
-                        Delete
-                      </Button> */}
-                    </div>
-              </div>
-            </div>
-              ))}
+               </div>
+             </div>
+           ))}
         </div>
       )}
 
