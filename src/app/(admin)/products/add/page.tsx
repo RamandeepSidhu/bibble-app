@@ -26,6 +26,17 @@ const isMultilingualFieldComplete = (field: MultilingualText): boolean => {
     return Object.values(field).some(val => !isRichTextEmpty(val));
 };
 
+// Function to clean multilingual data by removing Hindi fields
+const cleanMultilingualData = (data: MultilingualText): MultilingualText => {
+    const cleaned: MultilingualText = {};
+    Object.keys(data).forEach(key => {
+        if (key !== 'hi') {
+            cleaned[key] = data[key];
+        }
+    });
+    return cleaned;
+};
+
 export default function AddBookPage() {
     const [validationError, setValidationError] = useState<string>("");
     const [successMessage, setSuccessMessage] = useState<string>("");
@@ -71,10 +82,10 @@ export default function AddBookPage() {
                         });
                     }
                     
-                    setLanguages(languagesData);
-                    // Initialize multilingual fields with fetched languages
+                    setLanguages(languagesData.filter((lang: any) => lang.isActive !== false && lang.code !== 'hi'));
+                    // Initialize multilingual fields with fetched languages (excluding Hindi for Bible content)
                     const initialMultilingualData: MultilingualText = {};
-                    languagesData.forEach((lang: Language) => {
+                    languagesData.filter((lang: any) => lang.isActive !== false && lang.code !== 'hi').forEach((lang: Language) => {
                         initialMultilingualData[lang.code] = "";
                     });
                     setBookData(prev => ({
@@ -114,8 +125,8 @@ export default function AddBookPage() {
         try {
             const payload = {
                 type: bookData.type,
-                title: bookData.title,
-                description: bookData.description,
+                title: cleanMultilingualData(bookData.title),
+                description: cleanMultilingualData(bookData.description),
                 contentType: bookData.contentType,
                 freePages: bookData.freePages,
             };
@@ -123,9 +134,9 @@ export default function AddBookPage() {
             const response: any = await ClientInstance.APP.createProduct(payload);
             if (response.success) {
                 setSuccessMessage("Product created successfully!");
-                // Reset form with current languages
+                // Reset form with current languages (excluding Hindi for Bible content)
                 const resetMultilingualData: MultilingualText = {};
-                languages.forEach((lang: Language) => {
+                languages.filter((lang: Language) => lang.code !== 'hi').forEach((lang: Language) => {
                     resetMultilingualData[lang.code] = "";
                 });
                 setBookData({
@@ -252,6 +263,7 @@ export default function AddBookPage() {
                                     setValidationError("");
                                 }}
                                 placeholder="Enter multilingual title"
+                                excludeHindi={true}
                             />
                         </div>
 
@@ -266,6 +278,7 @@ export default function AddBookPage() {
                                     setValidationError("");
                                 }}
                                 placeholder="Enter multilingual description"
+                                excludeHindi={true}
                             />
                         </div>
                     </div>

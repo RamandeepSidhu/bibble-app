@@ -27,6 +27,17 @@ const isMultilingualFieldComplete = (field: MultilingualText): boolean => {
     return Object.values(field).some(val => !isRichTextEmpty(val));
 };
 
+// Function to clean multilingual data by removing Hindi fields
+const cleanMultilingualData = (data: MultilingualText): MultilingualText => {
+    const cleaned: MultilingualText = {};
+    Object.keys(data).forEach(key => {
+        if (key !== 'hi') {
+            cleaned[key] = data[key];
+        }
+    });
+    return cleaned;
+};
+
 export default function AddHymnPage() {
     const [validationError, setValidationError] = useState<string>("");
     const [successMessage, setSuccessMessage] = useState<string>("");
@@ -171,7 +182,7 @@ export default function AddHymnPage() {
             const payload: CreateHymnPayload = {
                 productId: hymnData.productId,
                 number: hymnData.number,
-                text: hymnData.text,
+                text: cleanMultilingualData(hymnData.text),
             };
 
             const response: any = await ClientInstance.APP.createHymn(payload);
@@ -307,6 +318,7 @@ export default function AddHymnPage() {
                                 setValidationError("");
                             }}
                             placeholder="Enter multilingual hymn text"
+                            excludeHindi={true}
                         />
                     </div>
                 </div>

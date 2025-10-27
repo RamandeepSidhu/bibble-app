@@ -6,15 +6,17 @@ import { MultilingualText, Language } from '@/lib/types/bibble';
 import { Button } from '@/components/ui/button';
 import { Eye, Edit3 } from 'lucide-react';
 import ClientInstance from '@/shared/client';
+import '@/styles/ckeditor.css';
 
 interface CKEditorComponentProps {
     value: MultilingualText;
     onChange: (value: MultilingualText) => void;
     placeholder?: string;
     className?: string;
+    excludeHindi?: boolean; // Add prop to exclude Hindi for Bible content
 }
 
-const CKEditorComponent: FC<CKEditorComponentProps> = ({ value, onChange, placeholder, className }) => {
+const CKEditorComponent: FC<CKEditorComponentProps> = ({ value, onChange, placeholder, className, excludeHindi = false }) => {
     const [EditorComponent, setEditorComponent] = useState<any>(null);
     const [isClient, setIsClient] = useState(false);
     const [activeLanguage, setActiveLanguage] = useState<string>('en');
@@ -24,7 +26,6 @@ const CKEditorComponent: FC<CKEditorComponentProps> = ({ value, onChange, placeh
 
     useEffect(() => {
         setIsClient(true);
-        // Load both CKEditor components
         Promise.all([
             import('@ckeditor/ckeditor5-react'),
             import('@ckeditor/ckeditor5-build-classic')
@@ -71,11 +72,13 @@ const CKEditorComponent: FC<CKEditorComponentProps> = ({ value, onChange, placeh
                         });
                     }
                     
-                    setLanguages(languagesData.filter((lang: any) => lang.isActive !== false));
+                    const filteredLanguages = languagesData.filter((lang: any) => 
+                        lang.isActive !== false && (!excludeHindi || lang.code !== 'hi')
+                    );
+                    setLanguages(filteredLanguages);
                     // Set first language as active if available
-                    const activeLanguages = languagesData.filter((lang: any) => lang.isActive !== false);
-                    if (activeLanguages.length > 0) {
-                        setActiveLanguage(activeLanguages[0].code);
+                    if (filteredLanguages.length > 0) {
+                        setActiveLanguage(filteredLanguages[0].code);
                     }
                 }
             } catch (error) {
@@ -166,38 +169,28 @@ const CKEditorComponent: FC<CKEditorComponentProps> = ({ value, onChange, placeh
                             editor={ClassicEditor}
                             data={langValue}
                             config={{
-                                placeholder: `${placeholder || ''} (${lang.name})`,
                                 toolbar: {
                                     items: [
-                                        "undo",
-                                        "redo",
-                                        "|",
-                                        "heading",
-                                        "|",
-                                        "fontfamily",
-                                        "fontsize",
-                                        "fontColor",
-                                        "fontBackgroundColor",
-                                        "|",
-                                        "bold",
-                                        "italic",
-                                        "strikethrough",
-                                        "subscript",
-                                        "superscript",
-                                        "code",
-                                        "|",
-                                        "link",
-                                        "blockQuote",
-                                        "codeBlock",
-                                        "|",
-                                        "bulletedList",
-                                        "numberedList",
-                                        "todoList",
-                                        "outdent",
-                                        "indent",
-                                    ],
-                                    shouldNotGroupWhenFull: false,
+                                        'heading', '|',
+                                        'bold', 'italic', 'underline', 'strikethrough', '|',
+                                        'bulletedList', 'numberedList', '|',
+                                        'outdent', 'indent', '|',
+                                        'blockQuote', '|',
+                                        'link', '|',
+                                        'undo', 'redo'
+                                    ]
                                 },
+                                heading: {
+                                    options: [
+                                        { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
+                                        { model: 'heading1', view: 'h1', title: 'Heading 1', class: 'ck-heading_heading1' },
+                                        { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
+                                        { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' },
+                                        { model: 'heading4', view: 'h4', title: 'Heading 4', class: 'ck-heading_heading4' },
+                                        { model: 'heading5', view: 'h5', title: 'Heading 5', class: 'ck-heading_heading5' },
+                                        { model: 'heading6', view: 'h6', title: 'Heading 6', class: 'ck-heading_heading6' }
+                                    ]
+                                }
                             }}
                             onChange={(event: any, editor: any) => {
                                 const data = editor.getData();

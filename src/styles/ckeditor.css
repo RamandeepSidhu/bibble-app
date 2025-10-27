@@ -1,0 +1,90 @@
+/* CKEditor Custom Styles */
+.ck-editor__editable {
+  min-height: 200px;
+}
+
+/* Heading Styles */
+.ck-editor__editable h1 {
+  font-size: 2em;
+  font-weight: bold;
+  margin: 0.67em 0;
+  color: #333;
+}
+
+.ck-editor__editable h2 {
+  font-size: 1.5em;
+  font-weight: bold;
+  margin: 0.75em 0;
+  color: #333;
+}
+
+.ck-editor__editable h3 {
+  font-size: 1.17em;
+  font-weight: bold;
+  margin: 0.83em 0;
+  color: #333;
+}
+
+.ck-editor__editable h4 {
+  font-size: 1em;
+  font-weight: bold;
+  margin: 1em 0;
+  color: #333;
+}
+
+.ck-editor__editable h5 {
+  font-size: 0.83em;
+  font-weight: bold;
+  margin: 1.17em 0;
+  color: #333;
+}
+
+.ck-editor__editable h6 {
+  font-size: 0.67em;
+  font-weight: bold;
+  margin: 1.33em 0;
+  color: #333;
+}
+
+/* Blockquote Styles */
+.ck-editor__editable blockquote {
+  border-left: 4px solid #ccc;
+  margin: 1em 0;
+  padding-left: 1em;
+  font-style: italic;
+  color: #666;
+  background-color: #f9f9f9;
+}
+
+/* List Styles */
+.ck-editor__editable ol {
+  list-style-type: decimal;
+  margin: 1em 0;
+  padding-left: 2em;
+}
+
+.ck-editor__editable ul {
+  list-style-type: disc;
+  margin: 1em 0;
+  padding-left: 2em;
+}
+
+.ck-editor__editable li {
+  margin: 0.5em 0;
+}
+
+/* Code Styles */
+.ck-editor__editable code {
+  background-color: #f4f4f4;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: monospace;
+}
+
+.ck-editor__editable pre {
+  background-color: #f4f4f4;
+  padding: 1em;
+  border-radius: 5px;
+  overflow-x: auto;
+  font-family: monospace;
+}
