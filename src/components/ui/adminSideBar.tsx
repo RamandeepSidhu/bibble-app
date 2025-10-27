@@ -89,7 +89,8 @@ export function AdminSidebar({ sidebarOpen, setSidebarOpen, isMobile = false }: 
             <p className="text-sm font-medium text-gray-700">
               {(session?.user as any)?.first_name} {(session?.user as any)?.last_name}
             </p>
-            <p className="text-xs text-gray-500">Admin</p>
+            <p className="text-xs text-gray-500">{(session?.user as any)?.name || 'Admin'}</p>
+            <p className="text-xs text-gray-500">{(session?.user as any)?.email || ''}</p>
           </div>
         </div>
         {/* <Button
