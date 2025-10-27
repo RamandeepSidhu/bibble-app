@@ -28,8 +28,7 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
-  Filter,
-  RefreshCw
+  Filter
 } from 'lucide-react';
 import Pagination from '@/components/common/Pagination';
 import ClientInstance from '@/shared/client';
@@ -196,7 +195,7 @@ export default function UsersPage() {
   };
 
   return (
-    <div className={`p-6 min-h-screen ${users.length === 0 && !loading ? 'bg-transparent' : 'bg-gray-50'}`}>
+    <div className={`container mx-auto px-4 py-8 p-6 min-h-screen ${users.length === 0 && !loading ? 'bg-transparent' : 'bg-gray-50'}`}>
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <div>
@@ -205,22 +204,11 @@ export default function UsersPage() {
             Manage and monitor user accounts, roles, and permissions
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            onClick={fetchUsers}
-            disabled={loading}
-            className="flex items-center gap-2"
-          >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-        </Button>
-        </div>
       </div>
 
       {/* Filters - Only show if there are users or if user has applied filters */}
       {(users.length > 0 || hasActiveFilters) && (
-        <div className=" p-6 mb-6">
+        <div className="p-1 mb-6">
           <div className="flex flex-col lg:flex-row gap-4">
             {/* Search */}
             <div className="flex-1">

@@ -34,7 +34,10 @@ export const authOptions: NextAuthOptions = {
           }
 
           const user = result.data;
-
+          // Check if user has admin role
+          if (user.role !== "admin") {
+            throw new Error("Access denied. Only administrators can access this system.");
+          }
           // Set cookies for token storage
           const cookieStore = await cookies();
           cookieStore.set(AUTH_TOKEN_KEY, result.token);

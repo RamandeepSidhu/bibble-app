@@ -1,5 +1,7 @@
 import axios from 'axios';
-import { getAuthToken } from './token';
+import { getAuthToken, removeAuthToken } from './token';
+import { showToast } from '@/lib/toast';
+import { signOut } from 'next-auth/react';
 const Axios = axios.create({
   baseURL: `${process.env.NEXT_PUBLIC_REST_API_ENDPOINT}`,
   timeout: 150000000,
@@ -25,13 +27,30 @@ Axios.interceptors.request.use(
 
 Axios.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (
-      (error.response && error.response.status === 401) ||
-      (error.response && error.response.status === 403)
-    ) {
-      // removeAuthToken();
-      //   Router.reload();
+  async (error) => {
+    if (error.response) {
+      const { status, data } = error.response;
+      
+      // Handle token expiration/invalid token
+      if (
+        status === 401 ||
+        status === 403)
+       {
+        const errorMessage = data?.message || data?.error?.message || "Token is invalid or expired";
+
+        showToast.error("Session Expired", errorMessage);
+        // Clear auth token
+        removeAuthToken();
+        // Clear localStorage if it exists
+        if (typeof window !== 'undefined') {
+          localStorage.clear();
+        }
+        // Sign out using NextAuth
+        await signOut({ 
+          redirect: true, 
+          callbackUrl: "/auth/login" 
+        });
+      }
     }
     return Promise.reject(error);
   }

@@ -263,35 +263,32 @@ export default function HymnsPage() {
               <div className="p-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                   {group.hymns.map((hymn: any) => (
-                    <div key={hymn._id} className="bg-white rounded-lg p-3 border border-gray-100 hover:shadow-md transition-shadow">
-                      <div className="flex items-center space-x-3">
-                        {/* Hymn Number - Theme Circle */}
-                        <div className="h-8 w-8 bg-theme-secondary rounded-full flex items-center justify-center text-theme-primary font-bold text-sm flex-shrink-0">
+                    <div key={hymn._id} className="bg-white rounded-lg p-4 border border-gray-100 hover:shadow-md transition-shadow">
+                      {/* Top Row with Edit Button */}
+                      <div className="flex items-start justify-between mb-2">
+                        {/* Hymn Number Badge */}
+                        <div className="h-6 w-6 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 font-semibold text-xs flex-shrink-0">
                           {hymn.number}
                         </div>
                         
-                        {/* Hymn Content */}
-                        <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-gray-900 text-sm">
-                            Hymn {hymn.number}
-                          </div>
-                          <div className="text-xs text-gray-600 whitespace-pre-wrap break-words">
-                            {hymn.text[selectedLanguage] ? (
-                              <span dangerouslySetInnerHTML={{ __html: hymn.text[selectedLanguage] }} />
-                            ) : (
-                              <span className="italic">No text</span>
-                            )}
-                          </div>
-                        </div>
+                        {/* Edit Button */}
+                        <Link href={`/hymns/edit/${hymn._id}`}>
+                          <Button variant="outline" size="sm" className="h-6 w-6 p-0 border-gray-300 text-gray-500 hover:bg-gray-100 flex-shrink-0">
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                        </Link>
+                      </div>
 
-                        {/* Edit Button - Square with Pencil */}
-                        <div className="flex-shrink-0">
-                          <Link href={`/hymns/edit/${hymn._id}`}>
-                            <Button variant="outline" size="sm" className="h-8 w-8 p-0 border-gray-300 text-gray-500 hover:bg-gray-100">
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          </Link>
-                        </div>
+                      {/* Hymn Content - Direct HTML Rendering */}
+                      <div className="text-sm text-gray-600">
+                        {hymn.text[selectedLanguage] ? (
+                          <div 
+                            className="[&_ol]:list-decimal [&_ol]:list-inside [&_ol]:pl-0 [&_li]:mb-1 [&_strong]:font-bold"
+                            dangerouslySetInnerHTML={{ __html: hymn.text[selectedLanguage] }} 
+                          />
+                        ) : (
+                          <span className="italic">No text</span>
+                        )}
                       </div>
                     </div>
                   ))}

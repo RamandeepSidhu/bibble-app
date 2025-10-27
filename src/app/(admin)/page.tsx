@@ -19,6 +19,7 @@ import Link from 'next/link';
 import ClientInstance from '@/shared/client';
 import { showToast } from '@/lib/toast';
 import DashboardShimmer from '@/components/ui/dashboard-shimmer';
+import { redirect } from 'next/navigation';
 
 interface DashboardData {
   user: {
@@ -42,19 +43,17 @@ interface DashboardData {
   };
 }
 
-interface DashboardResponse {
-  success: boolean;
-  message: string;
-  data: DashboardData;
-}
-
 export default function AdminDashboard() {
   const { data: session } = useSession();
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
 
   const firstName = (session?.user as any)?.first_name || 'Admin';
-
+  useEffect(() => {
+    if (session?.user.role !== "admin") {
+      redirect('/auth/login');
+    }
+  }, [session]);
   // Fetch dashboard data
   const fetchDashboardData = async () => {
     try {
