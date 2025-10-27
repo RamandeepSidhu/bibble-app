@@ -73,7 +73,7 @@ const CKEditorComponent: FC<CKEditorComponentProps> = ({ value, onChange, placeh
                     }
                     
                     const filteredLanguages = languagesData.filter((lang: any) => 
-                        lang.isActive !== false && (!excludeHindi || lang.code !== 'hi')
+                        lang.isActive === true && (!excludeHindi || lang.code !== 'hi')
                     );
                     setLanguages(filteredLanguages);
                     // Set first language as active if available

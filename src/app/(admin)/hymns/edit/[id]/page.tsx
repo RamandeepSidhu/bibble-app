@@ -24,7 +24,34 @@ const isRichTextEmpty = (htmlContent: string): boolean => {
 };
 
 const isMultilingualFieldComplete = (field: MultilingualText): boolean => {
-    return Object.values(field).some(val => !isRichTextEmpty(val));
+    // Check if all required languages (excluding Hindi) have content
+    const requiredLanguages = ['en', 'sw', 'fr', 'rn'];
+    return requiredLanguages.every(lang => 
+        field[lang] && !isRichTextEmpty(field[lang])
+    );
+};
+
+// Function to get specific empty field names
+const getEmptyFieldNames = (field: MultilingualText, fieldName: string): string[] => {
+    const requiredLanguages = ['en', 'sw', 'fr', 'rn'];
+    const languageNames = { en: 'English', sw: 'Swahili', fr: 'French', rn: 'Kinyarwanda' };
+    
+    return requiredLanguages
+        .filter(lang => !field[lang] || isRichTextEmpty(field[lang]))
+        .map(lang => `${fieldName} (${languageNames[lang as keyof typeof languageNames]})`);
+};
+
+// Function to clean multilingual data by removing invalid language codes
+const cleanMultilingualData = (data: MultilingualText): MultilingualText => {
+    const cleaned: MultilingualText = {};
+    const validLanguageCodes = ['en', 'sw', 'fr', 'rn']; // Only allow these 4 languages
+    
+    Object.keys(data).forEach(key => {
+        if (validLanguageCodes.includes(key) && data[key] && !isRichTextEmpty(data[key])) {
+            cleaned[key] = data[key];
+        }
+    });
+    return cleaned;
 };
 
 export default function EditHymnPage() {
@@ -77,7 +104,7 @@ export default function EditHymnPage() {
                         });
                     }
                     
-                    setLanguages(languagesData);
+                    setLanguages(languagesData.filter((lang: any) => lang.isActive === true && lang.code !== 'hi'));
                 }
 
                 // Handle hymn data
@@ -119,13 +146,20 @@ export default function EditHymnPage() {
     const handleSave = async () => {
         setValidationError("");
 
-        if (
-            !hymnData.number ||
-            !isMultilingualFieldComplete(hymnData.text)
-        ) {
-            setValidationError(
-                "Please fill in all required fields: Hymn Number and Text in all languages."
-            );
+        // Collect all empty fields
+        const emptyFields: string[] = [];
+        
+        if (!hymnData.number) {
+            emptyFields.push("Hymn Number");
+        }
+        
+        // Check multilingual fields
+        if (!isMultilingualFieldComplete(hymnData.text)) {
+            emptyFields.push(...getEmptyFieldNames(hymnData.text, "Text"));
+        }
+
+        if (emptyFields.length > 0) {
+            setValidationError(`Please fill in: ${emptyFields.join(", ")}`);
             return;
         }
 
@@ -134,7 +168,7 @@ export default function EditHymnPage() {
         try {
             const payload: UpdateHymnPayload = {
                 number: hymnData.number,
-                text: hymnData.text,
+                text: cleanMultilingualData(hymnData.text),
             };
 
             const response: any = await ClientInstance.APP.updateHymn(hymnId, payload);
@@ -146,12 +180,18 @@ export default function EditHymnPage() {
                     window.location.href = "/hymns";
                 }, 2000);
             } else {
-                setValidationError(response.message || "Failed to update hymn. Please try again.");
-                showToast.error("Error", response.message || "Failed to update hymn");
+                // Show specific API error message
+                const errorMessage = response.message || "Failed to update hymn. Please try again.";
+                setValidationError(errorMessage);
+                showToast.error("Error", errorMessage);
             }
-        } catch (error) {
-            setValidationError("Network error. Please check your connection and try again.");
-            showToast.error("Error", "Network error. Please check your connection and try again.");
+        } catch (error: any) {
+            // Show specific error message from API response
+            const errorMessage = error?.response?.data?.message || 
+                               error?.message || 
+                               "Network error. Please check your connection and try again.";
+            setValidationError(errorMessage);
+            showToast.error("Error", errorMessage);
         } finally {
             setIsLoading(false);
         }
@@ -217,20 +257,21 @@ export default function EditHymnPage() {
                                 setValidationError("");
                             }}
                             placeholder="Enter multilingual hymn text"
+                            excludeHindi={true}
                         />
                     </div>
                 </div>
 
                 {/* Validation / Success Messages */}
                 {validationError && (
-                    <div className="mx-10 mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <div className="mx-2 mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
                         <div className="text-red-600 text-sm font-medium">⚠️ {validationError}</div>
                     </div>
                 )}
 
                 {successMessage && (
-                    <div className="mx-10 mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-                        <div className="text-green-600 text-sm font-medium">{successMessage}</div>
+                    <div className="mx-2 mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                        <div className="text-green-600 text-sm font-medium">✅ {successMessage}</div>
                     </div>
                 )}
 

@@ -38,7 +38,7 @@ export default function HymnsPage() {
         // Fetch languages first
         const languagesResponse: any = await ClientInstance.APP.getLanguage();
         if (languagesResponse?.success && languagesResponse?.data) {
-          setLanguages(languagesResponse.data);
+          setLanguages(languagesResponse.data.filter((lang: any) => lang.isActive === true));
         }
         
         // Fetch products to get song products

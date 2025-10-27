@@ -107,7 +107,7 @@ export default function EditProductPage() {
                         });
                     }
                     
-                    setLanguages(languagesData.filter((lang: any) => lang.isActive !== false && lang.code !== 'hi'));
+                    setLanguages(languagesData.filter((lang: any) => lang.isActive === true && lang.code !== 'hi'));
                 }
 
                 // Handle product data

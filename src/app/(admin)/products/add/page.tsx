@@ -98,10 +98,10 @@ export default function AddBookPage() {
                         });
                     }
                     
-                    setLanguages(languagesData.filter((lang: any) => lang.isActive !== false && lang.code !== 'hi'));
+                    setLanguages(languagesData.filter((lang: any) => lang.isActive === true && lang.code !== 'hi'));
                     // Initialize multilingual fields with fetched languages (excluding Hindi for Bible content)
                     const initialMultilingualData: MultilingualText = {};
-                    languagesData.filter((lang: any) => lang.isActive !== false && lang.code !== 'hi').forEach((lang: Language) => {
+                    languagesData.filter((lang: any) => lang.isActive === true && lang.code !== 'hi').forEach((lang: Language) => {
                         initialMultilingualData[lang.code] = "";
                     });
                     setBookData(prev => ({

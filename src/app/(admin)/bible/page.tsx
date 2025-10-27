@@ -298,8 +298,8 @@ export default function BiblePage() {
           });
         }
 
-        // Filter out Hindi language from available languages
-        const filteredLangs = languagesData.filter((lang: any) => lang.code !== 'hi');
+        // Filter out Hindi language from available languages and only show active languages
+        const filteredLangs = languagesData.filter((lang: any) => lang.code !== 'hi' && lang.isActive === true);
         setLanguages(filteredLangs);
         
         // Create language names mapping for display (excluding Hindi)
