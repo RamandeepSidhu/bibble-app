@@ -358,35 +358,37 @@ export default function VersesPage() {
               <div className="p-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                   {group.verses.map((verse: any) => (
-                    <Link key={verse._id} href={`/bible/verses/edit/${verse._id}`}>
-                      <div className="group bg-white rounded-lg p-3 border border-gray-100 hover:shadow-md hover:border-theme-primary transition-all cursor-pointer">
-                        <div className="flex items-center space-x-3">
-                          {/* Verse Number - Theme Circle */}
-                          <div className="h-8 w-8 bg-theme-secondary rounded-full flex items-center justify-center text-theme-primary font-bold text-sm flex-shrink-0">
-                            {verse.number}
+                    <div key={verse._id} className="bg-white rounded-lg p-3 border border-gray-100 hover:shadow-md transition-shadow">
+                      <div className="flex items-center space-x-3">
+                        {/* Verse Number - Theme Circle */}
+                        <div className="h-8 w-8 bg-theme-secondary rounded-full flex items-center justify-center text-theme-primary font-bold text-sm flex-shrink-0">
+                          {verse.number}
+                        </div>
+                        
+                        {/* Verse Content */}
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-gray-900 text-sm">
+                            Verse {verse.number}
                           </div>
-                          
-                          {/* Verse Content */}
-                          <div className="flex-1 min-w-0">
-                            <div className="font-semibold text-gray-900 text-sm">
-                              Verse {verse.number}
-                            </div>
-                            <div className="text-xs text-gray-600 whitespace-pre-wrap break-words">
-                              {verse.text[selectedLanguage] ? (
-                                <span dangerouslySetInnerHTML={{ __html: verse.text[selectedLanguage] }} />
-                              ) : (
-                                <span className="italic">No text</span>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Edit Icon - Show on hover */}
-                          <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Edit className="h-4 w-4 text-gray-400" />
+                          <div className="text-xs text-gray-600 whitespace-pre-wrap break-words">
+                            {verse.text[selectedLanguage] ? (
+                              <span dangerouslySetInnerHTML={{ __html: verse.text[selectedLanguage] }} />
+                            ) : (
+                              <span className="italic">No text</span>
+                            )}
                           </div>
                         </div>
+
+                        {/* Edit Button - Always visible */}
+                        <div className="flex-shrink-0">
+                          <Link href={`/bible/verses/edit/${verse._id}`}>
+                            <Button variant="outline" size="sm" className="h-8 w-8 p-0 border-gray-300 text-gray-500 hover:bg-gray-100">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                        </div>
                       </div>
-                    </Link>
+                    </div>
                   ))}
                 </div>
               </div>
