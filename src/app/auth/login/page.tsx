@@ -84,7 +84,7 @@ const Login = () => {
                 <div className="flex size-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
                   <span className="text-sm font-bold">B</span>
                 </div>
-                Bibble App
+                Bible & Hymns
               </Link>
             </div>
             <form

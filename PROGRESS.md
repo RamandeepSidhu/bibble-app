@@ -1,4 +1,4 @@
-# Bibble App - Progress Documentation
+# Bible & Hymns - Progress Documentation
 
 ## Project Overview
 A multilingual content management system for religious content with hierarchical structure: Product (Book) → Chapter → Story → Verse.

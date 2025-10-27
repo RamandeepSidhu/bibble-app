@@ -17,8 +17,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Bibble App",
-  description: "Bibble App Admin Dashboard",
+  title: "Bible & Hymns",
+  description: "Bible & Hymns Admin Dashboard",
 };
 
 export default async function RootLayout({

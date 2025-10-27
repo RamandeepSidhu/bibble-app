@@ -88,7 +88,7 @@ const ResetPassword = () => {
                   <div className="flex size-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
                     <span className="text-sm font-bold">B</span>
                   </div>
-                  Bibble App
+                  Bible & Hymns
                 </Link>
               </div>
               <div className="flex flex-col items-center gap-2 text-center">
@@ -136,7 +136,7 @@ const ResetPassword = () => {
                 <div className="flex size-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
                   <span className="text-sm font-bold">B</span>
                 </div>
-                Bibble App
+                Bible & Hymns
               </Link>
             </div>
             <form
