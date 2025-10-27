@@ -32,6 +32,7 @@ export default function VersesPage() {
   const [languageNames, setLanguageNames] = useState<{[key: string]: string}>({});
   const [languages, setLanguages] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deletingVerse, setDeletingVerse] = useState<Verse | null>(null);
 
@@ -43,12 +44,13 @@ export default function VersesPage() {
   const fetchData = async () => {
     try {
       setIsLoading(true);
+      setIsInitialLoading(true);
       
       // Fetch languages first
       const languagesResponse: any = await ClientInstance.APP.getLanguage();
       if (languagesResponse?.success && languagesResponse?.data) {
-        // Filter out Hindi language from available languages
-        const filteredLangs = languagesResponse.data.filter((lang: any) => lang.code !== 'hi');
+        // Filter out Hindi language from available languages and only show active languages
+        const filteredLangs = languagesResponse.data.filter((lang: any) => lang.code !== 'hi' && lang.isActive === true);
         setLanguages(filteredLangs);
         // Create language names mapping (excluding Hindi)
         const names: {[key: string]: string} = {};
@@ -65,6 +67,7 @@ export default function VersesPage() {
       showToast.error('Failed to load data', 'Error loading languages');
     } finally {
       setIsLoading(false);
+      setIsInitialLoading(false);
     }
   };
 
@@ -272,7 +275,7 @@ export default function VersesPage() {
       </div>
 
       {/* Search and Filter - Only show if there are verses or if user has applied filters */}
-      {(Object.keys(groupedVerses).length > 0 || searchTerm || selectedLanguage !== 'en') && (
+      {!isInitialLoading && (Object.keys(groupedVerses).length > 0 || searchTerm || selectedLanguage !== 'en') && (
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-3 md:gap-4 mt-5">
         <div className="relative w-full md:w-96">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -287,7 +290,7 @@ export default function VersesPage() {
           />
         </div>
         {/* Only show language filter if there are verses or if user has applied filters */}
-        {(Object.keys(groupedVerses).length > 0 || searchTerm || selectedLanguage !== 'en') && (
+        {!isInitialLoading && (Object.keys(groupedVerses).length > 0 || searchTerm || selectedLanguage !== 'en') && (
           <div className="w-full sm:w-auto">
             <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
               <SelectTrigger className="w-full sm:w-[200px]">
@@ -307,7 +310,7 @@ export default function VersesPage() {
       )}
 
       {/* Verses Cards */}
-      {Object.keys(groupedVerses).length === 0 ? (
+      {!isInitialLoading && Object.keys(groupedVerses).length === 0 ? (
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <Hash className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -320,7 +323,7 @@ export default function VersesPage() {
             </p>
           </div>
         </div>
-      ) : (
+      ) : !isInitialLoading && Object.keys(groupedVerses).length > 0 ? (
         <div className="space-y-4">
           {Object.values(groupedVerses).map((group: any, index: number) => (
             <div key={`${group?.chapterTitle}-${index}`} className="bg-white rounded-lg shadow-sm">
@@ -355,42 +358,51 @@ export default function VersesPage() {
               <div className="p-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                   {group.verses.map((verse: any) => (
-                    <div key={verse._id} className="bg-white rounded-lg p-3 border border-gray-100 hover:shadow-md transition-shadow">
-                      <div className="flex items-center space-x-3">
-                        {/* Verse Number - Theme Circle */}
-                        <div className="h-8 w-8 bg-theme-secondary rounded-full flex items-center justify-center text-theme-primary font-bold text-sm flex-shrink-0">
-                          {verse.number}
-                        </div>
-                        
-                        {/* Verse Content */}
-                        <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-gray-900 text-sm">
-                            Verse {verse.number}
+                    <Link key={verse._id} href={`/bible/verses/edit/${verse._id}`}>
+                      <div className="group bg-white rounded-lg p-3 border border-gray-100 hover:shadow-md hover:border-theme-primary transition-all cursor-pointer">
+                        <div className="flex items-center space-x-3">
+                          {/* Verse Number - Theme Circle */}
+                          <div className="h-8 w-8 bg-theme-secondary rounded-full flex items-center justify-center text-theme-primary font-bold text-sm flex-shrink-0">
+                            {verse.number}
                           </div>
-                          <div className="text-xs text-gray-600 whitespace-pre-wrap break-words">
-                            {verse.text[selectedLanguage] ? (
-                              <span dangerouslySetInnerHTML={{ __html: verse.text[selectedLanguage] }} />
-                            ) : (
-                              <span className="italic">No text</span>
-                            )}
+                          
+                          {/* Verse Content */}
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-gray-900 text-sm">
+                              Verse {verse.number}
+                            </div>
+                            <div className="text-xs text-gray-600 whitespace-pre-wrap break-words">
+                              {verse.text[selectedLanguage] ? (
+                                <span dangerouslySetInnerHTML={{ __html: verse.text[selectedLanguage] }} />
+                              ) : (
+                                <span className="italic">No text</span>
+                              )}
+                            </div>
                           </div>
-                        </div>
 
-                        {/* Edit Button - Square with Pencil */}
-                        <div className="flex-shrink-0">
-                          <Link href={`/bible/verses/edit/${verse._id}`}>
-                            <Button variant="outline" size="sm" className="h-8 w-8 p-0 border-gray-300 text-gray-500 hover:bg-gray-100">
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          </Link>
+                          {/* Edit Icon - Show on hover */}
+                          <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Edit className="h-4 w-4 text-gray-400" />
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               </div>
             </div>
           ))}
+        </div>
+      ) : null}
+
+      {/* Loading State */}
+      {isInitialLoading && (
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-theme-primary mx-auto mb-4"></div>
+            <div className="text-gray-500 text-lg mb-2">Loading verses...</div>
+            <p className="text-gray-400">Please wait while we fetch your verse data.</p>
+          </div>
         </div>
       )}
 

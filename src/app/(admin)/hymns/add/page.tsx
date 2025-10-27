@@ -299,7 +299,12 @@ export default function AddHymnPage() {
                                             <SelectItem key={product._id} value={product._id}>
                                                 <span className="flex items-center gap-2">
                                                     <span>{getTypeIcon(product.type)}</span>
-                                                    <span className="flex-1">{product.title.en || 'Untitled'}</span>
+                                                    <span 
+                                                        className="flex-1"
+                                                        dangerouslySetInnerHTML={{ 
+                                                            __html: product.title.en || 'Untitled' 
+                                                        }}
+                                                    />
                                                 </span>
                                             </SelectItem>
                                         ))}

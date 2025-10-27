@@ -829,7 +829,7 @@ export default function BiblePage() {
         router.push(`/bible/chapters/edit/${id}`);
         break;
       case "verse":
-        router.push(`/bible/verses/${id}`);
+        router.push(`/bible/verses/edit/${id}`);
         break;
       default:
         console.error("Unknown content type:", contentType);
@@ -1559,18 +1559,24 @@ export default function BiblePage() {
                                         </div>
                                         <div>
                                           <h3 className="text-lg font-bold text-theme-primary">
-                                            {story.title?.[selectedLanguage] ? (
-                                              <span
-                                                dangerouslySetInnerHTML={{
-                                                  __html:
-                                                    story.title[
-                                                      selectedLanguage
-                                                    ],
-                                                }}
-                                              />
-                                            ) : (
-                                              `Story ${story.order}`
-                                            )}
+                                            <Link 
+                                              href={`/bible/stories/edit/${story._id}`}
+                                              onClick={(e) => e.stopPropagation()}
+                                              className="transition-colors"
+                                            >
+                                              {story.title?.[selectedLanguage] ? (
+                                                <span
+                                                  dangerouslySetInnerHTML={{
+                                                    __html:
+                                                      story.title[
+                                                        selectedLanguage
+                                                      ],
+                                                  }}
+                                                />
+                                              ) : (
+                                                `Story ${story.order}`
+                                              )}
+                                            </Link>
                                           </h3>
                                           <p className="text-gray-600 text-sm">
                                             {storyChapters.length} Chapters •
@@ -1579,6 +1585,18 @@ export default function BiblePage() {
                                         </div>
                                       </div>
                                       <div className="flex items-center gap-2">
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleEditContent("story", story._id);
+                                          }}
+                                          className="h-8 px-3 text-xs border-gray-300 text-gray-600 hover:bg-gray-100"
+                                        >
+                                          <Edit className="h-3 w-3 mr-1" />
+                                          Edit
+                                        </Button>
                                         <span className="bg-theme-primary/10 text-theme-primary px-3 py-1 rounded-full text-sm">
                                           {storyChapters.length} Chapters
                                         </span>
@@ -1594,50 +1612,6 @@ export default function BiblePage() {
                                   {/* Story Content - Collapsible */}
                                   {isStoryExpanded && (
                                     <div className="p-4 bg-gray-50">
-                                      {/* Story Details */}
-                                      <div className="mb-4 p-4 bg-white rounded-lg border border-gray-200">
-                                        <h4 className="text-md font-semibold text-gray-800 mb-2">
-                                          Story Details
-                                        </h4>
-                                        <div className="space-y-2">
-                                          {story.title?.[selectedLanguage] && (
-                                            <div className="text-sm text-gray-700">
-                                              <span className="text-gray-500 font-medium">
-                                                Title:
-                                              </span>
-                                              <span className="ml-2">
-                                                <span
-                                                  dangerouslySetInnerHTML={{
-                                                    __html:
-                                                      story.title[
-                                                        selectedLanguage
-                                                      ],
-                                                  }}
-                                                />
-                                              </span>
-                                            </div>
-                                          )}
-                                          {story.description?.[
-                                            selectedLanguage
-                                          ] && (
-                                            <div className="text-sm text-gray-700">
-                                              <span className="text-gray-500 font-medium">
-                                                Description:
-                                              </span>
-                                              <span className="ml-2">
-                                                <span
-                                                  dangerouslySetInnerHTML={{
-                                                    __html:
-                                                      story.description[
-                                                        selectedLanguage
-                                                      ],
-                                                  }}
-                                                />
-                                              </span>
-                                            </div>
-                                          )}
-                                        </div>
-                                      </div>
 
                                       {/* Chapters Accordion */}
                                       <div className="space-y-2">
@@ -1671,24 +1645,30 @@ export default function BiblePage() {
                                                       </div>
                                                       <div>
                                                         <h4 className="text-md font-bold text-theme-primary">
-                                                          Chapter{" "}
-                                                          {chapter.order}
-                                                          {chapter.title?.[
-                                                            selectedLanguage
-                                                          ] && (
-                                                            <span className="text-sm font-normal ml-2">
-                                                              -{" "}
-                                                              <span
-                                                                dangerouslySetInnerHTML={{
-                                                                  __html:
-                                                                    chapter
-                                                                      .title[
-                                                                      selectedLanguage
-                                                                    ],
-                                                                }}
-                                                              />
-                                                            </span>
-                                                          )}
+                                                          <Link 
+                                                            href={`/bible/chapters/edit/${chapter._id}`}
+                                                            onClick={(e) => e.stopPropagation()}
+                                                            className=" transition-colors"
+                                                          >
+                                                            Chapter{" "}
+                                                            {chapter.order}
+                                                            {chapter.title?.[
+                                                              selectedLanguage
+                                                            ] && (
+                                                              <span className="text-sm font-normal ml-2">
+                                                                -{" "}
+                                                                <span
+                                                                  dangerouslySetInnerHTML={{
+                                                                    __html:
+                                                                      chapter
+                                                                        .title[
+                                                                        selectedLanguage
+                                                                      ],
+                                                                  }}
+                                                                />
+                                                              </span>
+                                                            )}
+                                                          </Link>
                                                         </h4>
                                                         <p className="text-gray-600 text-xs">
                                                           {chapterVerses.length}{" "}
@@ -1698,6 +1678,18 @@ export default function BiblePage() {
                                                       </div>
                                                     </div>
                                                     <div className="flex items-center gap-2">
+                                                      <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={(e) => {
+                                                          e.stopPropagation();
+                                                          handleEditContent("chapter", chapter._id);
+                                                        }}
+                                                        className="h-7 px-2 text-xs border-gray-300 text-gray-600 hover:bg-gray-100"
+                                                      >
+                                                        <Edit className="h-3 w-3 mr-1" />
+                                                        Edit
+                                                      </Button>
                                                       <span className="bg-theme-primary/10 text-theme-primary px-2 py-1 rounded-full text-xs">
                                                         {chapterVerses.length}{" "}
                                                         Verses
