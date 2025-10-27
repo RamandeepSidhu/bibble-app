@@ -1595,7 +1595,6 @@ export default function BiblePage() {
                                           className="h-8 px-3 text-xs border-gray-300 text-gray-600 hover:bg-gray-100"
                                         >
                                           <Edit className="h-3 w-3 mr-1" />
-                                          Edit
                                         </Button>
                                         <span className="bg-theme-primary/10 text-theme-primary px-3 py-1 rounded-full text-sm">
                                           {storyChapters.length} Chapters
@@ -1688,7 +1687,6 @@ export default function BiblePage() {
                                                         className="h-7 px-2 text-xs border-gray-300 text-gray-600 hover:bg-gray-100"
                                                       >
                                                         <Edit className="h-3 w-3 mr-1" />
-                                                        Edit
                                                       </Button>
                                                       <span className="bg-theme-primary/10 text-theme-primary px-2 py-1 rounded-full text-xs">
                                                         {chapterVerses.length}{" "}
@@ -1739,10 +1737,9 @@ export default function BiblePage() {
                                                                       verse._id
                                                                     )
                                                                   }
-                                                                  className="text-theme-primary border-theme-primary hover:bg-theme-primary/10"
+                                                                  className="h-8 px-3 text-xs border-gray-300 text-gray-600 hover:bg-gray-100"
                                                                 >
                                                                   <Edit className="h-4 w-4 mr-1" />{" "}
-                                                                  Edit
                                                                 </Button>
                                                               </div>
 
