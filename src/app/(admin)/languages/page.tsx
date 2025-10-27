@@ -89,6 +89,20 @@ export default function LanguagesPage() {
 
   const handleCreateLanguage = async () => {
     try {
+      // If setting this language as default, ensure no other language is default
+      if (formData.isDefault) {
+        // First, set all existing languages to not be default
+        for (const lang of languages) {
+          if (lang.isDefault) {
+            await ClientInstance.APP.UpdateLanguage(lang._id, {
+              ...lang,
+              isDefault: false,
+              isActive: lang.isActive
+            });
+          }
+        }
+      }
+      
       const response: any = await ClientInstance.APP.CreateLanguage(formData);
       if (response?.success) {
         // Refresh languages list
@@ -119,6 +133,21 @@ export default function LanguagesPage() {
     if (!editingLanguage) return;
     
     try {
+      // If setting this language as default, ensure no other language is default
+      if (formData.isDefault) {
+        // First, set all other languages to not be default
+        const otherLanguages = languages.filter(lang => lang._id !== editingLanguage._id);
+        for (const lang of otherLanguages) {
+          if (lang.isDefault) {
+            await ClientInstance.APP.UpdateLanguage(lang._id, {
+              ...lang,
+              isDefault: false,
+              isActive: lang.isActive
+            });
+          }
+        }
+      }
+      
       const response: any = await ClientInstance.APP.UpdateLanguage(editingLanguage._id, formData);
       if (response?.success) {
         // Refresh languages list
@@ -176,12 +205,17 @@ export default function LanguagesPage() {
 
   const handleEditClick = (language: LanguageManagement) => {
     setEditingLanguage(language);
+    
+    // Ensure only one status is selected - prioritize Default over Active
+    const isDefault = language.isDefault;
+    const isActive = language.isActive && !language.isDefault;
+    
     setFormData({
       name: language.name,
       code: language.code,
       symbol: language.symbol,
-      isActive: language.isActive,
-      isDefault: language.isDefault,
+      isActive: isActive,
+      isDefault: isDefault,
       sortOrder: language.sortOrder
     });
     setIsEditModalOpen(true);

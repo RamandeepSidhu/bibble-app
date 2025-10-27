@@ -45,6 +45,7 @@ interface User {
   subscription?: any;
   createdAt?: string;
   updatedAt?: string;
+  paidReader:boolean;
 }
 
 interface UsersResponse {
@@ -235,14 +236,12 @@ export default function UsersPage() {
                   <SelectItem value="verified">Verified</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
                   <SelectItem value="suspended">Suspended</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             {/* Plan Filter */}
-            <div className="w-full lg:w-48">
+            {/* <div className="w-full lg:w-48">
               <Select value={planFilter} onValueChange={handlePlanFilter}>
                 <SelectTrigger>
                   <SelectValue placeholder="Filter by plan" />
@@ -250,11 +249,10 @@ export default function UsersPage() {
                 <SelectContent>
                   <SelectItem value="all">All Plans</SelectItem>
                   <SelectItem value="free">Free</SelectItem>
-                  <SelectItem value="premium">Premium</SelectItem>
-                  <SelectItem value="enterprise">Enterprise</SelectItem>
+                  <SelectItem value="paid">Paid</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </div> */}
 
             {/* Clear Filters */}
             {hasActiveFilters && (
@@ -343,7 +341,7 @@ export default function UsersPage() {
                     
                     <TableCell className="py-4 px-6">
                       <span className="text-sm text-gray-900 capitalize">
-                        {user.subscription?.plan || 'Free'}
+                        {user.paidReader ? "Paid Reader" : "Free Reader" }
                     </span>
                   </TableCell>
                     <TableCell className="py-4 px-6 text-righ">
@@ -354,7 +352,7 @@ export default function UsersPage() {
                   <TableCell className="text-right py-4 px-6">
                       <div className="flex items-center gap-2 justify-end">
                         {getStatusIcon(user.status)}
-                        <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(user.status)}`}>
+                        <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full capitalize ${getStatusColor(user.status)}`}>
                           {user.status}
                         </span>
                     </div>
