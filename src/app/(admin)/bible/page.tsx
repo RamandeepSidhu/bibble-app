@@ -1295,12 +1295,12 @@ export default function BiblePage() {
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">
-                  Products
+                 { products.length === 1 ? "Book" : "Books"}
                 </h3>
                 <p className="text-2xl font-bold text-theme-primary">
                   {products.length}
                 </p>
-                <p className="text-sm text-gray-500">Books available</p>
+                <p className="text-sm text-gray-500">{ products.length === 1 ? "Book" : "Books"} available</p>
               </div>
             </div>
           </div>
@@ -1312,11 +1312,13 @@ export default function BiblePage() {
                 <FileText className="h-6 w-6" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">Stories</h3>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {stories.length === 1 ? 'Story' : 'Stories'}
+                </h3>
                 <p className="text-2xl font-bold text-theme-primary">
                   {stories.length}
                 </p>
-                <p className="text-sm text-gray-500">Stories created</p>
+                <p className="text-sm text-gray-500">{ stories.length === 1 ? "Story" : "Stories"} available</p>
               </div>
             </div>
           </div>
@@ -1329,12 +1331,12 @@ export default function BiblePage() {
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">
-                  Chapters
+                  {chapters.length === 1 ? 'Chapter' : 'Chapters'}
                 </h3>
                 <p className="text-2xl font-bold text-theme-primary">
                   {chapters.length}
                 </p>
-                <p className="text-sm text-gray-500">Chapters created</p>
+                <p className="text-sm text-gray-500">{ chapters.length === 1 ? "Chapter" : "Chapters"} available</p>
               </div>
             </div>
           </div>
@@ -1350,7 +1352,7 @@ export default function BiblePage() {
                 <p className="text-2xl font-bold text-theme-primary">
                   {verses.length}
                 </p>
-                <p className="text-sm text-gray-500">Verses created</p>
+                <p className="text-sm text-gray-500">{ verses.length === 1 ? "Verse" : "Verses"} available</p>
               </div>
             </div>
           </div>
@@ -1389,7 +1391,7 @@ export default function BiblePage() {
           <div className="text-start mb-8">
             <div className="">
               <div className="flex items-start justify-start gap-4 mb-4">
-                <div className="text-xl">📖</div>
+                <div className="text-4xl">📖</div>
                 <div>
                   <h1 className="text-4xl font-bold tracking-wide text-theme-primary">
                     Bible
@@ -1493,13 +1495,13 @@ export default function BiblePage() {
                               )}
                             </h2>
                             <p className="text-gray-600 text-sm">
-                              {productStories.length} Stories • Click to expand
+                              {productStories.length} {productStories.length === 1 ? "Story" : "Stories"} • Click to expand
                             </p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="bg-theme-primary/10 text-theme-primary px-3 py-1 rounded-full text-sm">
-                            {productStories.length} Stories
+                            {productStories.length} {productStories.length === 1 ? "Story" : "Stories"}
                           </span>
                           {isProductExpanded ? (
                             <ChevronDown className="h-5 w-5" />
@@ -1579,7 +1581,7 @@ export default function BiblePage() {
                                             </Link>
                                           </h3>
                                           <p className="text-gray-600 text-sm">
-                                            {storyChapters.length} Chapters •
+                                            {storyChapters.length} {storyChapters.length === 1 ? "Chapter" : "Chapters"} •
                                             Click to expand
                                           </p>
                                         </div>
@@ -1597,7 +1599,7 @@ export default function BiblePage() {
                                           <Edit className="h-3 w-3 mr-1" />
                                         </Button>
                                         <span className="bg-theme-primary/10 text-theme-primary px-3 py-1 rounded-full text-sm">
-                                          {storyChapters.length} Chapters
+                                          {storyChapters.length} {storyChapters.length === 1 ? "Chapter" : "Chapters"}
                                         </span>
                                         {isStoryExpanded ? (
                                           <ChevronDown className="h-5 w-5" />
@@ -1670,9 +1672,7 @@ export default function BiblePage() {
                                                           </Link>
                                                         </h4>
                                                         <p className="text-gray-600 text-xs">
-                                                          {chapterVerses.length}{" "}
-                                                          Verses • Click to
-                                                          expand
+                                                          {chapterVerses.length} {chapterVerses.length === 1 ? "Verse" : "Verses"} • Click to expand
                                                         </p>
                                                       </div>
                                                     </div>
@@ -1689,8 +1689,7 @@ export default function BiblePage() {
                                                         <Edit className="h-3 w-3 mr-1" />
                                                       </Button>
                                                       <span className="bg-theme-primary/10 text-theme-primary px-2 py-1 rounded-full text-xs">
-                                                        {chapterVerses.length}{" "}
-                                                        Verses
+                                                        {chapterVerses.length} {chapterVerses.length === 1 ? "Verse" : "Verses"}
                                                       </span>
                                                       {isChapterExpanded ? (
                                                         <ChevronDown className="h-4 w-4" />

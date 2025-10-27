@@ -10,7 +10,7 @@ import {
   Package,
   Globe,
   Music,
-  Book
+  BookOpen
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -30,7 +30,7 @@ export function AdminSidebar({ sidebarOpen, setSidebarOpen, isMobile = false }: 
     { name: 'Users', href: '/users', icon: Users },
     { name: 'Products', href: '/products', icon: Package },
     { name: 'Hymns', href: '/hymns', icon: Music },
-    { name: 'Bible', href: '/bible', icon: Book },
+    { name: 'Bible', href: '/bible', icon: BookOpen },
   ];
 
   const sidebarContent = (

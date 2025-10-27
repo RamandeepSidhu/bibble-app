@@ -7,13 +7,13 @@ import {
   Users, 
   UserCheck, 
   UserX, 
-  TrendingUp, 
-  Activity,
   Calendar,
-  DollarSign,
   Package,
   Music,
-  RefreshCw
+  RefreshCw,
+  ArrowRight,
+  User,
+  BookOpen
 } from 'lucide-react';
 import Link from 'next/link';
 import ClientInstance from '@/shared/client';
@@ -136,7 +136,7 @@ export default function AdminDashboard() {
     id: user._id,
     action: user.email,
     user: user.name,
-    time: new Date(user.createdAt).toLocaleDateString(),
+    time: user.createdAt, // Keep original timestamp
     type: 'user' as const,
   })) || [];
 
@@ -186,38 +186,62 @@ export default function AdminDashboard() {
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Activity */}
-        <div className="bg-white border border-gray-200 rounded-lg">
+        {/* Recent Registrations */}
+        <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
           <div className="p-6 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">Recent Activity</h2>
-            <p className="text-sm text-gray-600 mt-1">Latest user actions and system events</p>
+            <div className="flex justify-between items-start">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">Recent Registrations</h2>
+                <p className="text-sm text-gray-600 mt-1">Latest users who joined the platform</p>
+              </div>
+              <Link href="/users">
+                <Button variant="outline" size="sm" className="border-theme-primary text-theme-primary hover:bg-theme-secondary">
+                  View All Users
+                  <ArrowRight className="h-4 w-4 ml-1" />
+                </Button>
+              </Link>
+            </div>
           </div>
           <div className="p-6">
             {recentActivity.length > 0 ? (
               <div className="space-y-4">
-                {recentActivity.map((activity) => (
-                  <div key={activity.id} className="flex items-center space-x-4">
-                    <div className={`w-2 h-2 rounded-full ${
-                      activity.type === 'user' ? 'bg-primary' : 'bg-green-500'
-                    }`}></div>
+                {recentActivity.map((activity, index) => (
+                  <div key={activity.id} className={`flex items-center space-x-4 py-3 ${
+                    index < recentActivity.length - 1 ? 'border-b border-gray-100' : ''
+                  }`}>
+                    {/* User Icon */}
+                    <div className="w-8 h-8 bg-theme-secondary rounded-full flex items-center justify-center flex-shrink-0">
+                      <User className="h-4 w-4 text-theme-primary" />
+                    </div>
+                    
+                    {/* User Details */}
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">
-                        {activity.action}
-                      </p>
-                      <p className="text-sm text-gray-500 truncate">
+                      <p className="text-sm font-semibold text-gray-900 truncate">
                         {activity.user}
                       </p>
+                      <p className="text-sm text-gray-500 truncate">
+                        {activity.action}
+                      </p>
                     </div>
-                    <div className="text-xs text-gray-500">
-                      {activity.time}
+                    
+                    {/* Registration Time */}
+                    <div className="text-xs text-gray-500 flex items-center flex-shrink-0">
+                      <Calendar className="h-3 w-3 mr-1" />
+                      {activity.time ? new Date(activity.time).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                      }) : 'N/A'}
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
               <div className="text-center py-8">
-                <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <div className="text-gray-500 text-lg mb-2">No recent activity</div>
+                <User className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <div className="text-gray-500 text-lg mb-2">No recent registrations</div>
                 <p className="text-gray-400">Recent user registrations will appear here</p>
               </div>
             )}
@@ -256,6 +280,15 @@ export default function AdminDashboard() {
                 <div className="text-left">
                   <div className="font-medium">View Hymns</div>
                   <div className="text-sm text-gray-500">Add and manage Hymns</div>
+                </div>
+              </Button>
+              </Link>
+              <Link href="/bible">
+              <Button variant="outline" className="w-full h-16 flex items-center justify-start">
+                <BookOpen className="h-5 w-5 mr-3" />
+                <div className="text-left">
+                  <div className="font-medium">View Bible</div>
+                  <div className="text-sm text-gray-500">Add and manage Bible content</div>
                 </div>
               </Button>
               </Link>
