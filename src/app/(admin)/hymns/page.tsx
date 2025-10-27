@@ -265,11 +265,8 @@ export default function HymnsPage() {
                   {group.hymns.map((hymn: any) => (
                     <div key={hymn._id} className="bg-white rounded-lg p-4 border border-gray-100 hover:shadow-md transition-shadow">
                       {/* Top Row with Edit Button */}
-                      <div className="flex items-start justify-between mb-2">
-                        {/* Hymn Number Badge */}
-                        <div className="h-6 w-6 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 font-semibold text-xs flex-shrink-0">
-                          {hymn.number}
-                        </div>
+                      <div className="flex items-start justify-end">
+
                         
                         {/* Edit Button */}
                         <Link href={`/hymns/edit/${hymn._id}`}>
