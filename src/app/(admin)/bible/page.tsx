@@ -1409,7 +1409,7 @@ export default function BiblePage() {
         <div className="w-full">
           {/* Bible Header */}
           <div className="text-start mb-8">
-            <div className="">
+            <div className="flex items-center justify-between">
               <div className="flex items-start justify-start gap-4 mb-4">
                 <div className="text-4xl">📖</div>
                 <div>
@@ -1421,11 +1421,7 @@ export default function BiblePage() {
                   </p>
                 </div>
               </div>
-            </div>
-          </div>
-
-          {/* Language Filter */}
-          <div className="mb-6">
+              <div className="mb-4">
             <div className="flex items-center justify-end gap-4">
               <label className="text-sm font-medium text-gray-700">
                 Filter by Language:
@@ -1447,6 +1443,11 @@ export default function BiblePage() {
               </Select>
             </div>
           </div>
+            </div>
+          </div>
+
+          {/* Language Filter */}
+       
 
           {/* Accordion Container */}
           <div className="space-y-4 w-full">
