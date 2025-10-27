@@ -37,7 +37,7 @@ import UsersTableShimmer from '@/components/ui/users-table-shimmer';
 
 interface User {
   _id: string;
-  username: string;
+  name: string;
   email: string;
   role: string;
   status: string;
@@ -183,17 +183,6 @@ export default function UsersPage() {
     }
   };
 
-  // Get role icon
-  const getRoleIcon = (role: string) => {
-    switch (role.toLowerCase()) {
-      case 'admin':
-        return <Shield className="h-4 w-4 text-purple-500" />;
-      case 'user':
-        return <User className="h-4 w-4 text-blue-500" />;
-      default:
-        return <User className="h-4 w-4 text-gray-500" />;
-    }
-  };
 
   return (
     <div className={`container mx-auto px-4 py-8 p-6 min-h-screen ${users.length === 0 && !loading ? 'bg-transparent' : 'bg-gray-50'}`}>
@@ -315,7 +304,7 @@ export default function UsersPage() {
                           {user.profile_image ? (
                             <img 
                               src={user.profile_image} 
-                              alt={user.username}
+                              alt={user.name}
                               className="h-10 w-10 rounded-full object-cover"
                             />
                           ) : (
@@ -323,7 +312,7 @@ export default function UsersPage() {
                           )}
                         </div>
                         <div>
-                          <div className="font-medium text-gray-900">{user.username}</div>
+                          <div className="font-medium text-gray-900">{user.name}</div>
                           <div className="text-sm text-gray-500 flex items-center gap-1">
                             <Mail className="h-3 w-3" />
                             {user.email}
@@ -331,6 +320,7 @@ export default function UsersPage() {
                         </div>
                       </div>
                     </TableCell>
+
                     <TableCell className="py-4 px-6">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium text-gray-900 capitalize">

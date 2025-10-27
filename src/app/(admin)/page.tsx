@@ -134,7 +134,7 @@ export default function AdminDashboard() {
   // Recent activity from API data
   const recentActivity = dashboardData?.statistics?.recentUsers?.map((user, index) => ({
     id: user._id,
-    action: 'New user registered',
+    action: user.email,
     user: user.name,
     time: new Date(user.createdAt).toLocaleDateString(),
     type: 'user' as const,
@@ -198,9 +198,7 @@ export default function AdminDashboard() {
                 {recentActivity.map((activity) => (
                   <div key={activity.id} className="flex items-center space-x-4">
                     <div className={`w-2 h-2 rounded-full ${
-                      activity.type === 'user' ? 'bg-blue-500' :
-                      activity.type === 'product' ? 'bg-purple-500' :
-                      'bg-green-500'
+                      activity.type === 'user' ? 'bg-primary' : 'bg-green-500'
                     }`}></div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900 truncate">
