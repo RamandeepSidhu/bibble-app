@@ -928,9 +928,9 @@ export default function BiblePage() {
               {/* STEP 1: STORY CREATION */}
               {currentStep === 0 && (
                 <>
-                  <div className="flex items-center gap-3 mb-6">
+                  <div className="flex items-center justify-between gap-3 mb-6">
                     <FileText className="h-8 w-8 text-theme-primary" />
-                    <div>
+                    <div className="flex-1">
                       <h2 className="text-2xl font-semibold text-gray-900">
                         Create Story
                       </h2>
@@ -938,6 +938,18 @@ export default function BiblePage() {
                         Create a new story under an existing product
                       </p>
                     </div>
+                    <div className="flex items-center gap-2">
+                    <Link href="/products/add">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-2 border-theme-primary text-theme-primary hover:bg-theme-secondary"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Add Product
+                      </Button>
+                    </Link>
+                  </div>
                   </div>
 
                   {/* Product Selection */}
@@ -1295,12 +1307,14 @@ export default function BiblePage() {
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">
-                 { products.length === 1 ? "Book" : "Books"}
+                  {products.length === 1 ? "Book" : "Books"}
                 </h3>
                 <p className="text-2xl font-bold text-theme-primary">
                   {products.length}
                 </p>
-                <p className="text-sm text-gray-500">{ products.length === 1 ? "Book" : "Books"} available</p>
+                <p className="text-sm text-gray-500">
+                  {products.length === 1 ? "Book" : "Books"} available
+                </p>
               </div>
             </div>
           </div>
@@ -1313,12 +1327,14 @@ export default function BiblePage() {
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">
-                  {stories.length === 1 ? 'Story' : 'Stories'}
+                  {stories.length === 1 ? "Story" : "Stories"}
                 </h3>
                 <p className="text-2xl font-bold text-theme-primary">
                   {stories.length}
                 </p>
-                <p className="text-sm text-gray-500">{ stories.length === 1 ? "Story" : "Stories"} available</p>
+                <p className="text-sm text-gray-500">
+                  {stories.length === 1 ? "Story" : "Stories"} available
+                </p>
               </div>
             </div>
           </div>
@@ -1331,12 +1347,14 @@ export default function BiblePage() {
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">
-                  {chapters.length === 1 ? 'Chapter' : 'Chapters'}
+                  {chapters.length === 1 ? "Chapter" : "Chapters"}
                 </h3>
                 <p className="text-2xl font-bold text-theme-primary">
                   {chapters.length}
                 </p>
-                <p className="text-sm text-gray-500">{ chapters.length === 1 ? "Chapter" : "Chapters"} available</p>
+                <p className="text-sm text-gray-500">
+                  {chapters.length === 1 ? "Chapter" : "Chapters"} available
+                </p>
               </div>
             </div>
           </div>
@@ -1352,7 +1370,9 @@ export default function BiblePage() {
                 <p className="text-2xl font-bold text-theme-primary">
                   {verses.length}
                 </p>
-                <p className="text-sm text-gray-500">{ verses.length === 1 ? "Verse" : "Verses"} available</p>
+                <p className="text-sm text-gray-500">
+                  {verses.length === 1 ? "Verse" : "Verses"} available
+                </p>
               </div>
             </div>
           </div>
@@ -1495,13 +1515,18 @@ export default function BiblePage() {
                               )}
                             </h2>
                             <p className="text-gray-600 text-sm">
-                              {productStories.length} {productStories.length === 1 ? "Story" : "Stories"} • Click to expand
+                              {productStories.length}{" "}
+                              {productStories.length === 1
+                                ? "Story"
+                                : "Stories"}{" "}
+                              • Click to expand
                             </p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="bg-theme-primary/10 text-theme-primary px-3 py-1 rounded-full text-sm">
-                            {productStories.length} {productStories.length === 1 ? "Story" : "Stories"}
+                            {productStories.length}{" "}
+                            {productStories.length === 1 ? "Story" : "Stories"}
                           </span>
                           {isProductExpanded ? (
                             <ChevronDown className="h-5 w-5" />
@@ -1561,12 +1586,16 @@ export default function BiblePage() {
                                         </div>
                                         <div>
                                           <h3 className="text-lg font-bold text-theme-primary">
-                                            <Link 
+                                            <Link
                                               href={`/bible/stories/edit/${story._id}`}
-                                              onClick={(e) => e.stopPropagation()}
+                                              onClick={(e) =>
+                                                e.stopPropagation()
+                                              }
                                               className="transition-colors"
                                             >
-                                              {story.title?.[selectedLanguage] ? (
+                                              {story.title?.[
+                                                selectedLanguage
+                                              ] ? (
                                                 <span
                                                   dangerouslySetInnerHTML={{
                                                     __html:
@@ -1581,8 +1610,11 @@ export default function BiblePage() {
                                             </Link>
                                           </h3>
                                           <p className="text-gray-600 text-sm">
-                                            {storyChapters.length} {storyChapters.length === 1 ? "Chapter" : "Chapters"} •
-                                            Click to expand
+                                            {storyChapters.length}{" "}
+                                            {storyChapters.length === 1
+                                              ? "Chapter"
+                                              : "Chapters"}{" "}
+                                            • Click to expand
                                           </p>
                                         </div>
                                       </div>
@@ -1592,14 +1624,20 @@ export default function BiblePage() {
                                           size="sm"
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            handleEditContent("story", story._id);
+                                            handleEditContent(
+                                              "story",
+                                              story._id
+                                            );
                                           }}
                                           className="h-8 px-3 text-xs border-gray-300 text-gray-600 hover:bg-gray-100"
                                         >
                                           <Edit className="h-3 w-3 mr-1" />
                                         </Button>
                                         <span className="bg-theme-primary/10 text-theme-primary px-3 py-1 rounded-full text-sm">
-                                          {storyChapters.length} {storyChapters.length === 1 ? "Chapter" : "Chapters"}
+                                          {storyChapters.length}{" "}
+                                          {storyChapters.length === 1
+                                            ? "Chapter"
+                                            : "Chapters"}
                                         </span>
                                         {isStoryExpanded ? (
                                           <ChevronDown className="h-5 w-5" />
@@ -1613,7 +1651,6 @@ export default function BiblePage() {
                                   {/* Story Content - Collapsible */}
                                   {isStoryExpanded && (
                                     <div className="p-4 bg-gray-50">
-
                                       {/* Chapters Accordion */}
                                       <div className="space-y-2">
                                         {storyChapters.length > 0 ? (
@@ -1646,9 +1683,11 @@ export default function BiblePage() {
                                                       </div>
                                                       <div>
                                                         <h4 className="text-md font-bold text-theme-primary">
-                                                          <Link 
+                                                          <Link
                                                             href={`/bible/chapters/edit/${chapter._id}`}
-                                                            onClick={(e) => e.stopPropagation()}
+                                                            onClick={(e) =>
+                                                              e.stopPropagation()
+                                                            }
                                                             className=" transition-colors"
                                                           >
                                                             Chapter{" "}
@@ -1672,7 +1711,12 @@ export default function BiblePage() {
                                                           </Link>
                                                         </h4>
                                                         <p className="text-gray-600 text-xs">
-                                                          {chapterVerses.length} {chapterVerses.length === 1 ? "Verse" : "Verses"} • Click to expand
+                                                          {chapterVerses.length}{" "}
+                                                          {chapterVerses.length ===
+                                                          1
+                                                            ? "Verse"
+                                                            : "Verses"}{" "}
+                                                          • Click to expand
                                                         </p>
                                                       </div>
                                                     </div>
@@ -1682,14 +1726,21 @@ export default function BiblePage() {
                                                         size="sm"
                                                         onClick={(e) => {
                                                           e.stopPropagation();
-                                                          handleEditContent("chapter", chapter._id);
+                                                          handleEditContent(
+                                                            "chapter",
+                                                            chapter._id
+                                                          );
                                                         }}
                                                         className="h-7 px-2 text-xs border-gray-300 text-gray-600 hover:bg-gray-100"
                                                       >
                                                         <Edit className="h-3 w-3 mr-1" />
                                                       </Button>
                                                       <span className="bg-theme-primary/10 text-theme-primary px-2 py-1 rounded-full text-xs">
-                                                        {chapterVerses.length} {chapterVerses.length === 1 ? "Verse" : "Verses"}
+                                                        {chapterVerses.length}{" "}
+                                                        {chapterVerses.length ===
+                                                        1
+                                                          ? "Verse"
+                                                          : "Verses"}
                                                       </span>
                                                       {isChapterExpanded ? (
                                                         <ChevronDown className="h-4 w-4" />

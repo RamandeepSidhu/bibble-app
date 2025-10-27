@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { CreateHymnPayload, MultilingualText, Language, ProductManagement } from "@/lib/types/bibble";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Save, Loader2, ArrowLeft } from 'lucide-react';
+import { Save, Loader2, ArrowLeft, Plus } from 'lucide-react';
 import Link from "next/link";
 import ClientInstance from "@/shared/client";
 import CKEditorComponent from "@/components/CKEditorComponent";
@@ -263,6 +263,7 @@ export default function AddHymnPage() {
         <div className="bg-white min-h-screen rounded-lg shadow-sky-100 space-y-6 container mx-auto px-4 py-4">
             {/* Header */}
             <div className=" mx-auto px-12 py-6  border-b border-gray-100 bg-white">
+                <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                     <Link href="/hymns" className="text-gray-600 hover:text-gray-900">
                         <ArrowLeft className="h-6 w-6" />
@@ -270,6 +271,19 @@ export default function AddHymnPage() {
                     <div className="flex-1">
                         <h1 className="text-3xl font-bold text-gray-900">Add Hymn</h1>
                         <p className="text-gray-500">Create a new hymn for a song product</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Link href="/products/add">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="flex items-center gap-2 border-theme-primary text-theme-primary hover:bg-theme-secondary"
+                            >
+                                <Plus className="h-4 w-4" />
+                                Add Product
+                            </Button>
+                        </Link>
                     </div>
                 </div>
             </div>
