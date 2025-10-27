@@ -85,8 +85,8 @@ export default function EditChapterPage() {
             return { ...lang, code: match?.code || lang.code, flag: lang.flag || '🌐' };
           });
         }
-        // Filter out Hindi language from available languages
-        const filteredLangs = langs.filter((lang: any) => lang.code !== 'hi');
+        // Filter out Hindi language from available languages and only show active languages
+        const filteredLangs = langs.filter((lang: any) => lang.code !== 'hi' && lang.isActive === true);
         setLanguages(filteredLangs);
         
         // Create language names mapping for display (excluding Hindi)

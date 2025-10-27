@@ -59,8 +59,8 @@ export default function AddChapterPage() {
     try {
       const response: any = await ClientInstance.APP.getLanguage();
       if (response?.success && response.data) {
-        // Filter out Hindi language from available languages
-        const filteredLangs = response.data.filter((lang: Language) => lang.code !== 'hi');
+        // Filter out Hindi language from available languages and only show active languages
+        const filteredLangs = response.data.filter((lang: Language) => lang.code !== 'hi' && lang.isActive === true);
         setLanguages(filteredLangs);
         // Create language names mapping (excluding Hindi)
         const names: { [key: string]: string } = {};

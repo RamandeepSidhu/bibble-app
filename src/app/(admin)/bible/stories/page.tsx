@@ -41,7 +41,7 @@ export default function StoriesPage() {
       try {
         const languagesResponse: any = await ClientInstance.APP.getLanguage();
         if (languagesResponse?.success && languagesResponse?.data) {
-          setLanguages(languagesResponse.data);
+          setLanguages(languagesResponse.data.filter((lang: any) => lang.isActive === true));
         }
       } catch (error) {
         console.error("Error fetching languages:", error);

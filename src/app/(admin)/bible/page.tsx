@@ -57,7 +57,6 @@ const steps = [
   { id: "verse", title: "Verses", icon: Hash },
 ];
 
-
 interface BibleFormData {
   // Story data (step 1)
   story: {
@@ -101,17 +100,25 @@ export default function BiblePage() {
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [verses, setVerses] = useState<Verse[]>([]);
   const [languages, setLanguages] = useState<Language[]>([]);
-  const [languageNames, setLanguageNames] = useState<{ [key: string]: string }>({});
+  const [languageNames, setLanguageNames] = useState<{ [key: string]: string }>(
+    {}
+  );
   const [selectedProduct, setSelectedProduct] =
     useState<ProductManagement | null>(null);
-  
+
   // Accordion state management
-  const [expandedProducts, setExpandedProducts] = useState<Set<string>>(new Set());
-  const [expandedStories, setExpandedStories] = useState<Set<string>>(new Set());
-  const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set());
-  
+  const [expandedProducts, setExpandedProducts] = useState<Set<string>>(
+    new Set()
+  );
+  const [expandedStories, setExpandedStories] = useState<Set<string>>(
+    new Set()
+  );
+  const [expandedChapters, setExpandedChapters] = useState<Set<string>>(
+    new Set()
+  );
+
   // Language filter state
-  const [selectedLanguage, setSelectedLanguage] = useState<string>('en');
+  const [selectedLanguage, setSelectedLanguage] = useState<string>("en");
 
   // Track created content IDs for edit mode
   const [createdStoryId, setCreatedStoryId] = useState<string | null>(null);
@@ -299,9 +306,11 @@ export default function BiblePage() {
         }
 
         // Filter out Hindi language from available languages and only show active languages
-        const filteredLangs = languagesData.filter((lang: any) => lang.code !== 'hi' && lang.isActive === true);
+        const filteredLangs = languagesData.filter(
+          (lang: any) => lang.code !== "hi" && lang.isActive === true
+        );
         setLanguages(filteredLangs);
-        
+
         // Create language names mapping for display (excluding Hindi)
         const namesMapping: { [key: string]: string } = {};
         filteredLangs.forEach((lang: any) => {
@@ -325,7 +334,7 @@ export default function BiblePage() {
 
   // Helper function to strip HTML tags for clean display
   const stripHtmlTags = (html: string) => {
-    return html.replace(/<[^>]*>/g, '');
+    return html.replace(/<[^>]*>/g, "");
   };
 
   // Accordion toggle functions
@@ -404,11 +413,11 @@ export default function BiblePage() {
 
   const isMultilingualFieldComplete = (field: MultilingualText): boolean => {
     // Get all available languages from the languages state
-    const availableLanguages = languages.map(lang => lang.code);
-    
+    const availableLanguages = languages.map((lang) => lang.code);
+
     // Check if all available languages have content
-    return availableLanguages.every(lang => 
-      field[lang] && field[lang].trim() !== ''
+    return availableLanguages.every(
+      (lang) => field[lang] && field[lang].trim() !== ""
     );
   };
 
@@ -416,7 +425,7 @@ export default function BiblePage() {
     const cleaned: MultilingualText = {};
     Object.entries(data).forEach(([key, value]) => {
       // Exclude Hindi language (hi) from payload
-      if (key !== 'hi' && value && value.trim() !== "") {
+      if (key !== "hi" && value && value.trim() !== "") {
         cleaned[key] = value;
       }
     });
@@ -433,9 +442,7 @@ export default function BiblePage() {
           return false;
         }
         if (!isMultilingualFieldComplete(formData.story.title)) {
-          setValidationError(
-            "Please fill in the story title in all languages"
-          );
+          setValidationError("Please fill in the story title in all languages");
           return false;
         }
         if (!isMultilingualFieldComplete(formData.story.description)) {
@@ -466,9 +473,7 @@ export default function BiblePage() {
         }
         // Verse number is auto-calculated, no validation needed
         if (!isMultilingualFieldComplete(formData.verse.text)) {
-          setValidationError(
-            "Please fill in the verse text in all languages"
-          );
+          setValidationError("Please fill in the verse text in all languages");
           return false;
         }
         break;
@@ -506,10 +511,15 @@ export default function BiblePage() {
         let response: any;
         if (createdStoryId) {
           // Update existing story
-          response = await ClientInstance.APP.updateStory(createdStoryId, storyPayload);
+          response = await ClientInstance.APP.updateStory(
+            createdStoryId,
+            storyPayload
+          );
         } else {
           // Create new story
-          const nextOrder = await getNextStoryOrderSmart(formData.story.productId);
+          const nextOrder = await getNextStoryOrderSmart(
+            formData.story.productId
+          );
           response = await ClientInstance.APP.createStory({
             ...storyPayload,
             order: nextOrder,
@@ -517,7 +527,7 @@ export default function BiblePage() {
         }
         if (response?.success) {
           const storyId = response.data._id || response.data.id;
-          
+
           if (createdStoryId) {
             showToast.success(
               "Story Updated",
@@ -536,14 +546,14 @@ export default function BiblePage() {
             );
             setCreatedStoryId(storyId);
           }
-          
+
           // Update form data with the story ID and move to next step
-          setFormData(prev => ({
+          setFormData((prev) => ({
             ...prev,
             chapter: {
               ...prev.chapter,
-              storyId: storyId
-            }
+              storyId: storyId,
+            },
           }));
           // Move to next step after a short delay to ensure state is updated
           setTimeout(() => {
@@ -569,10 +579,15 @@ export default function BiblePage() {
         let response: any;
         if (createdChapterId) {
           // Update existing chapter
-          response = await ClientInstance.APP.updateChapter(createdChapterId, chapterPayload);
+          response = await ClientInstance.APP.updateChapter(
+            createdChapterId,
+            chapterPayload
+          );
         } else {
           // Create new chapter
-          const nextOrder = await getNextChapterOrderSmart(formData.chapter.storyId);
+          const nextOrder = await getNextChapterOrderSmart(
+            formData.chapter.storyId
+          );
           response = await ClientInstance.APP.createChapter({
             ...chapterPayload,
             order: nextOrder,
@@ -580,7 +595,7 @@ export default function BiblePage() {
         }
         if (response?.success) {
           const chapterId = response.data._id || response.data.id;
-          
+
           if (createdChapterId) {
             showToast.success(
               "Chapter Updated",
@@ -599,14 +614,14 @@ export default function BiblePage() {
             );
             setCreatedChapterId(chapterId);
           }
-          
+
           // Update form data with the chapter ID and move to next step
-          setFormData(prev => ({
+          setFormData((prev) => ({
             ...prev,
             verse: {
               ...prev.verse,
-              chapterId: chapterId
-            }
+              chapterId: chapterId,
+            },
           }));
           // Move to next step after a short delay to ensure state is updated
           setTimeout(() => {
@@ -632,10 +647,16 @@ export default function BiblePage() {
         let response: any;
         if (createdVerseId) {
           // Update existing verse
-          response = await ClientInstance.APP.updateVerse(createdVerseId, versePayload);
+          response = await ClientInstance.APP.updateVerse(
+            createdVerseId,
+            versePayload
+          );
         } else {
           // Create new verse
-          const nextNumber = await getNextVerseNumber(formData.verse.chapterId, ClientInstance);
+          const nextNumber = await getNextVerseNumber(
+            formData.verse.chapterId,
+            ClientInstance
+          );
           response = await ClientInstance.APP.createVerse({
             ...versePayload,
             number: nextNumber,
@@ -643,7 +664,7 @@ export default function BiblePage() {
         }
         if (response?.success) {
           const verseId = response.data._id || response.data.id;
-          
+
           if (createdVerseId) {
             showToast.success(
               "Verse Updated",
@@ -662,7 +683,7 @@ export default function BiblePage() {
             );
             setCreatedVerseId(verseId);
           }
-          
+
           // Redirect back to Bible page after successful creation/update
           setTimeout(() => {
             router.push("/bible");
@@ -815,7 +836,6 @@ export default function BiblePage() {
     }
   };
 
-
   const getStoryName = (storyId: string) => {
     const story = stories.find((s) => s._id === storyId);
     return story
@@ -876,13 +896,12 @@ export default function BiblePage() {
         {/* Header */}
         <div className="border-b border-gray-100 bg-white">
           <div className="mx-auto px-5 py-6 flex items-center gap-4">
-            <Button
-              variant="outline"
-              onClick={handleCancelAdd}
-              className="text-gray-600 hover:text-gray-900"
+            <button
+              onClick={handleBackToBible}
+              className="text-gray-600 hover:text-gray-900 transition-colors"
             >
               <ArrowLeft className="h-6 w-6" />
-            </Button>
+            </button>
             <div className="flex-1">
               <h1 className="text-3xl font-bold text-gray-900">
                 Add Bible Content
@@ -939,14 +958,20 @@ export default function BiblePage() {
                     >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Choose a product to create story under">
-                          {formData.story.productId && (() => {
-                            const selectedProduct = products.find(p => p._id === formData.story.productId);
-                            if (selectedProduct) {
-                              const firstTitle = Object.values(selectedProduct.title || {})[0] || '';
-                              return stripHtmlTags(firstTitle);
-                            }
-                            return '';
-                          })()}
+                          {formData.story.productId &&
+                            (() => {
+                              const selectedProduct = products.find(
+                                (p) => p._id === formData.story.productId
+                              );
+                              if (selectedProduct) {
+                                const firstTitle =
+                                  Object.values(
+                                    selectedProduct.title || {}
+                                  )[0] || "";
+                                return stripHtmlTags(firstTitle);
+                              }
+                              return "";
+                            })()}
                         </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
@@ -955,9 +980,11 @@ export default function BiblePage() {
                             <div className="flex items-center gap-2">
                               <span>📖</span>
                               <span>
-                                {stripHtmlTags(product.title.en ||
-                                  product.title.sw ||
-                                  "Untitled")}
+                                {stripHtmlTags(
+                                  product.title.en ||
+                                    product.title.sw ||
+                                    "Untitled"
+                                )}
                               </span>
                             </div>
                           </SelectItem>
@@ -1001,7 +1028,6 @@ export default function BiblePage() {
                       placeholder="Enter story description in multiple languages"
                     />
                   </div>
-
                 </>
               )}
 
@@ -1037,7 +1063,6 @@ export default function BiblePage() {
                       placeholder="Enter chapter title"
                     />
                   </div>
-
                 </>
               )}
 
@@ -1067,14 +1092,20 @@ export default function BiblePage() {
                     >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Choose a chapter to create verse under">
-                          {formData.verse.chapterId && (() => {
-                            const selectedChapter = chapters.find(c => c._id === formData.verse.chapterId);
-                            if (selectedChapter) {
-                              const firstTitle = Object.values(selectedChapter.title || {})[0] || '';
-                              return stripHtmlTags(firstTitle);
-                            }
-                            return '';
-                          })()}
+                          {formData.verse.chapterId &&
+                            (() => {
+                              const selectedChapter = chapters.find(
+                                (c) => c._id === formData.verse.chapterId
+                              );
+                              if (selectedChapter) {
+                                const firstTitle =
+                                  Object.values(
+                                    selectedChapter.title || {}
+                                  )[0] || "";
+                                return stripHtmlTags(firstTitle);
+                              }
+                              return "";
+                            })()}
                         </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
@@ -1089,26 +1120,30 @@ export default function BiblePage() {
                                 <span className="font-medium">Chapter:</span>
                               </div>
                               {/* Chapter Title - All Languages */}
-                              {Object.entries(chapter.title || {}).map(([lang, text]) => (
-                                <div key={lang} className="text-xs text-gray-600 flex gap-1 ml-4">
-                                  <span className="text-gray-500 font-medium">
-                                    {getLanguageName(lang)}:
-                                  </span>
-                                  <span 
-                                    className="truncate"
-                                    title={text} // Show full HTML content on hover
+                              {Object.entries(chapter.title || {}).map(
+                                ([lang, text]) => (
+                                  <div
+                                    key={lang}
+                                    className="text-xs text-gray-600 flex gap-1 ml-4"
                                   >
-                                    {stripHtmlTags(text)}
-                                  </span>
-                                </div>
-                              ))}
+                                    <span className="text-gray-500 font-medium">
+                                      {getLanguageName(lang)}:
+                                    </span>
+                                    <span
+                                      className="truncate"
+                                      title={text} // Show full HTML content on hover
+                                    >
+                                      {stripHtmlTags(text)}
+                                    </span>
+                                  </div>
+                                )
+                              )}
                             </div>
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
-
 
                   {/* Verse Text */}
                   <div className="space-y-2">
@@ -1127,7 +1162,6 @@ export default function BiblePage() {
                       placeholder="Enter verse text"
                     />
                   </div>
-
                 </>
               )}
             </div>
@@ -1181,9 +1215,17 @@ export default function BiblePage() {
                     {createdVerseId ? "Update Verse" : "Create Verse"}
                   </div>
                 ) : currentStep === 1 ? (
-                  createdChapterId ? "Update Chapter" : "Next Step"
+                  createdChapterId ? (
+                    "Update Chapter"
+                  ) : (
+                    "Next Step"
+                  )
                 ) : currentStep === 0 ? (
-                  createdStoryId ? "Update Story" : "Next Step"
+                  createdStoryId ? (
+                    "Update Story"
+                  ) : (
+                    "Next Step"
+                  )
                 ) : (
                   "Next Step"
                 )}
@@ -1195,551 +1237,638 @@ export default function BiblePage() {
     );
   }
 
-// Main list view
-return (
-  <div
-    className={`min-h-screen rounded-lg shadow-sky-100 space-y-6 container mx-auto px-4 py-8 ${
-      products.length === 0 && !isLoading ? "bg-transparent" : "bg-white"
-    }`}
-  >
-    {/* Header */}
-    <div className="border-b border-gray-100">
-      <div className="mx-auto px-5 py-6 flex items-center gap-4">
-        <button
-          onClick={handleBackToBible}
-          className="text-gray-600 hover:text-gray-900 transition-colors"
-        >
-          <ArrowLeft className="h-6 w-6" />
-        </button>
-        <div className="flex-1">
-          <h1 className="text-3xl font-bold text-gray-900">
-            Bible Content Management
-          </h1>
-          <p className="text-gray-500">Manage your Bible content hierarchy</p>
-        </div>
-        <div className="flex gap-3">
-          <Button
-            onClick={handleAddBible}
-            className="bg-theme-primary text-theme-secondary hover:bg-theme-primary-dark flex items-center gap-2"
-          >
-            <Plus className="h-4 w-4" />
-            Add Bible Content
-          </Button>
-
-          <Link href="/bible/stories">
-            <Button variant="outline" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              Manage Stories
-            </Button>
-          </Link>
-          <Link href="/bible/chapters">
-            <Button variant="outline" className="flex items-center gap-2">
-              <Book className="h-4 w-4" />
-              Manage Chapters
-            </Button>
-          </Link>
-          <Link href="/bible/verses">
-            <Button variant="outline" className="flex items-center gap-2">
-              <Hash className="h-4 w-4" />
-              Manage Verses
-            </Button>
-          </Link>
-        </div>
-      </div>
-    </div>
-
-    {/* Content Overview - Only show if there are products */}
-    {products.length > 0 ? (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Products Overview */}
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="h-12 w-12 rounded-full bg-theme-secondary text-theme-primary flex items-center justify-center">
-              <Book className="h-6 w-6" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">Products</h3>
-              <p className="text-2xl font-bold text-theme-primary">
-                {products.length}
-              </p>
-              <p className="text-sm text-gray-500">Books available</p>
-            </div>
+  // Main list view
+  return (
+    <div
+      className={`min-h-screen rounded-lg shadow-sky-100 space-y-6 container mx-auto px-4 py-8 ${
+        products.length === 0 && !isLoading ? "bg-transparent" : "bg-white"
+      }`}
+    >
+      {/* Header */}
+      <div className="border-b border-gray-100">
+        <div className="mx-auto px-5 py-6 flex items-center gap-4">
+          <div className="flex-1">
+            <h1 className="text-3xl font-bold text-gray-900">
+              Bible Content Management
+            </h1>
+            <p className="text-gray-500">Manage your Bible content hierarchy</p>
           </div>
-        </div>
+          <div className="flex gap-3">
+            <Button
+              onClick={handleAddBible}
+              className="bg-theme-primary text-theme-secondary hover:bg-theme-primary-dark flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Add Bible Content
+            </Button>
 
-        {/* Stories Overview */}
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="h-12 w-12 rounded-full bg-theme-secondary text-theme-primary flex items-center justify-center">
-              <FileText className="h-6 w-6" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">Stories</h3>
-              <p className="text-2xl font-bold text-theme-primary">
-                {stories.length}
-              </p>
-              <p className="text-sm text-gray-500">Stories created</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Chapters Overview */}
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="h-12 w-12 rounded-full bg-theme-secondary text-theme-primary flex items-center justify-center">
-              <BookOpen className="h-6 w-6" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">Chapters</h3>
-              <p className="text-2xl font-bold text-theme-primary">
-                {chapters.length}
-              </p>
-              <p className="text-sm text-gray-500">Chapters created</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Verses Overview */}
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="h-12 w-12 rounded-full bg-theme-secondary text-theme-primary flex items-center justify-center">
-              <Hash className="h-6 w-6" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">Verses</h3>
-              <p className="text-2xl font-bold text-theme-primary">
-                {verses.length}
-              </p>
-              <p className="text-sm text-gray-500">Verses created</p>
-            </div>
+            <Link href="/bible/stories">
+              <Button variant="outline" className="flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                View Stories
+              </Button>
+            </Link>
+            <Link href="/bible/chapters">
+              <Button variant="outline" className="flex items-center gap-2">
+                <Book className="h-4 w-4" />
+                View Chapters
+              </Button>
+            </Link>
+            <Link href="/bible/verses">
+              <Button variant="outline" className="flex items-center gap-2">
+                <Hash className="h-4 w-4" />
+                View Verses
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
-    ) : (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <Book className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <div className="text-gray-500 text-lg mb-2">Book not have</div>
-          <p className="text-gray-400">No Bible books available yet.</p>
+
+      {/* Content Overview - Only show if there are products and not loading */}
+      {!isInitialLoading && products.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Products Overview */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-12 w-12 rounded-full bg-theme-secondary text-theme-primary flex items-center justify-center">
+                <Book className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Products
+                </h3>
+                <p className="text-2xl font-bold text-theme-primary">
+                  {products.length}
+                </p>
+                <p className="text-sm text-gray-500">Books available</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Stories Overview */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-12 w-12 rounded-full bg-theme-secondary text-theme-primary flex items-center justify-center">
+                <FileText className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Stories</h3>
+                <p className="text-2xl font-bold text-theme-primary">
+                  {stories.length}
+                </p>
+                <p className="text-sm text-gray-500">Stories created</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Chapters Overview */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-12 w-12 rounded-full bg-theme-secondary text-theme-primary flex items-center justify-center">
+                <BookOpen className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Chapters
+                </h3>
+                <p className="text-2xl font-bold text-theme-primary">
+                  {chapters.length}
+                </p>
+                <p className="text-sm text-gray-500">Chapters created</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Verses Overview */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-12 w-12 rounded-full bg-theme-secondary text-theme-primary flex items-center justify-center">
+                <Hash className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Verses</h3>
+                <p className="text-2xl font-bold text-theme-primary">
+                  {verses.length}
+                </p>
+                <p className="text-sm text-gray-500">Verses created</p>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-    )}
+      ) : !isInitialLoading ? (
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <Book className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <div className="text-gray-500 text-lg mb-2">
+              No Bible books found
+            </div>
+            <p className="text-gray-400">No Bible books available yet.</p>
+          </div>
+        </div>
+      ) : null}
 
-     {/* Accordion Bible Content */}
-     {products.length > 0 ? (
-       <div className="w-full">
-         {/* Bible Header */}
-         <div className="text-start mb-8">
-           <div className="">
-             <div className="flex items-start justify-start gap-4 mb-4">
-               <div className="text-xl">📖</div>
-               <div>
-                 <h1 className="text-4xl font-bold tracking-wide text-theme-primary">Bible</h1>
-                  <p className="text-gray-700 text-sm font-medium">Read products, stories, chapters and verses</p>
-               </div>
-             </div>
-           </div>
-         </div>
+      {/* Loading State */}
+      {isInitialLoading && (
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-theme-primary mx-auto mb-4"></div>
+            <div className="text-gray-500 text-lg mb-2">
+              Loading Bible content...
+            </div>
+            <p className="text-gray-400">
+              Please wait while we fetch your Bible books.
+            </p>
+          </div>
+        </div>
+      )}
 
-         {/* Language Filter */}
-         <div className="mb-6">
-           <div className="flex items-center justify-end gap-4">
-             <label className="text-sm font-medium text-gray-700">Filter by Language:</label>
-             <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
-               <SelectTrigger className="w-48">
-                 <SelectValue placeholder="Select Language" />
-               </SelectTrigger>
-               <SelectContent>
-                 {languages.map((lang) => (
-                   <SelectItem key={lang.code} value={lang.code}>
-                     {lang.name}
-                   </SelectItem>
-                 ))}
-               </SelectContent>
-             </Select>
-           </div>
-         </div>
-
-         {/* Accordion Container */}
-         <div className="space-y-4 w-full">
-
-          {(() => {
-            const productsWithContent = products.filter((product) => {
-              const productStories = stories.filter(
-                (s) =>
-                  (typeof s.productId === "object"
-                    ? s.productId._id
-                    : s.productId) === product._id
-              );
-              return productStories.length > 0;
-            });
-
-            if (productsWithContent.length === 0) {
-              return (
-                <div className="flex items-center justify-center min-h-[400px]">
-                  <div className="text-center">
-                    <Book className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <div className="text-gray-500 text-lg mb-2">
-                      Bible book not found
-                    </div>
-                    <p className="text-gray-400">
-                      No products have stories, chapters, or verses created yet.
-                    </p>
-                  </div>
+      {/* Accordion Bible Content */}
+      {!isInitialLoading && products.length > 0 ? (
+        <div className="w-full">
+          {/* Bible Header */}
+          <div className="text-start mb-8">
+            <div className="">
+              <div className="flex items-start justify-start gap-4 mb-4">
+                <div className="text-xl">📖</div>
+                <div>
+                  <h1 className="text-4xl font-bold tracking-wide text-theme-primary">
+                    Bible
+                  </h1>
+                  <p className="text-gray-700 text-sm font-medium">
+                    Read products, stories, chapters and verses
+                  </p>
                 </div>
-              );
-            }
+              </div>
+            </div>
+          </div>
 
-            return productsWithContent.map((product) => {
-              const productStories = stories.filter(
-                (s) =>
-                  (typeof s.productId === "object"
-                    ? s.productId._id
-                    : s.productId) === product._id
-              );
-              const isProductExpanded = expandedProducts.has(product._id);
+          {/* Language Filter */}
+          <div className="mb-6">
+            <div className="flex items-center justify-end gap-4">
+              <label className="text-sm font-medium text-gray-700">
+                Filter by Language:
+              </label>
+              <Select
+                value={selectedLanguage}
+                onValueChange={setSelectedLanguage}
+              >
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Select Language" />
+                </SelectTrigger>
+                <SelectContent>
+                  {languages.map((lang) => (
+                    <SelectItem key={lang.code} value={lang.code}>
+                      {lang.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
 
-              return (
-                <div
-                  key={product._id}
-                  className="bg-white border border-gray-200 rounded-lg shadow-md overflow-hidden"
-                >
-                  {/* Product Accordion Header */}
-                  <div 
-                    className="bg-gradient-to-r from-gray-50 to-gray-100 text-theme-primary p-4 cursor-pointer hover:from-gray-100 hover:to-gray-200 transition-colors w-full border-l-4 border-theme-primary"
-                    onClick={() => toggleProduct(product._id)}
+          {/* Accordion Container */}
+          <div className="space-y-4 w-full">
+            {(() => {
+              const productsWithContent = products.filter((product) => {
+                const productStories = stories.filter(
+                  (s) =>
+                    (typeof s.productId === "object"
+                      ? s.productId._id
+                      : s.productId) === product._id
+                );
+                return productStories.length > 0;
+              });
+
+              if (productsWithContent.length === 0) {
+                return (
+                  <div className="flex items-center justify-center min-h-[400px]">
+                    <div className="text-center">
+                      <Book className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <div className="text-gray-500 text-lg mb-2">
+                        Bible book not found
+                      </div>
+                      <p className="text-gray-400">
+                        No products have stories, chapters, or verses created
+                        yet.
+                      </p>
+                    </div>
+                  </div>
+                );
+              }
+
+              return productsWithContent.map((product) => {
+                const productStories = stories.filter(
+                  (s) =>
+                    (typeof s.productId === "object"
+                      ? s.productId._id
+                      : s.productId) === product._id
+                );
+                const isProductExpanded = expandedProducts.has(product._id);
+
+                return (
+                  <div
+                    key={product._id}
+                    className="bg-white border border-gray-200 rounded-lg shadow-md overflow-hidden"
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="bg-theme-primary/10 p-2 rounded-lg">
-                          <Book className="h-5 w-5 text-theme-primary" />
+                    {/* Product Accordion Header */}
+                    <div
+                      className="bg-gradient-to-r from-gray-50 to-gray-100 text-theme-primary p-4 cursor-pointer hover:from-gray-100 hover:to-gray-200 transition-colors w-full border-l-4 border-theme-primary"
+                      onClick={() => toggleProduct(product._id)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="bg-theme-primary/10 p-2 rounded-lg">
+                            <Book className="h-5 w-5 text-theme-primary" />
+                          </div>
+                          <div>
+                            <h2 className="text-xl font-bold text-theme-primary">
+                              {product.title?.[selectedLanguage] ? (
+                                <span
+                                  dangerouslySetInnerHTML={{
+                                    __html: product.title[selectedLanguage],
+                                  }}
+                                />
+                              ) : (
+                                "Bible Book"
+                              )}
+                            </h2>
+                            <p className="text-gray-600 text-sm">
+                              {productStories.length} Stories • Click to expand
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <h2 className="text-xl font-bold text-theme-primary">
-                            {product.title?.[selectedLanguage] ? (
+                        <div className="flex items-center gap-2">
+                          <span className="bg-theme-primary/10 text-theme-primary px-3 py-1 rounded-full text-sm">
+                            {productStories.length} Stories
+                          </span>
+                          {isProductExpanded ? (
+                            <ChevronDown className="h-5 w-5" />
+                          ) : (
+                            <ChevronRight className="h-5 w-5" />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Product Content - Collapsible */}
+                    {isProductExpanded && (
+                      <div className="p-6 bg-gray-50">
+                        {product.description?.[selectedLanguage] && (
+                          <div className="mb-6 p-4 bg-white rounded-lg border border-gray-200">
+                            <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                              Description
+                            </h3>
+                            <p className="text-gray-700 italic">
                               <span
                                 dangerouslySetInnerHTML={{
-                                  __html: product.title[selectedLanguage],
+                                  __html: product.description[selectedLanguage],
                                 }}
                               />
-                            ) : (
-                              "Bible Book"
-                            )}
-                          </h2>
-                          <p className="text-gray-600 text-sm">
-                            {productStories.length} Stories • Click to expand
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="bg-theme-primary/10 text-theme-primary px-3 py-1 rounded-full text-sm">
-                          {productStories.length} Stories
-                        </span>
-                        {isProductExpanded ? (
-                          <ChevronDown className="h-5 w-5" />
-                        ) : (
-                          <ChevronRight className="h-5 w-5" />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Product Content - Collapsible */}
-                  {isProductExpanded && (
-                    <div className="p-6 bg-gray-50">
-                      {product.description?.[selectedLanguage] && (
-                        <div className="mb-6 p-4 bg-white rounded-lg border border-gray-200">
-                          <h3 className="text-lg font-semibold text-gray-800 mb-2">Description</h3>
-                          <p className="text-gray-700 italic">
-                            <span
-                              dangerouslySetInnerHTML={{
-                                __html: product.description[selectedLanguage],
-                              }}
-                            />
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Stories Accordion */}
-                      <div className="space-y-3">
-                        {productStories.length > 0 ? (
-                          productStories.map((story) => {
-                            const storyChapters = chapters.filter(
-                              (c) =>
-                                (typeof c.storyId === "object"
-                                  ? c.storyId._id
-                                  : c.storyId) === story._id
-                            );
-                            const isStoryExpanded = expandedStories.has(story._id);
-
-                            return (
-                              <div
-                                key={story._id}
-                                className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden"
-                              >
-                                {/* Story Accordion Header */}
-                                <div 
-                                  className="bg-gradient-to-r from-gray-50 to-gray-100 text-theme-primary p-4 cursor-pointer hover:from-gray-100 hover:to-gray-200 transition-colors w-full border-l-4 border-theme-primary"
-                                  onClick={() => toggleStory(story._id)}
-                                >
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                      <div className="bg-theme-primary/10 p-2 rounded-lg">
-                                        <FileText className="h-5 w-5 text-theme-primary" />
-                                      </div>
-                                      <div>
-                                        <h3 className="text-lg font-bold text-theme-primary">
-                                          {story.title?.[selectedLanguage] ? (
-                                            <span
-                                              dangerouslySetInnerHTML={{
-                                                __html: story.title[selectedLanguage],
-                                              }}
-                                            />
-                                          ) : (
-                                            `Story ${story.order}`
-                                          )}
-                                        </h3>
-                                        <p className="text-gray-600 text-sm">
-                                          {storyChapters.length} Chapters • Click to expand
-                                        </p>
-                                      </div>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      <span className="bg-theme-primary/10 text-theme-primary px-3 py-1 rounded-full text-sm">
-                                        {storyChapters.length} Chapters
-                                      </span>
-                                      {isStoryExpanded ? (
-                                        <ChevronDown className="h-5 w-5" />
-                                      ) : (
-                                        <ChevronRight className="h-5 w-5" />
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-
-                                {/* Story Content - Collapsible */}
-                                {isStoryExpanded && (
-                                  <div className="p-4 bg-gray-50">
-                                     {/* Story Details */}
-                                     <div className="mb-4 p-4 bg-white rounded-lg border border-gray-200">
-                                       <h4 className="text-md font-semibold text-gray-800 mb-2">Story Details</h4>
-                                       <div className="space-y-2">
-                                         {story.title?.[selectedLanguage] && (
-                                           <div className="text-sm text-gray-700">
-                                             <span className="text-gray-500 font-medium">
-                                               Title:
-                                             </span>
-                                             <span className="ml-2">
-                                               <span
-                                                 dangerouslySetInnerHTML={{
-                                                   __html: story.title[selectedLanguage],
-                                                 }}
-                                               />
-                                             </span>
-                                           </div>
-                                         )}
-                                         {story.description?.[selectedLanguage] && (
-                                           <div className="text-sm text-gray-700">
-                                             <span className="text-gray-500 font-medium">
-                                               Description:
-                                             </span>
-                                             <span className="ml-2">
-                                               <span
-                                                 dangerouslySetInnerHTML={{
-                                                   __html: story.description[selectedLanguage],
-                                                 }}
-                                               />
-                                             </span>
-                                           </div>
-                                         )}
-                                       </div>
-                                     </div>
-
-                                    {/* Chapters Accordion */}
-                                    <div className="space-y-2">
-                                      {storyChapters.length > 0 ? (
-                                        storyChapters.map((chapter) => {
-                                          const chapterVerses = verses.filter(
-                                            (v) =>
-                                              (typeof v.chapterId === "object"
-                                                ? v.chapterId._id
-                                                : v.chapterId) === chapter._id
-                                          );
-                                          const isChapterExpanded = expandedChapters.has(chapter._id);
-
-                                          return (
-                                            <div
-                                              key={chapter._id}
-                                              className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden"
-                                            >
-                                              {/* Chapter Accordion Header */}
-                                              <div 
-                                                className="bg-gradient-to-r from-gray-50 to-gray-100 text-theme-primary p-3 cursor-pointer hover:from-gray-100 hover:to-gray-200 transition-colors w-full border-l-4 border-theme-primary"
-                                                onClick={() => toggleChapter(chapter._id)}
-                                              >
-                                                <div className="flex items-center justify-between">
-                                                  <div className="flex items-center gap-3">
-                                                    <div className="bg-theme-primary/10 p-1.5 rounded-lg">
-                                                      <BookOpen className="h-4 w-4 text-theme-primary" />
-                                                    </div>
-                                                    <div>
-                                                      <h4 className="text-md font-bold text-theme-primary">
-                                                        Chapter {chapter.order}
-                                                        {chapter.title?.[selectedLanguage] && (
-                                                          <span className="text-sm font-normal ml-2">
-                                                            - <span dangerouslySetInnerHTML={{ __html: chapter.title[selectedLanguage] }} />
-                                                          </span>
-                                                        )}
-                                                      </h4>
-                                                      <p className="text-gray-600 text-xs">
-                                                        {chapterVerses.length} Verses • Click to expand
-                                                      </p>
-                                                    </div>
-                                                  </div>
-                                                  <div className="flex items-center gap-2">
-                                                    <span className="bg-theme-primary/10 text-theme-primary px-2 py-1 rounded-full text-xs">
-                                                      {chapterVerses.length} Verses
-                                                    </span>
-                                                    {isChapterExpanded ? (
-                                                      <ChevronDown className="h-4 w-4" />
-                                                    ) : (
-                                                      <ChevronRight className="h-4 w-4" />
-                                                    )}
-                                                  </div>
-                                                </div>
-                                              </div>
-
-                                              {/* Chapter Content - Collapsible */}
-                                              {isChapterExpanded && (
-                                                <div className="p-4 bg-gray-50">
-                                                  {/* Verses Display */}
-                                                  <div className="space-y-3">
-                                                    {chapterVerses.length > 0 ? (
-                                                      chapterVerses.map((verse) => (
-                                                        <div
-                                                          key={verse._id}
-                                                          className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm"
-                                                        >
-                                                          <div className="flex justify-between items-start mb-3">
-                                                            <div className="flex items-center gap-2">
-                                                              <span className="bg-theme-primary text-theme-secondary text-sm font-bold px-2 py-1 rounded-full">
-                                                                {verse.number}
-                                                              </span>
-                                                              <span className="text-sm font-semibold text-theme-primary">
-                                                                Verse {verse.number}
-                                                              </span>
-                                                            </div>
-                                                            <Button
-                                                              variant="outline"
-                                                              size="sm"
-                                                              onClick={() =>
-                                                                handleEditContent("verse", verse._id)
-                                                              }
-                                                              className="text-theme-primary border-theme-primary hover:bg-theme-primary/10"
-                                                            >
-                                                              <Edit className="h-4 w-4 mr-1" /> Edit
-                                                            </Button>
-                                                          </div>
-                                                          
-                                                          {/* Verse Text */}
-                                                          <div className="text-gray-800 leading-relaxed">
-                                                            {verse.text?.[selectedLanguage] ? (
-                                                              <span
-                                                                dangerouslySetInnerHTML={{
-                                                                  __html: verse.text[selectedLanguage],
-                                                                }}
-                                                              />
-                                                            ) : (
-                                                              <span className="italic text-gray-500">
-                                                                No verse text available in {getLanguageName(selectedLanguage)}
-                                                              </span>
-                                                            )}
-                                                          </div>
-                                                        </div>
-                                                      ))
-                                                    ) : (
-                                                      <div className="text-center py-4 text-gray-500 italic">
-                                                        No verses found for this chapter
-                                                      </div>
-                                                    )}
-                                                  </div>
-                                                </div>
-                                              )}
-                                            </div>
-                                          );
-                                        })
-                                      ) : (
-                                        <div className="text-center py-4 text-gray-500 text-sm">
-                                          <p>No chapters created yet for this story.</p>
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })
-                        ) : (
-                          <div className="text-center py-8 text-gray-500">
-                            <p>No stories created yet for this product.</p>
-                            <p className="text-sm">
-                              Click "Add Bible Content" to create stories, chapters, and verses.
                             </p>
                           </div>
                         )}
+
+                        {/* Stories Accordion */}
+                        <div className="space-y-3">
+                          {productStories.length > 0 ? (
+                            productStories.map((story) => {
+                              const storyChapters = chapters.filter(
+                                (c) =>
+                                  (typeof c.storyId === "object"
+                                    ? c.storyId._id
+                                    : c.storyId) === story._id
+                              );
+                              const isStoryExpanded = expandedStories.has(
+                                story._id
+                              );
+
+                              return (
+                                <div
+                                  key={story._id}
+                                  className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden"
+                                >
+                                  {/* Story Accordion Header */}
+                                  <div
+                                    className="bg-gradient-to-r from-gray-50 to-gray-100 text-theme-primary p-4 cursor-pointer hover:from-gray-100 hover:to-gray-200 transition-colors w-full border-l-4 border-theme-primary"
+                                    onClick={() => toggleStory(story._id)}
+                                  >
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-3">
+                                        <div className="bg-theme-primary/10 p-2 rounded-lg">
+                                          <FileText className="h-5 w-5 text-theme-primary" />
+                                        </div>
+                                        <div>
+                                          <h3 className="text-lg font-bold text-theme-primary">
+                                            {story.title?.[selectedLanguage] ? (
+                                              <span
+                                                dangerouslySetInnerHTML={{
+                                                  __html:
+                                                    story.title[
+                                                      selectedLanguage
+                                                    ],
+                                                }}
+                                              />
+                                            ) : (
+                                              `Story ${story.order}`
+                                            )}
+                                          </h3>
+                                          <p className="text-gray-600 text-sm">
+                                            {storyChapters.length} Chapters •
+                                            Click to expand
+                                          </p>
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <span className="bg-theme-primary/10 text-theme-primary px-3 py-1 rounded-full text-sm">
+                                          {storyChapters.length} Chapters
+                                        </span>
+                                        {isStoryExpanded ? (
+                                          <ChevronDown className="h-5 w-5" />
+                                        ) : (
+                                          <ChevronRight className="h-5 w-5" />
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Story Content - Collapsible */}
+                                  {isStoryExpanded && (
+                                    <div className="p-4 bg-gray-50">
+                                      {/* Story Details */}
+                                      <div className="mb-4 p-4 bg-white rounded-lg border border-gray-200">
+                                        <h4 className="text-md font-semibold text-gray-800 mb-2">
+                                          Story Details
+                                        </h4>
+                                        <div className="space-y-2">
+                                          {story.title?.[selectedLanguage] && (
+                                            <div className="text-sm text-gray-700">
+                                              <span className="text-gray-500 font-medium">
+                                                Title:
+                                              </span>
+                                              <span className="ml-2">
+                                                <span
+                                                  dangerouslySetInnerHTML={{
+                                                    __html:
+                                                      story.title[
+                                                        selectedLanguage
+                                                      ],
+                                                  }}
+                                                />
+                                              </span>
+                                            </div>
+                                          )}
+                                          {story.description?.[
+                                            selectedLanguage
+                                          ] && (
+                                            <div className="text-sm text-gray-700">
+                                              <span className="text-gray-500 font-medium">
+                                                Description:
+                                              </span>
+                                              <span className="ml-2">
+                                                <span
+                                                  dangerouslySetInnerHTML={{
+                                                    __html:
+                                                      story.description[
+                                                        selectedLanguage
+                                                      ],
+                                                  }}
+                                                />
+                                              </span>
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+
+                                      {/* Chapters Accordion */}
+                                      <div className="space-y-2">
+                                        {storyChapters.length > 0 ? (
+                                          storyChapters.map((chapter) => {
+                                            const chapterVerses = verses.filter(
+                                              (v) =>
+                                                (typeof v.chapterId === "object"
+                                                  ? v.chapterId._id
+                                                  : v.chapterId) === chapter._id
+                                            );
+                                            const isChapterExpanded =
+                                              expandedChapters.has(chapter._id);
+
+                                            return (
+                                              <div
+                                                key={chapter._id}
+                                                className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden"
+                                              >
+                                                {/* Chapter Accordion Header */}
+                                                <div
+                                                  className="bg-gradient-to-r from-gray-50 to-gray-100 text-theme-primary p-3 cursor-pointer hover:from-gray-100 hover:to-gray-200 transition-colors w-full border-l-4 border-theme-primary"
+                                                  onClick={() =>
+                                                    toggleChapter(chapter._id)
+                                                  }
+                                                >
+                                                  <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-3">
+                                                      <div className="bg-theme-primary/10 p-1.5 rounded-lg">
+                                                        <BookOpen className="h-4 w-4 text-theme-primary" />
+                                                      </div>
+                                                      <div>
+                                                        <h4 className="text-md font-bold text-theme-primary">
+                                                          Chapter{" "}
+                                                          {chapter.order}
+                                                          {chapter.title?.[
+                                                            selectedLanguage
+                                                          ] && (
+                                                            <span className="text-sm font-normal ml-2">
+                                                              -{" "}
+                                                              <span
+                                                                dangerouslySetInnerHTML={{
+                                                                  __html:
+                                                                    chapter
+                                                                      .title[
+                                                                      selectedLanguage
+                                                                    ],
+                                                                }}
+                                                              />
+                                                            </span>
+                                                          )}
+                                                        </h4>
+                                                        <p className="text-gray-600 text-xs">
+                                                          {chapterVerses.length}{" "}
+                                                          Verses • Click to
+                                                          expand
+                                                        </p>
+                                                      </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                      <span className="bg-theme-primary/10 text-theme-primary px-2 py-1 rounded-full text-xs">
+                                                        {chapterVerses.length}{" "}
+                                                        Verses
+                                                      </span>
+                                                      {isChapterExpanded ? (
+                                                        <ChevronDown className="h-4 w-4" />
+                                                      ) : (
+                                                        <ChevronRight className="h-4 w-4" />
+                                                      )}
+                                                    </div>
+                                                  </div>
+                                                </div>
+
+                                                {/* Chapter Content - Collapsible */}
+                                                {isChapterExpanded && (
+                                                  <div className="p-4 bg-gray-50">
+                                                    {/* Verses Display */}
+                                                    <div className="space-y-3">
+                                                      {chapterVerses.length >
+                                                      0 ? (
+                                                        chapterVerses.map(
+                                                          (verse) => (
+                                                            <div
+                                                              key={verse._id}
+                                                              className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm"
+                                                            >
+                                                              <div className="flex justify-between items-start mb-3">
+                                                                <div className="flex items-center gap-2">
+                                                                  <span className="bg-theme-primary text-theme-secondary text-sm font-bold px-2 py-1 rounded-full">
+                                                                    {
+                                                                      verse.number
+                                                                    }
+                                                                  </span>
+                                                                  <span className="text-sm font-semibold text-theme-primary">
+                                                                    Verse{" "}
+                                                                    {
+                                                                      verse.number
+                                                                    }
+                                                                  </span>
+                                                                </div>
+                                                                <Button
+                                                                  variant="outline"
+                                                                  size="sm"
+                                                                  onClick={() =>
+                                                                    handleEditContent(
+                                                                      "verse",
+                                                                      verse._id
+                                                                    )
+                                                                  }
+                                                                  className="text-theme-primary border-theme-primary hover:bg-theme-primary/10"
+                                                                >
+                                                                  <Edit className="h-4 w-4 mr-1" />{" "}
+                                                                  Edit
+                                                                </Button>
+                                                              </div>
+
+                                                              {/* Verse Text */}
+                                                              <div className="text-gray-800 leading-relaxed">
+                                                                {verse.text?.[
+                                                                  selectedLanguage
+                                                                ] ? (
+                                                                  <span
+                                                                    dangerouslySetInnerHTML={{
+                                                                      __html:
+                                                                        verse
+                                                                          .text[
+                                                                          selectedLanguage
+                                                                        ],
+                                                                    }}
+                                                                  />
+                                                                ) : (
+                                                                  <span className="italic text-gray-500">
+                                                                    No verse
+                                                                    text
+                                                                    available in{" "}
+                                                                    {getLanguageName(
+                                                                      selectedLanguage
+                                                                    )}
+                                                                  </span>
+                                                                )}
+                                                              </div>
+                                                            </div>
+                                                          )
+                                                        )
+                                                      ) : (
+                                                        <div className="text-center py-4 text-gray-500 italic">
+                                                          No verses found for
+                                                          this chapter
+                                                        </div>
+                                                      )}
+                                                    </div>
+                                                  </div>
+                                                )}
+                                              </div>
+                                            );
+                                          })
+                                        ) : (
+                                          <div className="text-center py-4 text-gray-500 text-sm">
+                                            <p>
+                                              No chapters created yet for this
+                                              story.
+                                            </p>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })
+                          ) : (
+                            <div className="text-center py-8 text-gray-500">
+                              <p>No stories created yet for this product.</p>
+                              <p className="text-sm">
+                                Click "Add Bible Content" to create stories,
+                                chapters, and verses.
+                              </p>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </div>
-              );
-            });
-          })()}
+                    )}
+                  </div>
+                );
+              });
+            })()}
+          </div>
         </div>
-      </div>
-    ) : null}
+      ) : null}
 
-
-    {/* Delete Confirmation Dialog */}
-    <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Remove Product</DialogTitle>
-          <DialogDescription>
-            Are you sure you want to remove this product from the list? This
-            action cannot be undone.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => {
-              setIsDeleteDialogOpen(false);
-              setProductToDelete(null);
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="destructive"
-            onClick={() => {
-              if (productToDelete) {
-                setProducts((prev) =>
-                  prev.filter((p) => p._id !== productToDelete._id)
-                );
-                showToast.success(
-                  "Product Removed",
-                  "Product has been removed from the list"
-                );
-              }
-              setIsDeleteDialogOpen(false);
-              setProductToDelete(null);
-            }}
-          >
-            Remove
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  </div>
-);
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Remove Product</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to remove this product from the list? This
+              action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsDeleteDialogOpen(false);
+                setProductToDelete(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (productToDelete) {
+                  setProducts((prev) =>
+                    prev.filter((p) => p._id !== productToDelete._id)
+                  );
+                  showToast.success(
+                    "Product Removed",
+                    "Product has been removed from the list"
+                  );
+                }
+                setIsDeleteDialogOpen(false);
+                setProductToDelete(null);
+              }}
+            >
+              Remove
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
 }
