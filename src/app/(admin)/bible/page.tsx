@@ -1468,105 +1468,63 @@ export default function BiblePage() {
                 return (
                   <div
                     key={product._id}
-                    className="group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100"
+                    className="bg-white border border-gray-200 rounded-lg shadow-md overflow-hidden"
                   >
-                    {/* Modern Product Card Header */}
-                    <div className="relative">
-                      {/* Background Pattern */}
-                      <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 opacity-50"></div>
-                      
-                      {/* Header Content */}
-                      <div className="relative p-6">
-                        <div className="flex items-start justify-between mb-4">
-                          {/* Product Icon & Type */}
-                          <div className="flex items-center gap-4">
-                            <div className="relative">
-                              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-                                <Book className="h-8 w-8 text-white" />
-                              </div>
-                              <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                                <span className="text-xs text-white font-bold">✓</span>
-                              </div>
-                            </div>
-                            
-                            <div>
-                              <div className="flex items-center gap-2 mb-2">
-                                <span className="px-3 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full">
-                                  BOOK
-                                </span>
-                                <span className="px-3 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full">
-                                  {product.contentType?.toUpperCase() || 'FREE'}
-                                </span>
-                              </div>
-                              <h2 className="text-2xl font-bold text-gray-900 mb-1">
-                                {product.title?.[selectedLanguage] ? (
-                                  <span
-                                    dangerouslySetInnerHTML={{
-                                      __html: product.title[selectedLanguage],
-                                    }}
-                                  />
-                                ) : (
-                                  "Bible Book"
-                                )}
-                              </h2>
-                            </div>
+                    {/* Product Accordion Header */}
+                    <div
+                      className="bg-gradient-to-r from-gray-50 to-gray-100 text-theme-primary p-4 cursor-pointer hover:from-gray-100 hover:to-gray-200 transition-colors w-full border-l-4 border-theme-primary"
+                      onClick={() => toggleProduct(product._id)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="bg-theme-primary/10 p-2 rounded-lg">
+                            <Book className="h-5 w-5 text-theme-primary" />
                           </div>
-
-                          {/* Expand/Collapse Button */}
-                          <button
-                            onClick={() => toggleProduct(product._id)}
-                            className="p-3 rounded-xl bg-white/80 backdrop-blur-sm border border-gray-200 hover:bg-white hover:shadow-md transition-all duration-200"
-                          >
-                            {isProductExpanded ? (
-                              <ChevronDown className="h-5 w-5 text-gray-600" />
-                            ) : (
-                              <ChevronRight className="h-5 w-5 text-gray-600" />
-                            )}
-                          </button>
+                          <div>
+                            <h2 className="text-xl font-bold text-theme-primary">
+                              {product.title?.[selectedLanguage] ? (
+                                <span
+                                  dangerouslySetInnerHTML={{
+                                    __html: product.title[selectedLanguage],
+                                  }}
+                                />
+                              ) : (
+                                "Bible Book"
+                              )}
+                            </h2>
+                            <p className="text-gray-600 text-sm">
+                              {productStories.length} Stories • Click to expand
+                            </p>
+                          </div>
                         </div>
-
-                        {/* Stats Grid */}
-                        <div className="grid grid-cols-4 gap-4">
-                          <div className="text-center p-3 bg-white/60 backdrop-blur-sm rounded-xl border border-white/20">
-                            <div className="text-2xl font-bold text-blue-600">{productStories.length}</div>
-                            <div className="text-xs text-gray-600 font-medium">Stories</div>
-                          </div>
-                          <div className="text-center p-3 bg-white/60 backdrop-blur-sm rounded-xl border border-white/20">
-                            <div className="text-2xl font-bold text-purple-600">{product.freePages || 0}</div>
-                            <div className="text-xs text-gray-600 font-medium">Free Pages</div>
-                          </div>
-                          <div className="text-center p-3 bg-white/60 backdrop-blur-sm rounded-xl border border-white/20">
-                            <div className="text-2xl font-bold text-green-600">{product.views || 0}</div>
-                            <div className="text-xs text-gray-600 font-medium">Views</div>
-                          </div>
-                          <div className="text-center p-3 bg-white/60 backdrop-blur-sm rounded-xl border border-white/20">
-                            <div className="text-2xl font-bold text-orange-600">{product.shares || 0}</div>
-                            <div className="text-xs text-gray-600 font-medium">Shares</div>
-                          </div>
+                        <div className="flex items-center gap-2">
+                          <span className="bg-theme-primary/10 text-theme-primary px-3 py-1 rounded-full text-sm">
+                            {productStories.length} Stories
+                          </span>
+                          {isProductExpanded ? (
+                            <ChevronDown className="h-5 w-5" />
+                          ) : (
+                            <ChevronRight className="h-5 w-5" />
+                          )}
                         </div>
                       </div>
                     </div>
 
                     {/* Product Content - Collapsible */}
                     {isProductExpanded && (
-                      <div className="p-6 bg-gradient-to-b from-gray-50 to-white">
+                      <div className="p-6 bg-gray-50">
                         {product.description?.[selectedLanguage] && (
-                          <div className="mb-6 p-6 bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200 shadow-sm">
-                            <div className="flex items-center gap-3 mb-4">
-                              <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
-                                <span className="text-white text-sm font-bold">📖</span>
-                              </div>
-                              <h3 className="text-lg font-bold text-gray-800">
-                                Description
-                              </h3>
-                            </div>
-                            <div className="text-gray-700 leading-relaxed">
+                          <div className="mb-6 p-4 bg-white rounded-lg border border-gray-200">
+                            <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                              Description
+                            </h3>
+                            <p className="text-gray-700 italic">
                               <span
                                 dangerouslySetInnerHTML={{
                                   __html: product.description[selectedLanguage],
                                 }}
                               />
-                            </div>
+                            </p>
                           </div>
                         )}
 
