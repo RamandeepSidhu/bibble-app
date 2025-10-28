@@ -136,11 +136,15 @@ export default function HymnsPage() {
   const getProductName = (productId: any) => {
     // If productId is an object (from API response), use it directly
     if (typeof productId === 'object' && productId.title) {
-      return productId.title.en || 'Unknown Product';
+      const title = productId.title.en || 'Unknown Product';
+      return stripHtmlTags(title);
     }
     // If productId is a string, look it up in products array
     const product = products.find(p => p._id === productId);
-    return product?.title.en || 'Unknown Product';
+    if (product?.title?.en) {
+      return stripHtmlTags(product.title.en);
+    }
+    return 'Unknown Product';
   };
 
   if (isLoading) {
@@ -254,7 +258,7 @@ export default function HymnsPage() {
                   </div>
                   <div className="text-right">
                     <div className="text-2xl font-bold text-theme-primary">
-                      {group.hymns.map((hymn: any) => hymn.number).join(', ')}
+                    {group.hymns.length}
                     </div>
                     <div className="text-theme-primary text-sm">Hymns</div>
                   </div>
@@ -266,16 +270,31 @@ export default function HymnsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                   {group.hymns.map((hymn: any) => (
                     <div key={hymn._id} className="bg-white rounded-lg p-4 border border-gray-100 hover:shadow-md transition-shadow">
-                      {/* Top Row with Edit Button */}
-                      <div className="flex items-start justify-end">
-
-                        
+                      {/* Top Row with Action Buttons */}
+                      <div className="flex items-start justify-end gap-2">
                         {/* Edit Button */}
                         <Link href={`/hymns/edit/${hymn._id}`}>
                           <Button variant="outline" size="sm" className="h-6 w-6 p-0 border-gray-300 text-gray-500 hover:bg-gray-100 flex-shrink-0">
                             <Edit className="h-3 w-3" />
                           </Button>
                         </Link>
+                        
+                        {/* Delete Button */}
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-6 w-6 p-0 bg-red-50 text-red-700 border-red-200 hover:bg-red-100 flex-shrink-0"
+                          onClick={() => handleDeleteClick(hymn)}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+
+                      {/* Hymn Number */}
+                      <div className="mb-2">
+                        <span className="inline-flex items-center px-2 py-1 text-xs rounded-full bg-theme-secondary text-theme-primary border border-theme-primary">
+                          Hymn #{hymn.number}
+                        </span>
                       </div>
 
                       {/* Hymn Content - Direct HTML Rendering */}
@@ -304,15 +323,21 @@ export default function HymnsPage() {
           <DialogHeader>
             <DialogTitle>Delete Hymn</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete Hymn #{deletingHymn?.number}? This action cannot be undone.
+              Are you sure you want to delete Hymn #{deletingHymn?.number} from "{getProductName(deletingHymn?.productId)}"? 
+              <br />
+              <span className="text-red-600 font-medium">This action cannot be undone.</span>
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDeleteHymn}>
-              Delete
+            <Button 
+              variant="destructive" 
+              onClick={handleDeleteHymn}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete Hymn
             </Button>
           </DialogFooter>
         </DialogContent>
