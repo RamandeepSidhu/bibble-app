@@ -10,7 +10,6 @@ import {
   Calendar,
   Package,
   Music,
-  RefreshCw,
   ArrowRight,
   User,
   BookOpen
@@ -152,15 +151,6 @@ export default function AdminDashboard() {
           <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
           <p className="text-gray-600 mt-2">Welcome back, {firstName}! Here's what's happening with your platform.</p>
         </div>
-        <Button 
-          variant="outline" 
-          onClick={fetchDashboardData}
-          disabled={loading}
-          className="flex items-center gap-2"
-        >
-          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
       </div>
 
       {/* Stats Grid */}

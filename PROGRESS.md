@@ -207,6 +207,7 @@ getVersesByChapter: (chapterId: string) => HttpClient.get(GET_VERSES_BY_CHAPTER.
 
 ### 🔄 In Progress
 - CRUD Operations Testing and Verification
+- Environment Configuration Documentation
 
 ### ✅ Recently Completed
 - **Language Management Enhancement** - Removed Hindi (hi) language from all Bible content forms
@@ -215,6 +216,8 @@ getVersesByChapter: (chapterId: string) => HttpClient.get(GET_VERSES_BY_CHAPTER.
 - **Form Visibility Fix** - Resolved issue where story edit form was not displaying content
 - **Cancel Button Management** - Removed unnecessary Cancel buttons from Bible content forms
 - **Story Order UI Cleanup** - Hidden Story Order section from story edit page
+- **Dashboard UI Optimization** - Removed manual Refresh button for cleaner, streamlined interface
+- **NextAuth Configuration Fix** - Resolved NEXTAUTH_URL warning with proper environment setup
 
 ### 📋 Pending
 - Enhanced preview functionality
@@ -237,3 +240,5 @@ getVersesByChapter: (chapterId: string) => HttpClient.get(GET_VERSES_BY_CHAPTER.
 - Loading states provide good user experience
 - Multilingual support is built into all content types
 - Responsive design ensures compatibility across devices
+- NextAuth authentication properly configured with environment variables
+- Dashboard automatically refreshes data on page load for optimal UX
