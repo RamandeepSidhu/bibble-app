@@ -10,7 +10,8 @@ import {
   Package,
   Globe,
   Music,
-  BookOpen
+  BookOpen,
+  Upload
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -31,6 +32,7 @@ export function AdminSidebar({ sidebarOpen, setSidebarOpen, isMobile = false }: 
     { name: 'Products', href: '/products', icon: Package },
     { name: 'Hymns', href: '/hymns', icon: Music },
     { name: 'Bible', href: '/bible', icon: BookOpen },
+    { name: 'Upload CSV', href: '/upload-csv', icon: Upload },
   ];
 
   const sidebarContent = (

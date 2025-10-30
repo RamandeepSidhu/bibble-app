@@ -39,6 +39,8 @@ const {
   GET_VERSE_BY_ID,
   GET_VERSES_BY_CHAPTER,
   USER_LIST,
+  UPLOAD_CSV,
+  CSV_VALIDATION,
 } = API_ENDPOINTS;
 class Client {
   Auth = {
@@ -110,6 +112,19 @@ class Client {
     getUserList: (params?: string) => {
       const queryString = params ? `?${params}` : '';
       return HttpClient.get(USER_LIST + queryString);
+    },
+
+    // CSV Upload
+    uploadCsv: (productId: string, file: File) => {
+      const formData = new FormData();
+      formData.append('productId', productId);
+      formData.append('file', file);
+      return HttpClient.post(UPLOAD_CSV, formData);
+    },
+    validateCsv: (file: File) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      return HttpClient.post(CSV_VALIDATION, formData);
     },
   }
 }

@@ -43,5 +43,8 @@ export const API_ENDPOINTS = {
   UPDATE_LANGUAGE: "admin/languages/{id}",
   DELETE_LANGUAGE: "admin/languages/{id}",
   GET_LANGUAGE_BY_ID: "admin/languages/{id}",
-  USER_LIST:"/admin/users"
+  USER_LIST:"/admin/users",
+  // CSV Upload
+  UPLOAD_CSV: "admin/upload/csv-file",
+  CSV_VALIDATION: "admin/upload/validate"
 };
