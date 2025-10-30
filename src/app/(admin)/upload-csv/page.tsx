@@ -209,7 +209,7 @@ export default function UploadCsvPage() {
       </div>
 
       {/* Card */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6 container mx-auto px-4 py-8">
+      <div className="bg-white border border-gray-200 rounded-lg p-6 container mx-auto px-10 py-10">
         {/* Product Select */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
