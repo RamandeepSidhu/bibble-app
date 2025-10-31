@@ -48,7 +48,9 @@ export default function UploadCsvPage() {
     };
     loadProducts();
   }, []);
-
+  const stripHtmlTags = (html: string) => {
+    return html.replace(/<[^>]*>/g, "");
+  };
   const handleUpload = async (skipPreview: boolean = false) => {
     // debug: verify state before calling APIs
     // eslint-disable-next-line no-console
@@ -225,10 +227,19 @@ export default function UploadCsvPage() {
               <SelectValue placeholder={isLoading ? 'Loading products...' : 'Select product'} />
             </SelectTrigger>
             <SelectContent>
-              {products.map((p) => (
-                <SelectItem key={p._id} value={p._id}>
-                  {p.title?.en || p._id}
-                </SelectItem>
+              {products.map((product) => (
+                <SelectItem key={product._id} value={product._id}>
+                <div className="flex items-center gap-2">
+                  <span>📖</span>
+                  <span>
+                    {stripHtmlTags(
+                      product.title.en ||
+                        product.title.sw ||
+                        "Untitled"
+                    )}
+                  </span>
+                </div>
+              </SelectItem>
               ))}
             </SelectContent>
           </Select>
