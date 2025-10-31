@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import ClientInstance from '@/shared/client';
 import { showToast } from '@/lib/toast';
-import { Upload, FileSpreadsheet, Loader2, CheckCircle2, Info } from 'lucide-react';
+import { Upload, FileSpreadsheet, Loader2, CheckCircle2, Info, Plus } from 'lucide-react';
+import Link from 'next/link';
 
 interface ProductOption {
   _id: string;
@@ -199,7 +200,7 @@ export default function UploadCsvPage() {
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
       <div className="flex items-start justify-between gap-4 mb-8">
-        <div className="w-full">
+        <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
             <div className="h-10 w-10 rounded-lg bg-theme-secondary text-theme-primary flex items-center justify-center">
               <FileSpreadsheet className="h-5 w-5" />
@@ -207,6 +208,14 @@ export default function UploadCsvPage() {
             <h1 className="text-3xl font-bold text-gray-900">Upload Book by CSV</h1>
           </div>
           <p className="text-gray-600">First choose a product (Book), then upload a CSV to import data.</p>
+        </div>
+        <div className="flex-shrink-0">
+          <Link href="/products/add">
+            <Button className="bg-theme-primary text-theme-secondary hover:bg-theme-primary-dark">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Product
+            </Button>
+          </Link>
         </div>
       </div>
 
