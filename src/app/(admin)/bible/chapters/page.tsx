@@ -104,9 +104,12 @@ export default function ChaptersPage() {
   // Filter chapters based on search
   const filteredChapters = chapters.filter(chapter => {
     const matchesSearch = 
-      Object.values(chapter.title).some(title => 
-        title.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      Object.values(chapter.title || {}).some(title => {
+        const titleText = Array.isArray(title) 
+          ? title.map((item: any) => item?.data || item || '').join(' ')
+          : String(title || '');
+        return titleText.toLowerCase().includes(searchTerm.toLowerCase());
+      });
     return matchesSearch;
   });
 
@@ -119,7 +122,7 @@ export default function ChaptersPage() {
   const groupedChapters = filteredChapters.reduce((groups, chapter) => {
     const storyId = chapter.storyId && typeof chapter.storyId === 'object' ? chapter.storyId._id : 'unknown';
     const storyTitle = chapter.storyId && typeof chapter.storyId === 'object' && chapter.storyId.title ? 
-      (chapter.storyId.title[selectedLanguage] || chapter.storyId.title.en || 'Unknown Story') : 'Unknown Story';
+      (chapter.storyId.title[selectedLanguage] || chapter.storyId.title?.en || 'Unknown Story') : 'Unknown Story';
     
     if (!groups[storyId]) {
       groups[storyId] = {
@@ -287,7 +290,7 @@ export default function ChaptersPage() {
                             Chapter {chapter.order}
                           </div>
                           <div className="text-xs text-gray-600 truncate">
-                            {chapter.title[selectedLanguage] ? (
+                            {chapter.title?.[selectedLanguage] ? (
                               <span>{stripHtmlTags(chapter.title[selectedLanguage])}</span>
                             ) : (
                               <span className="italic">No title</span>

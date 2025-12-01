@@ -839,7 +839,7 @@ export default function BiblePage() {
   const getStoryName = (storyId: string) => {
     const story = stories.find((s) => s._id === storyId);
     return story
-      ? story.title.en || story.title.sw || "Untitled"
+      ? story.title?.en || story.title?.sw || "Untitled"
       : "Unknown Story";
   };
 
@@ -993,8 +993,8 @@ export default function BiblePage() {
                               <span>📖</span>
                               <span>
                                 {stripHtmlTags(
-                                  product.title.en ||
-                                    product.title.sw ||
+                                  product.title?.en ||
+                                    product.title?.sw ||
                                     "Untitled"
                                 )}
                               </span>
@@ -1508,7 +1508,7 @@ export default function BiblePage() {
                               {product.title?.[selectedLanguage] ? (
                                 <span
                                   dangerouslySetInnerHTML={{
-                                    __html: product.title[selectedLanguage],
+                                    __html: product.title?.[selectedLanguage],
                                   }}
                                 />
                               ) : (
@@ -1549,7 +1549,7 @@ export default function BiblePage() {
                             <p className="text-gray-700 italic">
                               <span
                                 dangerouslySetInnerHTML={{
-                                  __html: product.description[selectedLanguage],
+                                  __html: product.description?.[selectedLanguage],
                                 }}
                               />
                             </p>

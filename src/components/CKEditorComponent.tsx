@@ -93,12 +93,32 @@ const CKEditorComponent: FC<CKEditorComponentProps> = ({ value, onChange, placeh
         fetchLanguages();
     }, []);
 
+    // Helper function to convert array format to string
+    const convertArrayToHtml = (value: any): string => {
+        if (!value) return '';
+        if (typeof value === 'string') return value;
+        if (Array.isArray(value)) {
+            // Convert array of objects with 'data' property to HTML paragraphs
+            return value
+                .map((item: any) => {
+                    const text = item?.data || item || '';
+                    return `<p>${text}</p>`;
+                })
+                .join('');
+        }
+        return String(value);
+    };
+
     // Helper function to check if rich text content is actually empty
-    const isRichTextEmpty = (htmlContent: string): boolean => {
+    const isRichTextEmpty = (htmlContent: any): boolean => {
         if (!htmlContent) return true;
 
+        // Convert array format to string if needed
+        const htmlString = convertArrayToHtml(htmlContent);
+        if (!htmlString) return true;
+
         // Remove HTML tags and decode HTML entities
-        const textContent = htmlContent
+        const textContent = htmlString
             .replace(/<[^>]*>/g, '') // Remove HTML tags
             .replace(/&nbsp;/g, ' ') // Replace non-breaking spaces
             .replace(/&[a-zA-Z0-9#]+;/g, ' ') // Replace HTML entities
@@ -128,7 +148,9 @@ const CKEditorComponent: FC<CKEditorComponentProps> = ({ value, onChange, placeh
     const { CKEditor, ClassicEditor } = EditorComponent;
 
     const renderLanguageEditor = (lang: Language) => {
-        const langValue = value[lang.code] || '';
+        // Convert array format to string if needed
+        const rawValue = value[lang.code];
+        const langValue = convertArrayToHtml(rawValue);
         const isActive = activeLanguage === lang.code;
         const hasContent = !isRichTextEmpty(langValue);
 

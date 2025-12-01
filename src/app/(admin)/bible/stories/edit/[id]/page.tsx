@@ -675,7 +675,7 @@ export default function EditStoryPage() {
                             <span
                               dangerouslySetInnerHTML={{
                                 __html:
-                                  formData.chapters[0].title.en || "Chapter",
+                                  formData.chapters[0]?.title?.en || "Chapter",
                               }}
                             />
                           </p>

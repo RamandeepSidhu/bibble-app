@@ -97,12 +97,19 @@ export default function StoriesPage() {
 
   // Filter stories based on search
   const filteredStories = stories.filter(story => {
+    const getTextFromValue = (value: any): string => {
+      if (Array.isArray(value)) {
+        return value.map((item: any) => item?.data || item || '').join(' ');
+      }
+      return String(value || '');
+    };
+    
     const matchesSearch = 
-      Object.values(story.title).some(title => 
-        title.toLowerCase().includes(searchTerm.toLowerCase())
+      Object.values(story.title || {}).some(title => 
+        getTextFromValue(title).toLowerCase().includes(searchTerm.toLowerCase())
       ) ||
-      Object.values(story.description).some(description => 
-        description.toLowerCase().includes(searchTerm.toLowerCase())
+      Object.values(story.description || {}).some(description => 
+        getTextFromValue(description).toLowerCase().includes(searchTerm.toLowerCase())
       );
     return matchesSearch;
   });
@@ -285,7 +292,7 @@ export default function StoriesPage() {
                             Story {story.order}
                           </div>
                           <div className="text-xs text-gray-600 truncate">
-                            {story.title[selectedLanguage] ? (
+                            {story.title?.[selectedLanguage] ? (
                               <span>{stripHtmlTags(story.title[selectedLanguage])}</span>
                             ) : (
                               <span className="italic">No title</span>

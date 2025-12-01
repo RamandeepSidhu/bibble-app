@@ -180,15 +180,22 @@ export default function VersesPage() {
 
   // Filter verses based on search and language
   const filteredVerses = verses.filter(verse => {
+    const getTextFromValue = (value: any): string => {
+      if (Array.isArray(value)) {
+        return value.map((item: any) => item?.data || item || '').join(' ');
+      }
+      return String(value || '');
+    };
+    
     const matchesSearch = 
       verse.number.toString().includes(searchTerm) ||
-      Object.values(verse.text).some(text => 
-        text.toLowerCase().includes(searchTerm.toLowerCase())
+      Object.values(verse.text || {}).some(text => 
+        getTextFromValue(text).toLowerCase().includes(searchTerm.toLowerCase())
       );
     
     // Filter by language - only show verses that have content in the selected language
-    const hasContentInLanguage = verse.text[selectedLanguage] && 
-      verse.text[selectedLanguage].trim() !== '';
+    const hasContentInLanguage = verse.text?.[selectedLanguage] && 
+      verse.text?.[selectedLanguage].trim() !== '';
     
     return matchesSearch && hasContentInLanguage;
   });

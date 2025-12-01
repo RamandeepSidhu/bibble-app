@@ -547,11 +547,11 @@ export default function ProductsPage() {
                    </h4>
                    <p
                      className="mt-1 text-gray-900 text-base leading-relaxed"
-                     dangerouslySetInnerHTML={{
-                       __html:
-                         product.title[selectedLanguage] ||
-                         `<span class='italic text-gray-500'>No title available</span>`,
-                     }}
+                    dangerouslySetInnerHTML={{
+                      __html:
+                        product.title?.[selectedLanguage] ||
+                        `<span class='italic text-gray-500'>No title available</span>`,
+                    }}
                    />
                  </div>
 
@@ -562,11 +562,11 @@ export default function ProductsPage() {
                    </h4>
                    <div
                      className="mt-2 text-gray-800 text-sm leading-relaxed whitespace-pre-line"
-                     dangerouslySetInnerHTML={{
-                       __html:
-                         product.description[selectedLanguage] ||
-                         `<span class='italic text-gray-500'>No description available</span>`,
-                     }}
+                    dangerouslySetInnerHTML={{
+                      __html:
+                        product.description?.[selectedLanguage] ||
+                        `<span class='italic text-gray-500'>No description available</span>`,
+                    }}
                    />
                  </div>
 
@@ -615,7 +615,7 @@ export default function ProductsPage() {
           <DialogHeader>
             <DialogTitle>Delete Product</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete the product "{deletingProduct?.title[selectedLanguage] ? stripHtmlTags(deletingProduct.title[selectedLanguage]) : 'Untitled'}"? This action cannot be undone.
+              Are you sure you want to delete the product "{deletingProduct?.title?.[selectedLanguage] ? stripHtmlTags(deletingProduct.title?.[selectedLanguage]) : 'Untitled'}"? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -635,7 +635,7 @@ export default function ProductsPage() {
           <DialogHeader>
             <DialogTitle>Change Product Status</DialogTitle>
             <DialogDescription>
-              Are you sure you want to change the status of "{statusChangeProduct?.title.en || 'Untitled'}" to <strong>{newStatus}</strong>?
+              Are you sure you want to change the status of "{statusChangeProduct?.title?.en || 'Untitled'}" to <strong>{newStatus}</strong>?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

@@ -112,17 +112,47 @@ export default function EditHymnPage() {
                     const hymnData = (hymnResponse as any).data;
                     setHymn(hymnData);
                     
+                    // Helper function to convert array format to HTML string
+                    const convertTextToHtml = (textData: any): string => {
+                        if (!textData) return '';
+                        if (typeof textData === 'string') return textData;
+                        if (Array.isArray(textData)) {
+                            return textData
+                                .map((item: any) => {
+                                    const text = item?.data || item || '';
+                                    return `<p>${text}</p>`;
+                                })
+                                .join('');
+                        }
+                        return String(textData);
+                    };
+                    
+                    // Convert text object from array format to string format
+                    const convertedText: MultilingualText = {};
+                    if (hymnData.text) {
+                        Object.keys(hymnData.text).forEach((lang: string) => {
+                            convertedText[lang] = convertTextToHtml(hymnData.text[lang]);
+                        });
+                    }
+                    
                     // Initialize form with hymn data
                     setHymnData({
                         number: hymnData.number || 1,
-                        text: hymnData.text || {},
+                        text: convertedText,
                     });
 
                     // Fetch product data
                     try {
-                        const productResponse: any = await ClientInstance.APP.getProductById(hymnData.productId);
-                        if (productResponse?.success && productResponse?.data) {
-                            setProduct(productResponse.data);
+                        // Extract product ID - handle both object and string formats
+                        const productId = typeof hymnData.productId === 'object' 
+                            ? hymnData.productId?._id || hymnData.productId?.id
+                            : hymnData.productId;
+                        
+                        if (productId) {
+                            const productResponse: any = await ClientInstance.APP.getProductById(productId);
+                            if (productResponse?.success && productResponse?.data) {
+                                setProduct(productResponse.data);
+                            }
                         }
                     } catch (error) {
                         console.error("Error fetching product:", error);

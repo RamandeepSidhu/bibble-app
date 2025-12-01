@@ -316,7 +316,7 @@ export default function AddHymnPage() {
                                                     <span 
                                                         className="flex-1"
                                                         dangerouslySetInnerHTML={{ 
-                                                            __html: product.title.en || 'Untitled' 
+                                                            __html: product.title?.en || 'Untitled' 
                                                         }}
                                                     />
                                                 </span>

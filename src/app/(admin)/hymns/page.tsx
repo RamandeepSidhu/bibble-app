@@ -75,17 +75,32 @@ export default function HymnsPage() {
     fetchData();
   }, []);
 
+  // Helper function to extract text from hymn.text[lang] which can be a string or array of objects
+  const getHymnText = (textData: any): string => {
+    if (!textData) return '';
+    if (typeof textData === 'string') return textData;
+    if (Array.isArray(textData)) {
+      return textData.map((item: any) => item?.data || item || '').join(' ');
+    }
+    return String(textData);
+  };
+
   // Filter hymns based on search and language
   const filteredHymns = hymns.filter(hymn => {
+    const enText = getHymnText(hymn.text?.en);
+    const swText = getHymnText(hymn.text?.sw);
+    const frText = getHymnText(hymn.text?.fr);
+    const rnText = getHymnText(hymn.text?.rn);
+    
     const matchesSearch = 
-      (hymn.text.en || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (hymn.text.sw || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (hymn.text.fr || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (hymn.text.rn || '').toLowerCase().includes(searchTerm.toLowerCase());
+      enText.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      swText.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      frText.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      rnText.toLowerCase().includes(searchTerm.toLowerCase());
     
     // Filter by language - only show hymns that have content in the selected language
-    const hasContentInLanguage = hymn.text[selectedLanguage] && 
-      hymn.text[selectedLanguage].trim() !== '';
+    const selectedLanguageText = getHymnText(hymn.text?.[selectedLanguage]);
+    const hasContentInLanguage = selectedLanguageText.trim() !== '';
     
     return matchesSearch && hasContentInLanguage;
   });
@@ -136,13 +151,13 @@ export default function HymnsPage() {
   const getProductName = (productId: any) => {
     // If productId is an object (from API response), use it directly
     if (typeof productId === 'object' && productId.title) {
-      const title = productId.title.en || 'Unknown Product';
+      const title = productId.title?.en || 'Unknown Product';
       return stripHtmlTags(title);
     }
     // If productId is a string, look it up in products array
     const product = products.find(p => p._id === productId);
     if (product?.title?.en) {
-      return stripHtmlTags(product.title.en);
+      return stripHtmlTags(product.title?.en);
     }
     return 'Unknown Product';
   };
@@ -299,14 +314,40 @@ export default function HymnsPage() {
 
                       {/* Hymn Content - Direct HTML Rendering */}
                       <div className="text-sm text-gray-600">
-                        {hymn.text[selectedLanguage] ? (
-                          <div 
-                            className="[&_ol]:list-decimal [&_ol]:list-inside [&_ol]:pl-0 [&_li]:mb-1 [&_strong]:font-bold"
-                            dangerouslySetInnerHTML={{ __html: hymn.text[selectedLanguage] }} 
-                          />
-                        ) : (
-                          <span className="italic">No text</span>
-                        )}
+                        {(() => {
+                          const textData = hymn.text?.[selectedLanguage];
+                          if (!textData) {
+                            return <span className="italic">No text</span>;
+                          }
+                          
+                          // If it's a string, render as HTML
+                          if (typeof textData === 'string') {
+                            return (
+                              <div 
+                                className="[&_ol]:list-decimal [&_ol]:list-inside [&_ol]:pl-0 [&_li]:mb-1 [&_strong]:font-bold"
+                                dangerouslySetInnerHTML={{ __html: textData }} 
+                              />
+                            );
+                          }
+                          
+                          // If it's an array, convert to HTML with line breaks
+                          if (Array.isArray(textData)) {
+                            const htmlContent = textData
+                              .map((item: any) => {
+                                const text = item?.data || item || '';
+                                return `<p>${text}</p>`;
+                              })
+                              .join('');
+                            return (
+                              <div 
+                                className="[&_ol]:list-decimal [&_ol]:list-inside [&_ol]:pl-0 [&_li]:mb-1 [&_strong]:font-bold [&_p]:mb-2"
+                                dangerouslySetInnerHTML={{ __html: htmlContent }} 
+                              />
+                            );
+                          }
+                          
+                          return <span className="italic">No text</span>;
+                        })()}
                       </div>
                     </div>
                   ))}

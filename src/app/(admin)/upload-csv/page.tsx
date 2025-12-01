@@ -328,7 +328,7 @@ export default function UploadCsvPage() {
                         <span className="text-lg">📖</span>
                         <span className="font-medium">
                           {stripHtmlTags(
-                            product.title.en || product.title.sw || "Untitled"
+                            product.title?.en || product.title?.sw || "Untitled"
                           )}
                         </span>
                       </div>
