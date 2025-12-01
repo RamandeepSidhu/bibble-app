@@ -101,15 +101,18 @@ export default function ProductsPage() {
         if (response?.success && response?.data) {
           setProducts(response.data);
           
-          // Handle pagination data if available
+          // Handle pagination data from API response
           if (response.pagination) {
-            setTotalItems(response.pagination.total || response.data.length);
+            setTotalItems(response.pagination.total || 0);
             setTotalPages(response.pagination.totalPages || 1);
-            setCurrentPage(response.pagination.page || 1);
+            // Only update currentPage if it's different (to avoid unnecessary re-renders)
+            if (response.pagination.page && response.pagination.page !== currentPage) {
+              setCurrentPage(response.pagination.page);
+            }
           } else {
+            // Fallback if pagination data is not available
             setTotalItems(response.data.length);
             setTotalPages(1);
-            setCurrentPage(1);
           }
         } else {
           showToast.error("Error", response?.message || "Failed to fetch products");
