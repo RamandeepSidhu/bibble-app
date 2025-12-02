@@ -10,10 +10,13 @@ import {
   Search,
   Music,
   Check,
-  X
+  X,
+  ChevronDown,
+  ChevronRight
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import Pagination from '@/components/Pagination';
 import Link from 'next/link';
 import { HymnManagement, ProductManagement } from '@/lib/types/bibble';
 import ClientInstance from '@/shared/client';
@@ -28,6 +31,21 @@ export default function HymnsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deletingHymn, setDeletingHymn] = useState<HymnManagement | null>(null);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  
+  // Accordion state - track which products are expanded
+  const [expandedProducts, setExpandedProducts] = useState<Set<string>>(new Set());
+  
+  // Store hymns for each product (key: productId, value: hymns array)
+  const [productHymns, setProductHymns] = useState<Record<string, HymnManagement[]>>({});
+  
+  // Track loading state for each product
+  const [loadingProducts, setLoadingProducts] = useState<Set<string>>(new Set());
 
   // Fetch hymns, products, and languages from API
   useEffect(() => {
@@ -41,27 +59,36 @@ export default function HymnsPage() {
           setLanguages(languagesResponse.data.filter((lang: any) => lang.isActive === true));
         }
         
-        // Fetch products to get song products
-        const productsResponse: any = await ClientInstance.APP.getProducts();
+        // Fetch song products using getAllHymns endpoint with pagination
+        // This API returns products (songs), not hymns directly
+        const params: any = {
+          type: 'song',
+          status: 'active', // Only fetch active songs
+          page: currentPage,
+          limit: pageSize
+        };
+        
+        if (searchTerm.trim()) {
+          params.search = searchTerm;
+        }
+        
+        const productsResponse: any = await ClientInstance.APP.getAllHymns(params);
         if (productsResponse?.success && productsResponse?.data) {
-          const allProducts = productsResponse.data;
-          // Filter only song products
-          const songProducts = allProducts.filter((product: ProductManagement) => product.type === 'song');
+          const songProducts = productsResponse.data;
           setProducts(songProducts);
           
-          // Fetch hymns for each song product
-          const allHymns: HymnManagement[] = [];
-          for (const product of songProducts) {
-            try {
-              const hymnsResponse: any = await ClientInstance.APP.getHymnsByProduct(product._id);
-              if (hymnsResponse?.success && hymnsResponse?.data) {
-                allHymns.push(...hymnsResponse.data);
-              }
-            } catch (error) {
-              console.error(`Error fetching hymns for product ${product._id}:`, error);
+          // Update pagination state from API response
+          if (productsResponse.pagination) {
+            setTotalItems(productsResponse.pagination.total || 0);
+            setTotalPages(productsResponse.pagination.totalPages || 1);
+            // Only update currentPage if API returned a different page (to avoid infinite loops)
+            if (productsResponse.pagination.page && productsResponse.pagination.page !== currentPage) {
+              setCurrentPage(productsResponse.pagination.page);
             }
           }
-          setHymns(allHymns);
+          
+          // Don't fetch hymns automatically - only fetch when product is expanded
+          setHymns([]);
         } else {
           showToast.error("Error", productsResponse?.message || "Failed to fetch products");
         }
@@ -73,7 +100,60 @@ export default function HymnsPage() {
       }
     };
     fetchData();
-  }, []);
+  }, [currentPage, pageSize, searchTerm]);
+
+  // Toggle accordion for a product
+  const toggleProduct = async (productId: string) => {
+    const newExpanded = new Set(expandedProducts);
+    
+    if (newExpanded.has(productId)) {
+      // Collapse
+      newExpanded.delete(productId);
+    } else {
+      // Expand - fetch hymns if not already loaded
+      newExpanded.add(productId);
+      
+      // Only fetch if we don't have hymns for this product yet
+      if (!productHymns[productId]) {
+        setLoadingProducts(prev => new Set(prev).add(productId));
+        
+        try {
+          const hymnsResponse: any = await ClientInstance.APP.getHymnsByProduct(productId);
+          if (hymnsResponse?.success && hymnsResponse?.data) {
+            setProductHymns(prev => ({
+              ...prev,
+              [productId]: hymnsResponse.data
+            }));
+          } else {
+            setProductHymns(prev => ({
+              ...prev,
+              [productId]: []
+            }));
+          }
+        } catch (error: any) {
+          // Handle 401 Unauthorized errors gracefully
+          if (error?.response?.status === 401) {
+            console.warn(`Unauthorized access for product ${productId}. Token may have expired.`);
+          } else if (error?.response?.status !== 404) {
+            // 404 is expected if product has no hymns
+            console.error(`Error fetching hymns for product ${productId}:`, error);
+          }
+          setProductHymns(prev => ({
+            ...prev,
+            [productId]: []
+          }));
+        } finally {
+          setLoadingProducts(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(productId);
+            return newSet;
+          });
+        }
+      }
+    }
+    
+    setExpandedProducts(newExpanded);
+  };
 
   // Helper function to extract text from hymn.text[lang] which can be a string or array of objects
   const getHymnText = (textData: any): string => {
@@ -85,50 +165,41 @@ export default function HymnsPage() {
     return String(textData);
   };
 
-  // Filter hymns based on search and language
-  const filteredHymns = hymns.filter(hymn => {
-    if (!searchTerm.trim()) {
-      return true;
+  // Helper function to check if hymn has content in selected language
+  const hasContentInLanguage = (hymn: HymnManagement, language: string): boolean => {
+    const textData: any = hymn.text?.[language];
+    if (!textData) return false;
+    if (typeof textData === 'string') return textData.trim().length > 0;
+    if (Array.isArray(textData) && textData.length > 0) {
+      return textData.some((item: any) => {
+        const text = item?.data || item || '';
+        return String(text).trim().length > 0;
+      });
     }
-    
-    const enText = getHymnText(hymn.text?.en);
-    const swText = getHymnText(hymn.text?.sw);
-    const frText = getHymnText(hymn.text?.fr);
-    const rnText = getHymnText(hymn.text?.rn);
-    
-    return (
-      enText.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      swText.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      frText.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      rnText.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  });
+    return String(textData).trim().length > 0;
+  };
 
-  const groupedHymns = products.reduce((acc: any, product: ProductManagement) => {
+  // Filter hymns for a product based on language
+  const getFilteredHymnsForProduct = (productId: string): HymnManagement[] => {
+    const hymns = productHymns[productId] || [];
+    return hymns.filter(hymn => hasContentInLanguage(hymn, selectedLanguage));
+  };
+
+  // Group products with their hymn counts
+  const groupedProducts = products.map((product: ProductManagement) => {
     const productId = product._id;
     const productTitle = product.title?.[selectedLanguage] || product.title?.en || 'Unknown Product';
+    const hymns = productHymns[productId] || [];
+    const filteredHymns = getFilteredHymnsForProduct(productId);
     
-    if (!acc[productId]) {
-      acc[productId] = {
-        productId,
-        productTitle,
-        productData: product,
-        hymns: []
-      };
-    }
-    return acc;
-  }, {});
-  
-  // Add filtered hymns to their respective products
-  filteredHymns.forEach((hymn: any) => {
-    const productId = hymn.productId?._id || hymn.productId;
-    if (groupedHymns[productId]) {
-      groupedHymns[productId].hymns.push(hymn);
-    }
-  });
-  
-  // Convert to array and sort by product title
-  const groupedHymnsArray = Object.values(groupedHymns).sort((a: any, b: any) => {
+    return {
+      productId,
+      productTitle,
+      productData: product,
+      hymns: filteredHymns,
+      totalHymns: hymns.length
+    };
+  }).sort((a: any, b: any) => {
     return a.productTitle.localeCompare(b.productTitle);
   });
 
@@ -190,7 +261,7 @@ export default function HymnsPage() {
   }
 
   return (
-    <div className={`container mx-auto px-4 py-8 ${Object.keys(groupedHymns).length === 0 && !isLoading ? 'bg-transparent' : ''}`}>
+    <div className={`container mx-auto px-4 py-8 ${groupedProducts.length === 0 && !isLoading ? 'bg-transparent' : ''}`}>
       {/* Header */}
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 lg:gap-6 border-b border-gray-200 pb-4 lg:pb-6">
         <div className="w-full">
@@ -209,8 +280,8 @@ export default function HymnsPage() {
         </Link>
       </div>
 
-      {/* Search and Filter - Only show if there are hymns or if user has applied filters */}
-      {(Object.keys(groupedHymns).length > 0 || searchTerm || selectedLanguage !== 'en') && (
+      {/* Search and Filter */}
+      {products.length > 0 && (
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-3 md:gap-4 mt-5">
         <div className="relative w-full md:w-96">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -220,14 +291,19 @@ export default function HymnsPage() {
             placeholder="Search hymns..."
             type="search"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1); // Reset to first page when searching
+            }}
             className="block w-full sm:w-80 h-[40px] pl-10 pr-4 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
           />
         </div>
-        {/* Only show language filter if there are hymns or if user has applied filters */}
-        {(Object.keys(groupedHymns).length > 0 || searchTerm || selectedLanguage !== 'en') && (
-          <div className="w-full sm:w-auto">
-            <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+        {/* Language filter */}
+        <div className="w-full sm:w-auto">
+            <Select value={selectedLanguage} onValueChange={(value) => {
+              setSelectedLanguage(value);
+              setCurrentPage(1); // Reset to first page when changing language
+            }}>
               <SelectTrigger className="w-full sm:w-[200px]">
                 <SelectValue placeholder="Select language" />
               </SelectTrigger>
@@ -240,12 +316,11 @@ export default function HymnsPage() {
               </SelectContent>
             </Select>
           </div>
-        )}
         </div>
       )}
 
-      {/* Hymns Cards */}
-      {groupedHymnsArray.length === 0 ? (
+      {/* Products Accordion */}
+      {groupedProducts.length === 0 ? (
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <Music className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -257,16 +332,28 @@ export default function HymnsPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {groupedHymnsArray.map((group: any) => (
+          {groupedProducts.map((group: any) => {
+            const isExpanded = expandedProducts.has(group.productId);
+            const isLoading = loadingProducts.has(group.productId);
+            const hymns = group.hymns;
+            
+            return (
             <div key={group.productId} className="bg-white rounded-lg shadow-sm">
-              {/* Product Header - Clean Theme Card */}
-              <div className="bg-theme-secondary text-theme-primary p-4 rounded-t-lg">
+              {/* Product Header - Clickable Accordion */}
+              <div 
+                className="bg-theme-secondary text-theme-primary p-4 rounded-t-lg cursor-pointer hover:bg-opacity-90 transition-colors"
+                onClick={() => toggleProduct(group.productId)}
+              >
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="h-10 w-10 bg-white/20 rounded-lg flex items-center justify-center">
-                      <Music className="h-5 w-5 text-theme-primary" />
+                  <div className="flex items-center space-x-3 flex-1">
+                    <div className="h-10 w-10 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                      {isExpanded ? (
+                        <ChevronDown className="h-5 w-5 text-theme-primary" />
+                      ) : (
+                        <ChevronRight className="h-5 w-5 text-theme-primary" />
+                      )}
                     </div>
-                    <div>
+                    <div className="flex-1">
                       <h3 className="text-lg font-bold">
                         {stripHtmlTags(group?.productTitle)}
                       </h3>
@@ -279,20 +366,26 @@ export default function HymnsPage() {
                       </div>
                     </div>
                   </div>
-                  <div className="text-right">
+                  {/* <div className="text-right ml-4">
                     <div className="text-2xl font-bold text-theme-primary">
-                    {group.hymns.length}
+                      {group.totalHymns > 0 ? group.totalHymns : '-'}
                     </div>
                     <div className="text-theme-primary text-sm">Hymns</div>
-                  </div>
+                  </div> */}
                 </div>
               </div>
 
-              {/* Hymns Grid - Clean White Cards */}
-              <div className="p-4">
-                {group.hymns.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {group.hymns.map((hymn: any) => (
+              {/* Hymns Grid - Only show when expanded */}
+              {isExpanded && (
+                <div className="p-4">
+                  {isLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-theme-primary"></div>
+                      <span className="ml-3 text-gray-600">Loading hymns...</span>
+                    </div>
+                  ) : hymns.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {hymns.map((hymn: any) => (
                     <div key={hymn._id} className="bg-white rounded-lg p-4 border border-gray-100 hover:shadow-md transition-shadow">
                       {/* Top Row with Action Buttons */}
                       <div className="flex items-start justify-end gap-2">
@@ -371,16 +464,35 @@ export default function HymnsPage() {
                       </div>
                     </div>
                   ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <Music className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p>No hymns in this product</p>
-                  </div>
-                )}
-              </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <Music className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p>No hymns found in {selectedLanguage.toUpperCase()} for this product</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
-          ))}
+            );
+          })}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalItems > 0 && (
+        <div className="mt-6">
+          <Pagination className='!border-none !bg-transparent'
+            currentPage={currentPage}
+            totalItems={totalItems}
+            pageSize={pageSize}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setCurrentPage(1);
+            }}
+            isLoading={isLoading}
+          />
         </div>
       )}
 

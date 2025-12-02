@@ -41,6 +41,7 @@ const {
   USER_LIST,
   UPLOAD_CSV,
   CSV_VALIDATION,
+  GET_HYMNS,
 } = API_ENDPOINTS;
 class Client {
   Auth = {
@@ -125,6 +126,10 @@ class Client {
       const formData = new FormData();
       formData.append('file', file);
       return HttpClient.post(CSV_VALIDATION, formData);
+    },
+    getAllHymns: (params?: any) => {
+      const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
+      return HttpClient.get(GET_HYMNS + queryString);
     },
   }
 }

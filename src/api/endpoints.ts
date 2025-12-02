@@ -46,5 +46,6 @@ export const API_ENDPOINTS = {
   USER_LIST:"/admin/users",
   // CSV Upload
   UPLOAD_CSV: "admin/upload/csv-file",
-  CSV_VALIDATION: "admin/upload/validate"
+  CSV_VALIDATION: "admin/upload/validate",
+  GET_HYMNS: "user/hymns",
 };
