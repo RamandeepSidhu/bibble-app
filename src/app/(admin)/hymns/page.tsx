@@ -87,39 +87,50 @@ export default function HymnsPage() {
 
   // Filter hymns based on search and language
   const filteredHymns = hymns.filter(hymn => {
+    if (!searchTerm.trim()) {
+      return true;
+    }
+    
     const enText = getHymnText(hymn.text?.en);
     const swText = getHymnText(hymn.text?.sw);
     const frText = getHymnText(hymn.text?.fr);
     const rnText = getHymnText(hymn.text?.rn);
     
-    const matchesSearch = 
+    return (
       enText.toLowerCase().includes(searchTerm.toLowerCase()) ||
       swText.toLowerCase().includes(searchTerm.toLowerCase()) ||
       frText.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      rnText.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    // Filter by language - only show hymns that have content in the selected language
-    const selectedLanguageText = getHymnText(hymn.text?.[selectedLanguage]);
-    const hasContentInLanguage = selectedLanguageText.trim() !== '';
-    
-    return matchesSearch && hasContentInLanguage;
+      rnText.toLowerCase().includes(searchTerm.toLowerCase())
+    );
   });
 
-  // Group hymns by product
-  const groupedHymns = filteredHymns.reduce((acc: any, hymn: any) => {
-    const productId = hymn.productId?._id || hymn.productId;
-    const productTitle = hymn.productId?.title?.[selectedLanguage] || hymn.productId?.title?.en || 'Unknown Product';
+  const groupedHymns = products.reduce((acc: any, product: ProductManagement) => {
+    const productId = product._id;
+    const productTitle = product.title?.[selectedLanguage] || product.title?.en || 'Unknown Product';
     
-    if (!acc[productTitle]) {
-      acc[productTitle] = {
+    if (!acc[productId]) {
+      acc[productId] = {
+        productId,
         productTitle,
-        productData: hymn.productId,
+        productData: product,
         hymns: []
       };
     }
-    acc[productTitle].hymns.push(hymn);
     return acc;
   }, {});
+  
+  // Add filtered hymns to their respective products
+  filteredHymns.forEach((hymn: any) => {
+    const productId = hymn.productId?._id || hymn.productId;
+    if (groupedHymns[productId]) {
+      groupedHymns[productId].hymns.push(hymn);
+    }
+  });
+  
+  // Convert to array and sort by product title
+  const groupedHymnsArray = Object.values(groupedHymns).sort((a: any, b: any) => {
+    return a.productTitle.localeCompare(b.productTitle);
+  });
 
   // Helper function to strip HTML tags
   const stripHtmlTags = (html: string) => {
@@ -234,23 +245,20 @@ export default function HymnsPage() {
       )}
 
       {/* Hymns Cards */}
-      {Object.keys(groupedHymns).length === 0 ? (
+      {groupedHymnsArray.length === 0 ? (
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <Music className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <div className="text-gray-500 text-lg mb-2">No hymns found</div>
+            <div className="text-gray-500 text-lg mb-2">No products found</div>
             <p className="text-gray-400">
-              {searchTerm || selectedLanguage !== 'en'
-                ? 'Try adjusting your search criteria'
-                : 'Get started by adding your first hymn'
-              }
+              Get started by adding your first product
             </p>
           </div>
         </div>
       ) : (
         <div className="space-y-4">
-          {Object.values(groupedHymns).map((group: any, index: number) => (
-            <div key={`${group?.productTitle}-${index}`} className="bg-white rounded-lg shadow-sm">
+          {groupedHymnsArray.map((group: any) => (
+            <div key={group.productId} className="bg-white rounded-lg shadow-sm">
               {/* Product Header - Clean Theme Card */}
               <div className="bg-theme-secondary text-theme-primary p-4 rounded-t-lg">
                 <div className="flex items-center justify-between">
@@ -282,8 +290,9 @@ export default function HymnsPage() {
 
               {/* Hymns Grid - Clean White Cards */}
               <div className="p-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {group.hymns.map((hymn: any) => (
+                {group.hymns.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {group.hymns.map((hymn: any) => (
                     <div key={hymn._id} className="bg-white rounded-lg p-4 border border-gray-100 hover:shadow-md transition-shadow">
                       {/* Top Row with Action Buttons */}
                       <div className="flex items-start justify-end gap-2">
@@ -332,12 +341,23 @@ export default function HymnsPage() {
                           
                           // If it's an array, convert to HTML with line breaks
                           if (Array.isArray(textData)) {
+                            // Check if array is empty
+                            if (textData.length === 0) {
+                              return <span className="italic text-gray-400">No text available</span>;
+                            }
+                            
                             const htmlContent = textData
                               .map((item: any) => {
                                 const text = item?.data || item || '';
-                                return `<p>${text}</p>`;
+                                return text ? `<p>${text}</p>` : '';
                               })
+                              .filter(Boolean)
                               .join('');
+                            
+                            if (!htmlContent) {
+                              return <span className="italic text-gray-400">No text available</span>;
+                            }
+                            
                             return (
                               <div 
                                 className="[&_ol]:list-decimal [&_ol]:list-inside [&_ol]:pl-0 [&_li]:mb-1 [&_strong]:font-bold [&_p]:mb-2"
@@ -346,12 +366,18 @@ export default function HymnsPage() {
                             );
                           }
                           
-                          return <span className="italic">No text</span>;
+                          return <span className="italic text-gray-400">No text available</span>;
                         })()}
                       </div>
                     </div>
                   ))}
-                </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <Music className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <p>No hymns in this product</p>
+                  </div>
+                )}
               </div>
             </div>
           ))}

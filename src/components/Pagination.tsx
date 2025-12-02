@@ -37,6 +37,46 @@ export default function Pagination({
         onPageChange(1); // Reset to first page when changing page size
     };
 
+    // Generate page numbers to display: 1, 2, 3, 4, ..., last
+    const getPageNumbers = () => {
+        const pages: (number | string)[] = [];
+        
+        if (totalPages <= 7) {
+            // Show all pages if total is 7 or less
+            for (let i = 1; i <= totalPages; i++) {
+                pages.push(i);
+            }
+        } else {
+            // Always show first page
+            pages.push(1);
+            
+            if (currentPage <= 3) {
+                // Show 1, 2, 3, 4, ..., last
+                for (let i = 2; i <= 4; i++) {
+                    pages.push(i);
+                }
+                pages.push('...');
+                pages.push(totalPages);
+            } else if (currentPage >= totalPages - 2) {
+                // Show 1, ..., last-3, last-2, last-1, last
+                pages.push('...');
+                for (let i = totalPages - 3; i <= totalPages; i++) {
+                    pages.push(i);
+                }
+            } else {
+                // Show 1, ..., current-1, current, current+1, ..., last
+                pages.push('...');
+                for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+                    pages.push(i);
+                }
+                pages.push('...');
+                pages.push(totalPages);
+            }
+        }
+        
+        return pages;
+    };
+
     // Hide pagination if there are no items or only one page with 10 or fewer items
     if (totalItems === 0 || (totalPages === 1 && totalItems <= 10)) return null;
 
@@ -116,42 +156,24 @@ export default function Pagination({
                         <span className="sr-only">Previous</span>
                     </Button>
 
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                        let pageNum;
-                        if (totalPages <= 5) {
-                            pageNum = i + 1;
-                        } else if (currentPage <= 3) {
-                            pageNum = i + 1;
-                        } else if (currentPage >= totalPages - 2) {
-                            pageNum = totalPages - 4 + i;
-                        } else {
-                            pageNum = currentPage - 2 + i;
+                    {getPageNumbers().map((page, index) => {
+                        if (page === '...') {
+                            return (
+                                <span key={`ellipsis-${index}`} className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                                    ...
+                                </span>
+                            );
                         }
 
-                        if (i === 3 && currentPage < totalPages - 3) {
-                            return (
-                                <span key="ellipsis" className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
-                                    ...
-                                </span>
-                            );
-                        }
-                        if (i === 1 && currentPage > 4) {
-                            return (
-                                <span key="ellipsis-start" className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
-                                    ...
-                                </span>
-                            );
-                        }
-                        if (i > 3 && currentPage < totalPages - 3) {
-                            return null;
-                        }
+                        const pageNum = page as number;
+                        const isActive = pageNum === currentPage;
 
                         return (
                             <Button
                                 key={pageNum}
-                                variant={currentPage === pageNum ? "default" : "outline"}
+                                variant={isActive ? "default" : "outline"}
                                 size="sm"
-                                className={`rounded-none !min-w-[40px] !h-[40px] p-0 flex items-center justify-center  hover:text-primary-500 ${currentPage === pageNum ? 'z-10' : ''}`}
+                                className={`rounded-none !min-w-[40px] !h-[40px] p-0 flex items-center justify-center hover:text-primary-500 ${isActive ? 'z-10' : ''}`}
                                 onClick={() => onPageChange(pageNum)}
                                 disabled={isLoading}
                             >
@@ -165,7 +187,7 @@ export default function Pagination({
                         size="sm"
                         onClick={() => onPageChange(currentPage + 1)}
                         disabled={currentPage === totalPages || isLoading}
-                        className="rounded-l-none !h-[40px] !min-w-[40px] p-0 flex items-center justify-center  hover:text-primary-500"
+                        className="rounded-l-none !h-[40px] !min-w-[40px] p-0 flex items-center justify-center hover:text-primary-500"
                     >
                         <span className="sr-only">Next</span>
                         <ChevronRight className="h-4" />

@@ -6,17 +6,12 @@ import { Input } from '@/components/ui/input';
 import { 
   Plus, 
   Edit, 
-  Trash2, 
   Search,
-  Eye,
-  Globe,
-  FileText,
   X,
   Package
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { ToggleSwitch } from '@/components/ui/toggle-switch';
 import Pagination from '@/components/Pagination';
 import Link from 'next/link';
 import { ProductManagement, ChangeProductStatusPayload } from '@/lib/types/bibble';
