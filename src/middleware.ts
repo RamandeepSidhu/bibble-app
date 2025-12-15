@@ -1,5 +1,5 @@
-import { extractIpFromHeaders, getCompleteGeoData } from "@/lib/geo-api";
 import { NextRequest, NextResponse } from "next/server";
+import { getCompleteGeoData, extractIpFromHeaders } from "@/lib/geo-api";
 
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next();
@@ -48,7 +48,11 @@ export async function middleware(req: NextRequest) {
     null;
 
   let regionName: string | null = null;
-  let countryCode: string | null = null;
+  // Use country code from edge headers if available (cf-ipcountry is already a code)
+  let countryCode: string | null =
+    req.headers.get("cf-ipcountry") ||
+    req.headers.get("x-vercel-ip-country") ||
+    null;
   let lat: number | null =  null;
   let lon: number | null = null;
  if ((!country || !city)) {
@@ -102,20 +106,20 @@ export async function middleware(req: NextRequest) {
           console.error("[Middleware] Fallback API error:", fallbackError);
         }
       }            
-      if (result?.geoData) {
+  if (result?.geoData) {
         const { country: apiCountry, city: apiCity, regionName: apiRegion, countryCode: apiCountryCode, lat: apiLat, lon: apiLon } = result.geoData;
         if (apiCountry && apiCity) {
           country = apiCountry;
           city = apiCity;
           regionName = apiRegion || null;
-          countryCode = apiCountryCode || null;
+          countryCode = apiCountryCode || countryCode || null;
           lat = apiLat || null;
           lon = apiLon || null;
         } else {
           country = country || apiCountry || "Unknown";
           city = city || apiCity || "Unknown";
           regionName = apiRegion || null;
-          countryCode = apiCountryCode || null;
+          countryCode = apiCountryCode || countryCode || null;
           lat = apiLat || null;
           lon = apiLon || null;
         }
