@@ -358,12 +358,12 @@ export default function UsersPage() {
           </Table>
           
             {/* Pagination */}
-            {pagination.pages > 1 && (
+            {pagination.total > 0 && (
               <div className="border-t border-gray-200 px-6 py-4">
                 <Pagination
                   currentPage={pagination.page}
                   totalItems={pagination.total}
-                  pageSize={pagination.limit}
+                  pageSize={pageSize}
                   onPageChange={handlePageChange}
                   onPageSizeChange={handlePageSizeChange}
                 />
