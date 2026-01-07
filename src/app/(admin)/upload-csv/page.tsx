@@ -64,15 +64,11 @@ export default function UploadCsvPage() {
     const loadProducts = async () => {
       try {
         setIsLoading(true);
-        const res: any = await ClientInstance.APP.getProducts();
+        const res: any = await ClientInstance.APP.getProducts({ type: "book" });
         if (res?.success && Array.isArray(res?.data)) {
-          setProducts(
-            (res.data as ProductOption[]).filter((p) => p.type === "book")
-          );
+          setProducts(res.data as ProductOption[]);
         } else if (Array.isArray(res)) {
-          setProducts(
-            (res as ProductOption[]).filter((p) => p.type === "book")
-          );
+          setProducts(res as ProductOption[]);
         }
       } catch (e) {
         showToast.error("Error", "Failed to load products");
