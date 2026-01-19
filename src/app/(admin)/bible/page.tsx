@@ -117,6 +117,22 @@ export default function BiblePage() {
     new Set()
   );
 
+  // Track which data has been loaded (for lazy loading)
+  const [loadedProducts, setLoadedProducts] = useState<Set<string>>(new Set());
+  const [loadedStories, setLoadedStories] = useState<Set<string>>(new Set());
+  const [loadedChapters, setLoadedChapters] = useState<Set<string>>(new Set());
+  const [loadingStates, setLoadingStates] = useState<{
+    products: boolean;
+    stories: { [productId: string]: boolean };
+    chapters: { [storyId: string]: boolean };
+    verses: { [chapterId: string]: boolean };
+  }>({
+    products: false,
+    stories: {},
+    chapters: {},
+    verses: {},
+  });
+
   // Language filter state
   const [selectedLanguage, setSelectedLanguage] = useState<string>("en");
 
@@ -174,11 +190,10 @@ export default function BiblePage() {
     }
   }, [languages]);
 
-  // Fetch data on component mount
+  // Fetch data on component mount - only products and languages
   useEffect(() => {
     fetchProducts();
     fetchLanguages();
-    fetchAllBibleContent();
   }, []);
 
   // Handle URL parameters for stepper navigation
@@ -194,79 +209,115 @@ export default function BiblePage() {
     }
   }, [searchParams]);
 
-  const fetchAllBibleContent = async () => {
+  // Lazy load stories for a product when it's expanded
+  const fetchStoriesForProduct = async (productId: string) => {
+    // Skip if already loaded
+    if (loadedProducts.has(productId)) {
+      return;
+    }
+
     try {
-      setIsLoading(true);
-      // Fetch all products first
-      const productsResponse: any = await ClientInstance.APP.getProducts({
-        type: "book",
-      });
-      if (productsResponse?.success && productsResponse?.data) {
-        setProducts(productsResponse.data);
+      setLoadingStates((prev) => ({
+        ...prev,
+        stories: { ...prev.stories, [productId]: true },
+      }));
 
-        // Fetch stories for each product
-        const allStories: Story[] = [];
-        const allChapters: Chapter[] = [];
-        const allVerses: Verse[] = [];
-
-        for (const product of productsResponse.data) {
-          try {
-            const storiesResponse: any =
-              await ClientInstance.APP.getStoriesByProduct(product._id);
-            if (storiesResponse?.success && storiesResponse?.data) {
-              allStories.push(...storiesResponse.data);
-
-              // Fetch chapters for each story
-              for (const story of storiesResponse.data) {
-                try {
-                  const chaptersResponse: any =
-                    await ClientInstance.APP.getChaptersByStory(story._id);
-                  if (chaptersResponse?.success && chaptersResponse?.data) {
-                    allChapters.push(...chaptersResponse.data);
-
-                    // Fetch verses for each chapter
-                    for (const chapter of chaptersResponse.data) {
-                      try {
-                        const versesResponse: any =
-                          await ClientInstance.APP.getVersesByChapter(
-                            chapter._id
-                          );
-                        if (versesResponse?.success && versesResponse?.data) {
-                          allVerses.push(...versesResponse.data);
-                        }
-                      } catch (error) {
-                        console.error(
-                          `Error fetching verses for chapter ${chapter._id}:`,
-                          error
-                        );
-                      }
-                    }
-                  }
-                } catch (error) {
-                  console.error(
-                    `Error fetching chapters for story ${story._id}:`,
-                    error
-                  );
-                }
-              }
-            }
-          } catch (error) {
-            console.error(
-              `Error fetching stories for product ${product._id}:`,
-              error
-            );
-          }
-        }
-
-        setStories(allStories);
-        setChapters(allChapters);
-        setVerses(allVerses);
+      const response: any = await ClientInstance.APP.getStoriesByProduct(
+        productId
+      );
+      if (response?.success && response?.data) {
+        // Add new stories to the existing stories array
+        setStories((prev) => {
+          const existingIds = new Set(prev.map((s) => s._id));
+          const newStories = response.data.filter(
+            (story: Story) => !existingIds.has(story._id)
+          );
+          return [...prev, ...newStories];
+        });
+        setLoadedProducts((prev) => new Set(prev).add(productId));
       }
     } catch (error) {
-      console.error("Error fetching Bible content:", error);
+      console.error(`Error fetching stories for product ${productId}:`, error);
+      showToast.error("Error", "Failed to load stories");
     } finally {
-      setIsLoading(false);
-      setIsInitialLoading(false);
+      setLoadingStates((prev) => ({
+        ...prev,
+        stories: { ...prev.stories, [productId]: false },
+      }));
+    }
+  };
+
+  // Lazy load chapters for a story when it's expanded
+  const fetchChaptersForStory = async (storyId: string) => {
+    // Skip if already loaded
+    if (loadedStories.has(storyId)) {
+      return;
+    }
+
+    try {
+      setLoadingStates((prev) => ({
+        ...prev,
+        chapters: { ...prev.chapters, [storyId]: true },
+      }));
+
+      const response: any = await ClientInstance.APP.getChaptersByStory(storyId);
+      if (response?.success && response?.data) {
+        // Add new chapters to the existing chapters array
+        setChapters((prev) => {
+          const existingIds = new Set(prev.map((c) => c._id));
+          const newChapters = response.data.filter(
+            (chapter: Chapter) => !existingIds.has(chapter._id)
+          );
+          return [...prev, ...newChapters];
+        });
+        setLoadedStories((prev) => new Set(prev).add(storyId));
+      }
+    } catch (error) {
+      console.error(`Error fetching chapters for story ${storyId}:`, error);
+      showToast.error("Error", "Failed to load chapters");
+    } finally {
+      setLoadingStates((prev) => ({
+        ...prev,
+        chapters: { ...prev.chapters, [storyId]: false },
+      }));
+    }
+  };
+
+  // Lazy load verses for a chapter when it's expanded
+  const fetchVersesForChapter = async (chapterId: string) => {
+    // Skip if already loaded
+    if (loadedChapters.has(chapterId)) {
+      return;
+    }
+
+    try {
+      setLoadingStates((prev) => ({
+        ...prev,
+        verses: { ...prev.verses, [chapterId]: true },
+      }));
+
+      const response: any = await ClientInstance.APP.getVersesByChapter(
+        chapterId
+      );
+      if (response?.success && response?.data) {
+        // Add new verses to the existing verses array
+        setVerses((prev) => {
+          const existingIds = new Set(prev.map((v) => v._id));
+          const newVerses = response.data.filter(
+            (verse: Verse) => !existingIds.has(verse._id)
+          );
+          return [...prev, ...newVerses];
+        });
+        setLoadedChapters((prev) => new Set(prev).add(chapterId));
+      }
+    } catch (error) {
+      console.error(`Error fetching verses for chapter ${chapterId}:`, error);
+      showToast.error("Error", "Failed to load verses");
+    } finally {
+      setLoadingStates((prev) => ({
+        ...prev,
+        verses: { ...prev.verses, [chapterId]: false },
+      }));
     }
   };
 
@@ -337,40 +388,53 @@ export default function BiblePage() {
     return html.replace(/<[^>]*>/g, "");
   };
 
-  // Accordion toggle functions
-  const toggleProduct = (productId: string) => {
+  // Accordion toggle functions with lazy loading
+  const toggleProduct = async (productId: string) => {
     const newExpanded = new Set(expandedProducts);
-    if (newExpanded.has(productId)) {
-      newExpanded.delete(productId);
-    } else {
+    const isExpanding = !newExpanded.has(productId);
+    
+    if (isExpanding) {
       newExpanded.add(productId);
+      // Lazy load stories when expanding
+      await fetchStoriesForProduct(productId);
+    } else {
+      newExpanded.delete(productId);
     }
     setExpandedProducts(newExpanded);
   };
 
-  const toggleStory = (storyId: string) => {
+  const toggleStory = async (storyId: string) => {
     const newExpanded = new Set(expandedStories);
-    if (newExpanded.has(storyId)) {
-      newExpanded.delete(storyId);
-    } else {
+    const isExpanding = !newExpanded.has(storyId);
+    
+    if (isExpanding) {
       newExpanded.add(storyId);
+      // Lazy load chapters when expanding
+      await fetchChaptersForStory(storyId);
+    } else {
+      newExpanded.delete(storyId);
     }
     setExpandedStories(newExpanded);
   };
 
-  const toggleChapter = (chapterId: string) => {
+  const toggleChapter = async (chapterId: string) => {
     const newExpanded = new Set(expandedChapters);
-    if (newExpanded.has(chapterId)) {
-      newExpanded.delete(chapterId);
-    } else {
+    const isExpanding = !newExpanded.has(chapterId);
+    
+    if (isExpanding) {
       newExpanded.add(chapterId);
+      // Lazy load verses when expanding
+      await fetchVersesForChapter(chapterId);
+    } else {
+      newExpanded.delete(chapterId);
     }
     setExpandedChapters(newExpanded);
   };
 
   const fetchProducts = async () => {
     try {
-      setIsLoading(true);
+      setIsInitialLoading(true);
+      setLoadingStates((prev) => ({ ...prev, products: true }));
       const response: any = await ClientInstance.APP.getProducts({
         type: "book",
       });
@@ -381,7 +445,8 @@ export default function BiblePage() {
       console.error("Error fetching products:", error);
       showToast.error("Error", "Failed to fetch products");
     } finally {
-      setIsLoading(false);
+      setIsInitialLoading(false);
+      setLoadingStates((prev) => ({ ...prev, products: false }));
     }
   };
 
@@ -814,9 +879,15 @@ export default function BiblePage() {
     setValidationError("");
     setSuccessMessage("");
 
-    // Refresh all data
-    setIsLoading(true);
-    fetchAllBibleContent();
+    // Refresh products only (lazy load will handle the rest)
+    fetchProducts();
+    // Clear loaded data to force refresh
+    setStories([]);
+    setChapters([]);
+    setVerses([]);
+    setLoadedProducts(new Set());
+    setLoadedStories(new Set());
+    setLoadedChapters(new Set());
   };
 
   const handleEditContent = (contentType: string, id: string) => {
@@ -851,8 +922,20 @@ export default function BiblePage() {
           "Story Deleted",
           "Story has been deleted successfully!"
         );
-        // Refresh data
-        fetchAllBibleContent();
+        // Remove story from state and reset loaded state
+        setStories((prev) => prev.filter((s) => s._id !== storyId));
+        const story = stories.find((s) => s._id === storyId);
+        if (story) {
+          const productId =
+            typeof story.productId === "object"
+              ? story.productId._id
+              : story.productId;
+          setLoadedProducts((prev) => {
+            const newSet = new Set(prev);
+            newSet.delete(productId);
+            return newSet;
+          });
+        }
       } else {
         showToast.error("Error", response?.message || "Failed to delete story");
       }
@@ -873,8 +956,20 @@ export default function BiblePage() {
           "Chapter Deleted",
           "Chapter has been deleted successfully!"
         );
-        // Refresh data
-        fetchAllBibleContent();
+        // Remove chapter from state and reset loaded state
+        setChapters((prev) => prev.filter((c) => c._id !== chapterId));
+        const chapter = chapters.find((c) => c._id === chapterId);
+        if (chapter) {
+          const storyId =
+            typeof chapter.storyId === "object"
+              ? chapter.storyId._id
+              : chapter.storyId;
+          setLoadedStories((prev) => {
+            const newSet = new Set(prev);
+            newSet.delete(storyId);
+            return newSet;
+          });
+        }
       } else {
         showToast.error(
           "Error",
@@ -1452,34 +1547,23 @@ export default function BiblePage() {
           {/* Accordion Container */}
           <div className="space-y-4 w-full">
             {(() => {
-              const productsWithContent = products.filter((product) => {
-                const productStories = stories.filter(
-                  (s) =>
-                    (typeof s.productId === "object"
-                      ? s.productId._id
-                      : s.productId) === product._id
-                );
-                return productStories.length > 0;
-              });
-
-              if (productsWithContent.length === 0) {
+              if (products.length === 0) {
                 return (
                   <div className="flex items-center justify-center min-h-[400px]">
                     <div className="text-center">
                       <Book className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                       <div className="text-gray-500 text-lg mb-2">
-                        Bible book not found
+                        No Bible books found
                       </div>
                       <p className="text-gray-400">
-                        No products have stories, chapters, or verses created
-                        yet.
+                        No products available yet. Click "Add Bible Content" to create products.
                       </p>
                     </div>
                   </div>
                 );
               }
 
-              return productsWithContent.map((product) => {
+              return products.map((product) => {
                 const productStories = stories.filter(
                   (s) =>
                     (typeof s.productId === "object"
@@ -1516,19 +1600,34 @@ export default function BiblePage() {
                               )}
                             </h2>
                             <p className="text-gray-600 text-sm">
-                              {productStories.length}{" "}
-                              {productStories.length === 1
-                                ? "Story"
-                                : "Stories"}{" "}
-                              • Click to expand
+                              {loadingStates.stories[product._id] ? (
+                                <span className="flex items-center gap-2">
+                                  <div className="w-3 h-3 border-2 border-theme-primary border-t-transparent rounded-full animate-spin"></div>
+                                  Loading stories...
+                                </span>
+                              ) : loadedProducts.has(product._id) ? (
+                                <>
+                                  {productStories.length}{" "}
+                                  {productStories.length === 1
+                                    ? "Story"
+                                    : "Stories"}{" "}
+                                  • Click to expand
+                                </>
+                              ) : (
+                                "Click to load stories"
+                              )}
                             </p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="bg-theme-primary/10 text-theme-primary px-3 py-1 rounded-full text-sm">
-                            {productStories.length}{" "}
-                            {productStories.length === 1 ? "Story" : "Stories"}
-                          </span>
+                          {loadingStates.stories[product._id] ? (
+                            <div className="w-4 h-4 border-2 border-theme-primary border-t-transparent rounded-full animate-spin"></div>
+                          ) : loadedProducts.has(product._id) ? (
+                            <span className="bg-theme-primary/10 text-theme-primary px-3 py-1 rounded-full text-sm">
+                              {productStories.length}{" "}
+                              {productStories.length === 1 ? "Story" : "Stories"}
+                            </span>
+                          ) : null}
                           {isProductExpanded ? (
                             <ChevronDown className="h-5 w-5" />
                           ) : (
@@ -1558,7 +1657,14 @@ export default function BiblePage() {
 
                         {/* Stories Accordion */}
                         <div className="space-y-3">
-                          {productStories.length > 0 ? (
+                          {loadingStates.stories[product._id] ? (
+                            <div className="flex items-center justify-center py-8">
+                              <div className="text-center">
+                                <div className="w-8 h-8 border-4 border-theme-primary border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                                <p className="text-gray-500 text-sm">Loading stories...</p>
+                              </div>
+                            </div>
+                          ) : productStories.length > 0 ? (
                             productStories.map((story) => {
                               const storyChapters = chapters.filter(
                                 (c) =>
@@ -1611,11 +1717,22 @@ export default function BiblePage() {
                                             </Link>
                                           </h3>
                                           <p className="text-gray-600 text-sm">
-                                            {storyChapters.length}{" "}
-                                            {storyChapters.length === 1
-                                              ? "Chapter"
-                                              : "Chapters"}{" "}
-                                            • Click to expand
+                                            {loadingStates.chapters[story._id] ? (
+                                              <span className="flex items-center gap-2">
+                                                <div className="w-3 h-3 border-2 border-theme-primary border-t-transparent rounded-full animate-spin"></div>
+                                                Loading chapters...
+                                              </span>
+                                            ) : loadedStories.has(story._id) ? (
+                                              <>
+                                                {storyChapters.length}{" "}
+                                                {storyChapters.length === 1
+                                                  ? "Chapter"
+                                                  : "Chapters"}{" "}
+                                                • Click to expand
+                                              </>
+                                            ) : (
+                                              "Click to load chapters"
+                                            )}
                                           </p>
                                         </div>
                                       </div>
@@ -1634,12 +1751,16 @@ export default function BiblePage() {
                                         >
                                           <Edit className="h-3 w-3 mr-1" />
                                         </Button>
-                                        <span className="bg-theme-primary/10 text-theme-primary px-3 py-1 rounded-full text-sm">
-                                          {storyChapters.length}{" "}
-                                          {storyChapters.length === 1
-                                            ? "Chapter"
-                                            : "Chapters"}
-                                        </span>
+                                        {loadingStates.chapters[story._id] ? (
+                                          <div className="w-4 h-4 border-2 border-theme-primary border-t-transparent rounded-full animate-spin"></div>
+                                        ) : loadedStories.has(story._id) ? (
+                                          <span className="bg-theme-primary/10 text-theme-primary px-3 py-1 rounded-full text-sm">
+                                            {storyChapters.length}{" "}
+                                            {storyChapters.length === 1
+                                              ? "Chapter"
+                                              : "Chapters"}
+                                          </span>
+                                        ) : null}
                                         {isStoryExpanded ? (
                                           <ChevronDown className="h-5 w-5" />
                                         ) : (
@@ -1654,7 +1775,14 @@ export default function BiblePage() {
                                     <div className="p-4 bg-gray-50">
                                       {/* Chapters Accordion */}
                                       <div className="space-y-2">
-                                        {storyChapters.length > 0 ? (
+                                        {loadingStates.chapters[story._id] ? (
+                                          <div className="flex items-center justify-center py-6">
+                                            <div className="text-center">
+                                              <div className="w-6 h-6 border-3 border-theme-primary border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                                              <p className="text-gray-500 text-xs">Loading chapters...</p>
+                                            </div>
+                                          </div>
+                                        ) : storyChapters.length > 0 ? (
                                           storyChapters.map((chapter) => {
                                             const chapterVerses = verses.filter(
                                               (v) =>
@@ -1712,12 +1840,23 @@ export default function BiblePage() {
                                                           </Link>
                                                         </h4>
                                                         <p className="text-gray-600 text-xs">
-                                                          {chapterVerses.length}{" "}
-                                                          {chapterVerses.length ===
-                                                          1
-                                                            ? "Verse"
-                                                            : "Verses"}{" "}
-                                                          • Click to expand
+                                                          {loadingStates.verses[chapter._id] ? (
+                                                            <span className="flex items-center gap-1">
+                                                              <div className="w-2.5 h-2.5 border-2 border-theme-primary border-t-transparent rounded-full animate-spin"></div>
+                                                              Loading verses...
+                                                            </span>
+                                                          ) : loadedChapters.has(chapter._id) ? (
+                                                            <>
+                                                              {chapterVerses.length}{" "}
+                                                              {chapterVerses.length ===
+                                                              1
+                                                                ? "Verse"
+                                                                : "Verses"}{" "}
+                                                              • Click to expand
+                                                            </>
+                                                          ) : (
+                                                            "Click to load verses"
+                                                          )}
                                                         </p>
                                                       </div>
                                                     </div>
@@ -1736,13 +1875,17 @@ export default function BiblePage() {
                                                       >
                                                         <Edit className="h-3 w-3 mr-1" />
                                                       </Button>
-                                                      <span className="bg-theme-primary/10 text-theme-primary px-2 py-1 rounded-full text-xs">
-                                                        {chapterVerses.length}{" "}
-                                                        {chapterVerses.length ===
-                                                        1
-                                                          ? "Verse"
-                                                          : "Verses"}
-                                                      </span>
+                                                      {loadingStates.verses[chapter._id] ? (
+                                                        <div className="w-3.5 h-3.5 border-2 border-theme-primary border-t-transparent rounded-full animate-spin"></div>
+                                                      ) : loadedChapters.has(chapter._id) ? (
+                                                        <span className="bg-theme-primary/10 text-theme-primary px-2 py-1 rounded-full text-xs">
+                                                          {chapterVerses.length}{" "}
+                                                          {chapterVerses.length ===
+                                                          1
+                                                            ? "Verse"
+                                                            : "Verses"}
+                                                        </span>
+                                                      ) : null}
                                                       {isChapterExpanded ? (
                                                         <ChevronDown className="h-4 w-4" />
                                                       ) : (
@@ -1757,7 +1900,14 @@ export default function BiblePage() {
                                                   <div className="p-4 bg-gray-50">
                                                     {/* Verses Display */}
                                                     <div className="space-y-3">
-                                                      {chapterVerses.length >
+                                                      {loadingStates.verses[chapter._id] ? (
+                                                        <div className="flex items-center justify-center py-6">
+                                                          <div className="text-center">
+                                                            <div className="w-6 h-6 border-3 border-theme-primary border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                                                            <p className="text-gray-500 text-xs">Loading verses...</p>
+                                                          </div>
+                                                        </div>
+                                                      ) : chapterVerses.length >
                                                       0 ? (
                                                         chapterVerses.map(
                                                           (verse) => (
